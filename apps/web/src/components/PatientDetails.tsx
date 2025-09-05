@@ -74,7 +74,7 @@ const PatientDetails: React.FC = () => {
 
   // Decode the patient ID and validate access
   const patientId = encodedPatientId ? decodePatientId(encodedPatientId) : null;
-  
+
   // Log patient details page access
   useEffect(() => {
     logger.info('PATIENT_DETAILS_PAGE_ACCESSED', {
@@ -117,9 +117,9 @@ const PatientDetails: React.FC = () => {
       navigate('/MedMatchDoctorPortal');
       return;
     }
-    
+
     logger.patientValidation(patientId, true, 'Patient ID format valid');
-    
+
     if (!initialAlertsShown && location.state?.alerts) {
       setAlertData(location.state.alerts);
       setShowAlertModal(true);
@@ -168,7 +168,7 @@ const PatientDetails: React.FC = () => {
       })
       .catch((error) => {
         logger.patientDataFetch(patientId, 'validate', false, { error: error.message });
-        
+
         // Try to fetch patient data directly from the patients list as fallback
         fetch(`${BASE_URL_1}/api/patients`, { headers: { Authorization: `Bearer ${token}` } })
           .then(res => res.json())
@@ -208,8 +208,8 @@ const PatientDetails: React.FC = () => {
       .then((data: PrescriptionResp) => {
         if (data.prescription?.medicines) {
           setCurrentMedications(data.prescription.medicines);
-          logger.patientDataFetch(patientId, 'prescriptions', true, { 
-            medicineCount: data.prescription.medicines.length 
+          logger.patientDataFetch(patientId, 'prescriptions', true, {
+            medicineCount: data.prescription.medicines.length
           });
         }
       })
@@ -223,7 +223,7 @@ const PatientDetails: React.FC = () => {
       .then(res => res.json())
       .then(data => {
         if (data.notes) {
-          const sortedNotes = data.notes.sort((a: HistoryNote, b: HistoryNote) => 
+          const sortedNotes = data.notes.sort((a: HistoryNote, b: HistoryNote) =>
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           );
           setHistoryNotes(sortedNotes);
@@ -239,13 +239,13 @@ const PatientDetails: React.FC = () => {
       })
       .catch(() => setError('Failed to fetch patient history'));
 
-      return () => {
-        setAlertData({ ddi: [], pdi: [] });
-        setInitialAlertsShown(false);
-      };
+    return () => {
+      setAlertData({ ddi: [], pdi: [] });
+      setInitialAlertsShown(false);
+    };
   }, [patientId]);
 
-  
+
 
   const handleSaveNote = async () => {
     if (!noteInput.trim()) return;
@@ -258,12 +258,12 @@ const PatientDetails: React.FC = () => {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ patientId, notes: noteInput })
       });
-  
+
       const result = await res.json();
       if (res.ok && result.note) {
         // Update notes
         setHistoryNotes(prev => [result.note, ...prev]);
-  
+
         // Update structured data
         const s = result.note.structured;
         if (s) {
@@ -272,7 +272,7 @@ const PatientDetails: React.FC = () => {
           setPastConditions(s.conditions?.past || []);
           setAllergies(s.allergies || []);
         }
-  
+
         // Cleanup
         setNoteInput('');
         setCurrentPage(1);
@@ -285,7 +285,7 @@ const PatientDetails: React.FC = () => {
       setIsLoading(false); // ✅ Hide loading
     }
   };
-  
+
   const indexOfLast = currentPage * NOTES_PER_PAGE;
   const indexOfFirst = indexOfLast - NOTES_PER_PAGE;
   const currentNotes = historyNotes.slice(indexOfFirst, indexOfLast);
@@ -386,12 +386,12 @@ const PatientDetails: React.FC = () => {
               <div className="wave wave-3"></div>
             </div>
           </div>
-          
+
           <div className="error-text">
             <h1>Oops! Something went wrong</h1>
             <h2>Unable to Load Patient Details</h2>
             <p className="error-description">
-              We encountered an issue while trying to fetch the patient information. 
+              We encountered an issue while trying to fetch the patient information.
               This could be due to a temporary network issue or server maintenance.
             </p>
             <div className="error-details">
@@ -400,15 +400,15 @@ const PatientDetails: React.FC = () => {
           </div>
 
           <div className="error-actions">
-            <button 
-              className="btn-primary-error" 
+            <button
+              className="btn-primary-error"
               onClick={() => window.location.reload()}
             >
               <i className="fas fa-redo"></i>
               Try Again
             </button>
-            <button 
-              className="btn-secondary-error" 
+            <button
+              className="btn-secondary-error"
               onClick={() => navigate('/MedMatchDoctorPortal')}
             >
               <i className="fas fa-arrow-left"></i>
@@ -475,14 +475,14 @@ const PatientDetails: React.FC = () => {
   return (
     <div className="doctor-dashboard">
       {isLoading && (
-            <div className="fullscreen-loader">
-                <div className="loader-content">
-                <i className="fas fa-spinner fa-spin fa-2x"></i>
-                <p>Loading... Please wait.</p>
-                </div>
-            </div>
-            )}
-      
+        <div className="fullscreen-loader">
+          <div className="loader-content">
+            <i className="fas fa-spinner fa-spin fa-2x"></i>
+            <p>Loading... Please wait.</p>
+          </div>
+        </div>
+      )}
+
       {/* Sidebar */}
       <div className="sidebar-wrapper">
         <DocSidebar
@@ -494,7 +494,7 @@ const PatientDetails: React.FC = () => {
           }}
         />
       </div>
-      
+
       <main className="dashboard-main patient-details-main">
         {error && <div className="error-message">{error}</div>}
 
@@ -538,7 +538,7 @@ const PatientDetails: React.FC = () => {
                   <span className="alert-badge">{alertData.ddi.length + alertData.pdi.length}</span>
                 )}
               </button>
-              <button className="prescription-btn" onClick={() => navigate('/create-prescription', {state: {patientId}})}>
+              <button className="prescription-btn" onClick={() => navigate('/create-prescription', { state: { patientId } })}>
                 <i className="fas fa-prescription-bottle-alt"></i>
                 <span>Manage Prescription</span>
               </button>
@@ -561,7 +561,7 @@ const PatientDetails: React.FC = () => {
                   <span className="notes-count">{historyNotes.length} notes</span>
                 </div>
               </div>
-              
+
               <div className="notes-input-container">
                 <textarea
                   rows={4}
@@ -586,7 +586,7 @@ const PatientDetails: React.FC = () => {
                           <span className="timeline-date">{new Date(note.createdAt).toLocaleDateString()}</span>
                           <span className="timeline-time">{new Date(note.createdAt).toLocaleTimeString()}</span>
                         </div>
-                        <div className="timeline-text">{note.summary.length > 150 ? note.summary.slice(0,150)+'...' : note.summary}</div>
+                        <div className="timeline-text">{note.summary.length > 150 ? note.summary.slice(0, 150) + '...' : note.summary}</div>
                       </div>
                     </div>
                   ))
@@ -598,7 +598,7 @@ const PatientDetails: React.FC = () => {
                   </div>
                 )}
               </div>
-              
+
               {totalPages > 1 && (
                 <div className="modern-pagination">
                   <button onClick={handlePrevPage} disabled={currentPage === 1} className="pagination-btn">
@@ -623,7 +623,7 @@ const PatientDetails: React.FC = () => {
                   <span className="medication-count">{currentMedications.length} active</span>
                 </div>
               </div>
-              
+
               {currentMedications.length ? (
                 <div className="medications-grid">
                   {currentMedications.map((med, idx) => (
@@ -671,23 +671,23 @@ const PatientDetails: React.FC = () => {
                 </div>
                 <h3>Medical Conditions</h3>
               </div>
-              
+
               <div className="conditions-tabs">
                 <div className="tab-header">
-                  <button 
+                  <button
                     className={`tab-btn ${activeTab === 'current' ? 'active' : ''}`}
                     onClick={() => handleTabClick('current')}
                   >
                     Current ({currentConditions.length})
                   </button>
-                  <button 
+                  <button
                     className={`tab-btn ${activeTab === 'past' ? 'active' : ''}`}
                     onClick={() => handleTabClick('past')}
                   >
                     Past ({pastConditions.length})
                   </button>
                 </div>
-                
+
                 <div className={`tab-content ${activeTab === 'current' ? 'active' : ''}`}>
                   {currentConditions.length ? (
                     <div className="conditions-list">
@@ -705,7 +705,7 @@ const PatientDetails: React.FC = () => {
                     </div>
                   )}
                 </div>
-                
+
                 <div className={`tab-content ${activeTab === 'past' ? 'active' : ''}`}>
                   {pastConditions.length ? (
                     <div className="conditions-list">
@@ -737,7 +737,7 @@ const PatientDetails: React.FC = () => {
                   <span className="allergy-count">{allergies.length} known</span>
                 </div>
               </div>
-              
+
               {allergies.length ? (
                 <div className="allergies-list">
                   {allergies.map((allergy, i) => (
@@ -792,7 +792,7 @@ const PatientDetails: React.FC = () => {
               {editForm.profileImage && <img src={editForm.profileImage} alt="Preview" style={{ width: 80, marginTop: 8 }} />}
             </div>
             <div className="modal-actions">
-              <button className="modal-btn cancel-btn" onClick={()=>setShowEditModal(false)}>Cancel</button>
+              <button className="modal-btn cancel-btn" onClick={() => setShowEditModal(false)}>Cancel</button>
               <button className="modal-btn confirm-btn" onClick={handleEditSave}>Save</button>
             </div>
           </div>
@@ -804,9 +804,9 @@ const PatientDetails: React.FC = () => {
         <div className="modal-overlay">
           <div className="modal-box note-modal-box">
             <h3 className="modal-title">Edit Note</h3>
-            <textarea className="modal-input note-modal-input" rows={8} value={editText} onChange={e=>setEditText(e.target.value)} />
+            <textarea className="modal-input note-modal-input" rows={8} value={editText} onChange={e => setEditText(e.target.value)} />
             <div className="modal-actions">
-              <button className="modal-btn cancel-btn" onClick={()=>setShowNoteModal(false)}>Cancel</button>
+              <button className="modal-btn cancel-btn" onClick={() => setShowNoteModal(false)}>Cancel</button>
               <button className="modal-btn confirm-btn" onClick={handleSaveEdit}>Save</button>
               <button className="modal-btn delete-btn" onClick={handleDeleteNote}>Delete</button>
             </div>
@@ -823,7 +823,7 @@ const PatientDetails: React.FC = () => {
               </div>
               <h2>Interaction & History Alerts</h2>
             </div>
-            
+
             <div className="alert-modal-content">
               {alertData.ddi.length === 0 && alertData.pdi.length === 0 ? (
                 <div className="no-alerts-state">
