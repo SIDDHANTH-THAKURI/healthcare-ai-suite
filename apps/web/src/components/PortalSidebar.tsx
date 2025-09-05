@@ -22,27 +22,17 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ navItems, profile }) => {
-  const [collapsed, setCollapsed] = useState(false);
-  const toggleSidebar = () => setCollapsed(prev => !prev);
-
   return (
-    <aside className={`dashboard-sidebar sidebar ${collapsed ? 'collapsed' : ''}`}>
-      <button className="sidebar-toggle" onClick={toggleSidebar}>
-        <i className={`fas ${collapsed ? 'fa-angle-right' : 'fa-angle-left'}`} />
-      </button>
+    <aside className="dashboard-sidebar sidebar">
 
       <div className="doctor-profile">
         {profile.avatarUrl && <img src={profile.avatarUrl} alt="Doctor" />}
-        {!collapsed && (
-          <>
-            <h3>{profile.name}</h3>
-            {profile.specialization && <p>{profile.specialization}</p>}
-            {profile.onEditProfile && (
-              <button className="btn-edit" onClick={profile.onEditProfile}>
-                Edit Profile
-              </button>
-            )}
-          </>
+        <h3>{profile.name}</h3>
+        {profile.specialization && <p>{profile.specialization}</p>}
+        {profile.onEditProfile && (
+          <button className="btn-edit" onClick={profile.onEditProfile}>
+            Edit Profile
+          </button>
         )}
       </div>
 
@@ -57,7 +47,7 @@ const Sidebar: React.FC<SidebarProps> = ({ navItems, profile }) => {
             }
           >
             <i className={`fas ${item.icon}`} />
-            {!collapsed && <span>{item.label}</span>}
+            <span>{item.label}</span>
           </NavLink>
         ))}
       </nav>

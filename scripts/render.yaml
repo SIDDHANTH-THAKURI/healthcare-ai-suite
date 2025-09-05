@@ -1,0 +1,40 @@
+services:
+  # 🔹 Frontend React Client
+  - type: web
+    name: healthcare-ai-web
+    env: node
+    buildCommand: cd apps/web && npm install
+    startCommand: cd apps/web && npm run dev
+    envVars:
+      - key: NODE_ENV
+        value: development
+
+  # 🔹 Node.js API Gateway
+  - type: web
+    name: healthcare-ai-api
+    env: node
+    buildCommand: cd apps/api-gateway && npm install
+    startCommand: cd apps/api-gateway && npm run dev
+    envVars:
+      - key: NODE_ENV
+        value: development
+
+  # 🔹 ML Service (FastAPI - port 8000)
+  - type: web
+    name: healthcare-ai-ml
+    env: python
+    buildCommand: ./scripts/build.sh
+    startCommand: cd apps/ml-service && uvicorn server:app --host 0.0.0.0 --port 8000
+    envVars:
+      - key: TESSERACT_CMD
+        value: /usr/bin/tesseract
+
+  # 🔹 DDI Service (FastAPI - port 9000)
+  - type: web
+    name: healthcare-ai-ddi
+    env: python
+    buildCommand: ./scripts/build.sh
+    startCommand: cd apps/ddi-service && uvicorn server2:app --host 0.0.0.0 --port 9000
+    envVars:
+      - key: TESSERACT_CMD
+        value: /usr/bin/tesseract

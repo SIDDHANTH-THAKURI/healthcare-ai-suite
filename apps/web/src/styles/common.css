@@ -142,6 +142,17 @@ body {
   background: var(--accent);
 }
 
+.nav-link.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.nav-link.disabled:hover {
+  background: none;
+  transform: none;
+}
+
 .auth-buttons {
   display: flex;
   gap: 1rem;

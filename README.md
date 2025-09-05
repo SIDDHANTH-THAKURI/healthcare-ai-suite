@@ -83,20 +83,45 @@ full architecture diagram yet to upload
 
 ```bash
 # Clone the repo
-git clone https://github.com/Team-DDI-CSIT998/Personalised_DDI_Checker.git
-cd Personalised_DDI_Checker
+git clone https://github.com/SIDDHANTH-THAKURI/healthcare-ai-suite.git
+cd healthcare-ai-suite
 
-# Install backend and frontend
-npm install  # for frontend
-pip install -r requirements.txt  # for backend Python API
+# Install all dependencies
+npm run install:all
 
-# Start 4 servers
-npm run dev  # frontend
-npm run dev # node backend
-uvicorn server:app --reload --port 8000  # python backend
-uvicorn server2:app --reload --port 9000 --reload  # python2 backend
+# Install Python dependencies
+cd apps/ml-service && pip install -r requirements.txt
+cd ../ddi-service && pip install -r requirements.txt
+
+# Start all services (Option 1: All at once)
+npm run dev
+
+# Or start services individually (Option 2)
+npm run dev:web      # Frontend (React) - http://localhost:5173
+npm run dev:api      # API Gateway (Node.js) - http://localhost:3000  
+npm run dev:ml       # ML Service (Python) - http://localhost:8000
+npm run dev:ddi      # DDI Service (Python) - http://localhost:9000
+
+# Windows users can also use:
+./scripts/dev.ps1
+```
 
 🔑 Be sure to configure your .env file with MONGO_URI, OPENROUTER_API_KEY, etc.
+
+## 📁 Project Structure
+
+```
+healthcare-ai-suite/
+├── apps/
+│   ├── web/                    # React frontend
+│   ├── api-gateway/            # Node.js API gateway
+│   ├── ml-service/             # Python ML/AI service
+│   └── ddi-service/            # DDI-specific service
+├── packages/                   # Shared libraries
+├── docs/                       # Documentation & ML models
+├── scripts/                    # Build and deployment scripts
+└── config/                     # Configuration files
+```
 
 📚 References
 🧬 DrugBank Database

@@ -14,32 +14,9 @@
     height: 100%;
 }
 
-/* Collapsed state */
-.sidebar.collapsed {
-    width: 80px;
-}
+/* Collapsed state removed - no longer needed */
 
-/* Toggle button */
-.sidebar-toggle {
-    position: absolute;
-    top: 8px;
-    right: -22px;
-    width: 40px;
-    height: 40px;
-    border-radius: 100%;
-    border: 2px solid var(--text-light);
-    background: var(--primary);
-    color: var(--text-light);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background var(--transition);
-}
-
-.sidebar-toggle:hover {
-    background: var(--accent);
-}
+/* Toggle button removed - no longer needed */
 
 /* Profile area */
 .profile {
@@ -61,31 +38,7 @@
     transition: width var(--transition), height var(--transition);
 }
 
-.sidebar.collapsed .nav-link {
-    justify-content: center;
-}
-
-.sidebar.collapsed .nav-link.active {
-    text-decoration: none;
-    border-bottom: none !important;
-}
-
-.sidebar.collapsed .profile img {
-    width: 32px;
-    height: 32px;
-}
-
-.profile h4,
-.profile p {
-    transition: opacity var(--transition), height var(--transition);
-}
-
-.sidebar.collapsed .profile h4,
-.sidebar.collapsed .profile p {
-    opacity: 0;
-    height: 0;
-    overflow: hidden;
-}
+/* Collapsed state styles removed - no longer needed */
 
 /* Navigation */
 .sidebar-nav {
@@ -110,13 +63,7 @@
     text-align: center;
 }
 
-.nav-link span {
-    transition: opacity var(--transition);
-}
-
-.sidebar.collapsed .nav-link span {
-    opacity: 0;
-}
+/* Navigation link spans - no transitions needed */
 
 .nav-link:hover,
 .nav-link.active {

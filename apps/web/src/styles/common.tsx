@@ -48,13 +48,27 @@ const Header: React.FC = () => {
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem("user") || "null"));
   const isLoggedIn = !!user;
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [activeAnchorLink, setActiveAnchorLink] = useState<string>('');
   const showNavLinks = shouldShowNavLinks(location.pathname);
+  const isHomePage = location.pathname === '/';
+  const isHowItWorksPage = location.pathname === '/how-it-works';
 
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     setUser(null);
     navigate("/Authentication", { state: { isSignUp: false } });
+  };
+
+  const handleAnchorClick = (anchor: string) => {
+    // Don't allow anchor clicks when on How It Works page
+    if (isHowItWorksPage) return;
+    setActiveAnchorLink(anchor);
+  };
+
+  const handleHomeClick = () => {
+    setActiveAnchorLink('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -81,25 +95,36 @@ const Header: React.FC = () => {
             <>
               <Link
                 to="/"
-                className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                className={`nav-link ${location.pathname === '/' && activeAnchorLink === '' ? 'active' : ''}`}
+                onClick={handleHomeClick}
               >
                 Home
               </Link>
               
-              <a href="#features" className="nav-link">
+              <a 
+                href="#features" 
+                className={`nav-link ${activeAnchorLink === 'features' && !isHowItWorksPage ? 'active' : ''} ${isHowItWorksPage ? 'disabled' : ''}`}
+                onClick={() => handleAnchorClick('features')}
+              >
                 Features
               </a>
               
               <Link
                 to="/how-it-works"
                 className={`nav-link ${location.pathname === '/how-it-works' ? 'active' : ''}`}
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                onClick={() => {
+                  setActiveAnchorLink(''); // Clear anchor link state when navigating to route
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
               >
                 How It Works
               </Link>
               
-              <a href="#footer" className="nav-link">
+              <a 
+                href="#footer" 
+                className={`nav-link ${activeAnchorLink === 'footer' && !isHowItWorksPage ? 'active' : ''} ${isHowItWorksPage ? 'disabled' : ''}`}
+                onClick={() => handleAnchorClick('footer')}
+              >
                 Get in Touch
               </a>
               
