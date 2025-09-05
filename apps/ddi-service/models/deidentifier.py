@@ -4,11 +4,23 @@ import re
 from typing import Dict, List
 from transformers import AutoTokenizer, AutoModelForTokenClassification, pipeline
 
-# ─── Load DeID model only once ───────────────────────────────
+# ─── Load DeID model lazily to avoid startup crashes ───────────────────────────────
 model_name = "StanfordAIMI/stanford-deidentifier-base"
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForTokenClassification.from_pretrained(model_name)
-nlp_pipeline = pipeline("ner", model=model, tokenizer=tokenizer, aggregation_strategy="simple")
+tokenizer = None
+model = None
+nlp_pipeline = None
+
+def _load_model():
+    global tokenizer, model, nlp_pipeline
+    if nlp_pipeline is None:
+        try:
+            tokenizer = AutoTokenizer.from_pretrained(model_name)
+            model = AutoModelForTokenClassification.from_pretrained(model_name)
+            nlp_pipeline = pipeline("ner", model=model, tokenizer=tokenizer, aggregation_strategy="simple")
+        except Exception as e:
+            print(f"Warning: Could not load deidentifier model: {e}")
+            # Return a dummy pipeline that just returns empty results
+            nlp_pipeline = lambda x: []
 
 # ─── Regex patterns ───────────────────────────────────────────
 regex_patterns = {
@@ -31,7 +43,13 @@ ENTITY_REMAP = {
 
 # ─── Main function to expose ──────────────────────────────────
 def deidentify_text(text: str) -> Dict:
-    ner_entities = nlp_pipeline(text)
+    _load_model()  # Load model on first use
+    
+    try:
+        ner_entities = nlp_pipeline(text) if nlp_pipeline else []
+    except Exception as e:
+        print(f"Warning: NER pipeline failed: {e}")
+        ner_entities = []
 
     regex_entities = []
     for entity_type, pattern in regex_patterns.items():

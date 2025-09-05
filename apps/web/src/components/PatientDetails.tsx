@@ -4,6 +4,8 @@ import './MedMatchDoctorPortal.css';
 import './PatientDetails.css';
 import { DocSidebar } from './PortalSidebar';
 import { BASE_URL_1, BASE_URL_2 } from '../base';
+import { decodePatientId, isValidPatientIdFormat } from '../utils/patientSecurity';
+import { logger } from '../utils/logger';
 
 interface DoctorProfile {
   fullName: string;
@@ -65,10 +67,23 @@ const defaultPatientAvatars: Record<string, string> = {
 const NOTES_PER_PAGE = 4;
 
 const PatientDetails: React.FC = () => {
-  const { patientId } = useParams<{ patientId: string }>();
+  const { patientId: encodedPatientId } = useParams<{ patientId: string }>();
   const navigate = useNavigate();
   const location = useLocation() as { state?: LocationState };
   const [initialAlertsShown, setInitialAlertsShown] = useState(false);
+
+  // Decode the patient ID and validate access
+  const patientId = encodedPatientId ? decodePatientId(encodedPatientId) : null;
+  
+  // Log patient details page access
+  useEffect(() => {
+    logger.info('PATIENT_DETAILS_PAGE_ACCESSED', {
+      encodedPatientId,
+      decodedPatientId: patientId,
+      isValidFormat: patientId ? isValidPatientIdFormat(patientId) : false,
+      referrer: document.referrer
+    });
+  }, [encodedPatientId, patientId]);
 
   const [doctorProfile, setDoctorProfile] = useState<DoctorProfile | null>(null);
   const [editForm, setEditForm] = useState<DoctorProfile>({ fullName: '', phone: '', specialization: '', qualifications: '', experienceYears: 0, age: 0, gender: '', profileImage: '' });
@@ -92,10 +107,18 @@ const PatientDetails: React.FC = () => {
   const [showAlertModal, setShowAlertModal] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [hasAccess, setHasAccess] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (!patientId) return;
+    if (!patientId || !isValidPatientIdFormat(patientId)) {
+      logger.patientValidation(patientId || 'null', false, 'Invalid patient ID format');
+      setError('Invalid patient ID');
+      navigate('/MedMatchDoctorPortal');
+      return;
+    }
+    
+    logger.patientValidation(patientId, true, 'Patient ID format valid');
     
     if (!initialAlertsShown && location.state?.alerts) {
       setAlertData(location.state.alerts);
@@ -126,26 +149,74 @@ const PatientDetails: React.FC = () => {
       })
       .catch(() => setError('Failed to fetch doctor profile'));
 
-    // Fetch patient bio
-    fetch(`${BASE_URL_1}/api/patients`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => res.json())
+    // Validate patient access first
+    fetch(`${BASE_URL_1}/api/patients/${patientId}/validate`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`Access validation failed: ${res.status} ${res.statusText}`);
+        }
+        return res.json();
+      })
       .then(data => {
-        const found = data.patients.find((p: Patient) => p.id === patientId);
-        if (found) {
-          setPatientBio(found);
+        if (data.hasAccess && data.patient) {
+          setPatientBio(data.patient);
+          setHasAccess(true);
+          logger.patientDataFetch(patientId, 'validate', true, { patientName: data.patient.name });
+        } else {
+          throw new Error('Access denied - no patient data returned');
         }
       })
-      .catch(() => setError('Failed to fetch patient bio'));
+      .catch((error) => {
+        logger.patientDataFetch(patientId, 'validate', false, { error: error.message });
+        
+        // Try to fetch patient data directly from the patients list as fallback
+        fetch(`${BASE_URL_1}/api/patients`, { headers: { Authorization: `Bearer ${token}` } })
+          .then(res => res.json())
+          .then(data => {
+            if (data.patients) {
+              const patient = data.patients.find((p: Patient) => p.id === patientId);
+              if (patient) {
+                setPatientBio(patient);
+                setHasAccess(true);
+                setError(null);
+                return;
+              }
+            }
+            throw new Error('Patient not found in fallback');
+          })
+          .catch(() => {
+            setError('Patient not found or access denied');
+            setTimeout(() => {
+              navigate('/MedMatchDoctorPortal');
+            }, 3000);
+          });
+      });
 
     // Fetch prescriptions
     fetch(`${BASE_URL_1}/api/prescriptions?patientId=${patientId}`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => res.json())
+      .then(res => {
+        if (res.ok) {
+          return res.json();
+        } else if (res.status === 404) {
+          // No prescription found - this is normal, not an error
+          logger.patientDataFetch(patientId, 'prescriptions', true, { message: 'No prescriptions found' });
+          return { prescription: null };
+        } else {
+          throw new Error(`Failed to fetch prescriptions: ${res.status} ${res.statusText}`);
+        }
+      })
       .then((data: PrescriptionResp) => {
         if (data.prescription?.medicines) {
           setCurrentMedications(data.prescription.medicines);
+          logger.patientDataFetch(patientId, 'prescriptions', true, { 
+            medicineCount: data.prescription.medicines.length 
+          });
         }
       })
-      .catch(() => setError('Failed to fetch prescriptions'));
+      .catch((error) => {
+        logger.patientDataFetch(patientId, 'prescriptions', false, { error: error.message });
+        setError('Failed to fetch prescriptions');
+      });
 
     // Fetch history notes
     fetch(`${BASE_URL_2}/api/patient-history?patientId=${patientId}`, { headers: { Authorization: `Bearer ${token}` } })
@@ -294,7 +365,86 @@ const PatientDetails: React.FC = () => {
     }
   };
 
-  if (!doctorProfile || !patientBio) return <div>Loading...</div>;
+  // Tab functionality for conditions
+  const [activeTab, setActiveTab] = useState('current');
+
+  const handleTabClick = (tabName: string) => {
+    setActiveTab(tabName);
+  };
+
+  if (error) {
+    return (
+      <div className="error-page-container">
+        <div className="error-content">
+          <div className="error-animation">
+            <div className="error-icon">
+              <i className="fas fa-exclamation-triangle"></i>
+            </div>
+            <div className="error-waves">
+              <div className="wave wave-1"></div>
+              <div className="wave wave-2"></div>
+              <div className="wave wave-3"></div>
+            </div>
+          </div>
+          
+          <div className="error-text">
+            <h1>Oops! Something went wrong</h1>
+            <h2>Unable to Load Patient Details</h2>
+            <p className="error-description">
+              We encountered an issue while trying to fetch the patient information. 
+              This could be due to a temporary network issue or server maintenance.
+            </p>
+            <div className="error-details">
+              <span className="error-code">Error: {error}</span>
+            </div>
+          </div>
+
+          <div className="error-actions">
+            <button 
+              className="btn-primary-error" 
+              onClick={() => window.location.reload()}
+            >
+              <i className="fas fa-redo"></i>
+              Try Again
+            </button>
+            <button 
+              className="btn-secondary-error" 
+              onClick={() => navigate('/MedMatchDoctorPortal')}
+            >
+              <i className="fas fa-arrow-left"></i>
+              Back to Portal
+            </button>
+          </div>
+
+          <div className="error-help">
+            <p>If the problem persists, please contact your system administrator or try again later.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!doctorProfile || !patientBio || !hasAccess) {
+    return (
+      <div className="loading-page-container">
+        <div className="loading-content-page">
+          <div className="loading-spinner-page">
+            <div className="spinner-ring-page"></div>
+            <div className="spinner-ring-page"></div>
+            <div className="spinner-ring-page"></div>
+          </div>
+          <h3>Loading Patient Details</h3>
+          <p>Please wait while we securely fetch the patient information...</p>
+          <div className="loading-progress">
+            <div className="progress-bar"></div>
+          </div>
+          <p className="patient-id-info">
+            Patient ID: {patientId || 'Validating...'}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const imgSrc = patientBio.profileImage || defaultPatientAvatars[patientBio.gender.toLowerCase()] || defaultPatientAvatars.other;
 
@@ -323,7 +473,7 @@ const PatientDetails: React.FC = () => {
   };
 
   return (
-    <div className="patient-details-container">
+    <div className="doctor-dashboard">
       {isLoading && (
             <div className="fullscreen-loader">
                 <div className="loader-content">
@@ -332,98 +482,284 @@ const PatientDetails: React.FC = () => {
                 </div>
             </div>
             )}
-      <DocSidebar
-        profile={{
-          name: `Dr. ${doctorProfile.fullName}`,
-          specialization: doctorProfile.specialization,
-          avatarUrl: doctorProfile.profileImage,
-          onEditProfile: () => setShowEditModal(true)
-        }}
-      />
-
-    
       
-      <main className="patient-details-main">
+      {/* Sidebar */}
+      <div className="sidebar-wrapper">
+        <DocSidebar
+          profile={{
+            name: `Dr. ${doctorProfile.fullName}`,
+            specialization: doctorProfile.specialization,
+            avatarUrl: doctorProfile.profileImage,
+            onEditProfile: () => setShowEditModal(true)
+          }}
+        />
+      </div>
+      
+      <main className="dashboard-main patient-details-main">
         {error && <div className="error-message">{error}</div>}
 
-        {/* Patient Bio */}
-        <section className="patient-bio-card">
-          <img src={imgSrc} alt="Patient" className="patient-bio-image" />
-          <div className="patient-bio-info">
-            <h3>{patientBio.name}</h3>
-            <p><strong>ID:</strong> {patientBio.id}</p>
-            <p><strong>Age:</strong> {patientBio.age}</p>
-            <p><strong>Gender:</strong> {patientBio.gender}</p>
-            <p><strong>DOB:</strong> {patientBio.dob}</p>
-          </div>
-          <button className="alert-btn-inside" onClick={() => {
-              setShowAlertModal(true);
-          }}>
-            ⚠️ Alerts {alertData.ddi.length + alertData.pdi.length > 0 ? `(${alertData.ddi.length + alertData.pdi.length})` : ''}
-          </button>
-        </section>
-
-        {/* Consultation Notes */}
-        <section className="patient-section">
-          <h3>Consultation Notes</h3>
-          <textarea
-            rows={4}
-            value={noteInput}
-            placeholder="Type patient's condition, symptoms, or history..."
-            onChange={e => setNoteInput(e.target.value)}
-            className="notes-input"
-          />
-          <button className="btn-primary" onClick={handleSaveNote}>Save Note</button>
-
-          <div className="notes-container">
-            {currentNotes.length ? (
-              currentNotes.map(note => (
-                <div key={note.id} className="note-card" onClick={() => handleOpenNote(note)}>
-                  <div className="note-card-title">{new Date(note.createdAt).toLocaleString()}</div>
-                  <div className="note-card-preview">{note.summary.length > 100 ? note.summary.slice(0,100)+'...' : note.summary}</div>
+        {/* Patient Header Section */}
+        <div className="patient-header-section">
+          <div className="patient-hero-card">
+            <div className="patient-avatar-container">
+              <img src={imgSrc} alt="Patient" className="patient-avatar" />
+              <div className="patient-status-indicator"></div>
+            </div>
+            <div className="patient-hero-info">
+              <h1 className="patient-name">{patientBio.name}</h1>
+              <div className="patient-meta-grid">
+                <div className="meta-item">
+                  <i className="fas fa-id-card"></i>
+                  <span className="meta-label">Patient ID</span>
+                  <span className="meta-value">{patientBio.id}</span>
                 </div>
-              ))
-            ) : (
-              <p>No notes available.</p>
-            )}
+                <div className="meta-item">
+                  <i className="fas fa-birthday-cake"></i>
+                  <span className="meta-label">Age</span>
+                  <span className="meta-value">{patientBio.age} years</span>
+                </div>
+                <div className="meta-item">
+                  <i className="fas fa-venus-mars"></i>
+                  <span className="meta-label">Gender</span>
+                  <span className="meta-value">{patientBio.gender}</span>
+                </div>
+                <div className="meta-item">
+                  <i className="fas fa-calendar-alt"></i>
+                  <span className="meta-label">Date of Birth</span>
+                  <span className="meta-value">{patientBio.dob}</span>
+                </div>
+              </div>
+            </div>
+            <div className="patient-actions">
+              <button className="alert-btn-modern" onClick={() => setShowAlertModal(true)}>
+                <i className="fas fa-exclamation-triangle"></i>
+                <span>Alerts</span>
+                {alertData.ddi.length + alertData.pdi.length > 0 && (
+                  <span className="alert-badge">{alertData.ddi.length + alertData.pdi.length}</span>
+                )}
+              </button>
+              <button className="prescription-btn" onClick={() => navigate('/create-prescription', {state: {patientId}})}>
+                <i className="fas fa-prescription-bottle-alt"></i>
+                <span>Manage Prescription</span>
+              </button>
+            </div>
           </div>
-          <div className="pagination-controls">
-            <button onClick={handlePrevPage} disabled={currentPage === 1}>Previous</button>
-            <span>Page {currentPage} of {totalPages}</span>
-            <button onClick={handleNextPage} disabled={currentPage === totalPages}>Next</button>
-          </div>
-        </section>
+        </div>
 
-        {/* Current Medications */}
-        <section className="patient-section">
-          <h3>Current Medications</h3>
-          <table>
-            <thead>
-              <tr><th>Name</th><th>Dosage</th><th>Frequency</th><th>Duration</th><th>Status</th></tr>
-            </thead>
-            <tbody>
-              {currentMedications.length ? (
-                currentMedications.map((med, idx) => (
-                  <tr key={idx}><td>{med.name || 'N/A'}</td><td>{med.dosage || 'N/A'}</td><td>{med.frequency || 'N/A'}</td><td>{med.duration || 'N/A'}</td><td>{med.status || 'N/A'}</td></tr>
-                ))
-              ) : (
-                <tr><td colSpan={5}>No medications available.</td></tr>
+        {/* Main Content Grid */}
+        <div className="patient-content-grid">
+          {/* Left Column */}
+          <div className="content-column-left">
+            {/* Consultation Notes */}
+            <section className="modern-card consultation-card">
+              <div className="card-header">
+                <div className="header-icon">
+                  <i className="fas fa-notes-medical"></i>
+                </div>
+                <h3>Consultation Notes</h3>
+                <div className="header-actions">
+                  <span className="notes-count">{historyNotes.length} notes</span>
+                </div>
+              </div>
+              
+              <div className="notes-input-container">
+                <textarea
+                  rows={4}
+                  value={noteInput}
+                  placeholder="Document patient's condition, symptoms, observations, or treatment notes..."
+                  onChange={e => setNoteInput(e.target.value)}
+                  className="modern-textarea"
+                />
+                <button className="save-note-btn" onClick={handleSaveNote} disabled={!noteInput.trim()}>
+                  <i className="fas fa-save"></i>
+                  Save Note
+                </button>
+              </div>
+
+              <div className="notes-timeline">
+                {currentNotes.length ? (
+                  currentNotes.map(note => (
+                    <div key={note.id} className="timeline-note" onClick={() => handleOpenNote(note)}>
+                      <div className="timeline-marker"></div>
+                      <div className="timeline-content">
+                        <div className="timeline-header">
+                          <span className="timeline-date">{new Date(note.createdAt).toLocaleDateString()}</span>
+                          <span className="timeline-time">{new Date(note.createdAt).toLocaleTimeString()}</span>
+                        </div>
+                        <div className="timeline-text">{note.summary.length > 150 ? note.summary.slice(0,150)+'...' : note.summary}</div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="empty-state">
+                    <i className="fas fa-clipboard-list"></i>
+                    <p>No consultation notes yet</p>
+                    <span>Start documenting patient interactions above</span>
+                  </div>
+                )}
+              </div>
+              
+              {totalPages > 1 && (
+                <div className="modern-pagination">
+                  <button onClick={handlePrevPage} disabled={currentPage === 1} className="pagination-btn">
+                    <i className="fas fa-chevron-left"></i>
+                  </button>
+                  <span className="pagination-info">Page {currentPage} of {totalPages}</span>
+                  <button onClick={handleNextPage} disabled={currentPage === totalPages} className="pagination-btn">
+                    <i className="fas fa-chevron-right"></i>
+                  </button>
+                </div>
               )}
-            </tbody>
-          </table>
-        </section>
+            </section>
 
-        {/* Conditions & Allergies */}
-        <section className="patient-section">
-          <h3>Current Conditions</h3>
-          {currentConditions.length ? <ul>{currentConditions.map((c,i)=><li key={i}>{c}</li>)}</ul> : <p>None</p>}
-          <h3>Past Conditions</h3>
-          {pastConditions.length ? <ul>{pastConditions.map((c,i)=><li key={i}>{c}</li>)}</ul> : <p>None</p>}
-          <h3>Allergies</h3>
-          {allergies.length ? <ul>{allergies.map((a,i)=><li key={i}>{a}</li>)}</ul> : <p>None</p>}
-        </section>
+            {/* Current Medications */}
+            <section className="modern-card medications-card">
+              <div className="card-header">
+                <div className="header-icon">
+                  <i className="fas fa-pills"></i>
+                </div>
+                <h3>Current Medications</h3>
+                <div className="header-actions">
+                  <span className="medication-count">{currentMedications.length} active</span>
+                </div>
+              </div>
+              
+              {currentMedications.length ? (
+                <div className="medications-grid">
+                  {currentMedications.map((med, idx) => (
+                    <div key={idx} className="medication-item">
+                      <div className="medication-header">
+                        <h4 className="medication-name">{med.name || 'Unknown Medication'}</h4>
+                        <span className={`medication-status ${(med.status || 'active').toLowerCase()}`}>
+                          {med.status || 'Active'}
+                        </span>
+                      </div>
+                      <div className="medication-details">
+                        <div className="detail-row">
+                          <i className="fas fa-weight"></i>
+                          <span>Dosage: {med.dosage || 'Not specified'}</span>
+                        </div>
+                        <div className="detail-row">
+                          <i className="fas fa-clock"></i>
+                          <span>Frequency: {med.frequency || 'Not specified'}</span>
+                        </div>
+                        <div className="detail-row">
+                          <i className="fas fa-calendar"></i>
+                          <span>Duration: {med.duration || 'Ongoing'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <i className="fas fa-prescription-bottle"></i>
+                  <p>No current medications</p>
+                  <span>Add medications via prescription management</span>
+                </div>
+              )}
+            </section>
+          </div>
 
-        <button className="btn-primary" onClick={()=>navigate('/create-prescription',{state:{patientId}})}>Add / Edit Prescription</button>
+          {/* Right Column */}
+          <div className="content-column-right">
+            {/* Medical Conditions */}
+            <section className="modern-card conditions-card">
+              <div className="card-header">
+                <div className="header-icon">
+                  <i className="fas fa-heartbeat"></i>
+                </div>
+                <h3>Medical Conditions</h3>
+              </div>
+              
+              <div className="conditions-tabs">
+                <div className="tab-header">
+                  <button 
+                    className={`tab-btn ${activeTab === 'current' ? 'active' : ''}`}
+                    onClick={() => handleTabClick('current')}
+                  >
+                    Current ({currentConditions.length})
+                  </button>
+                  <button 
+                    className={`tab-btn ${activeTab === 'past' ? 'active' : ''}`}
+                    onClick={() => handleTabClick('past')}
+                  >
+                    Past ({pastConditions.length})
+                  </button>
+                </div>
+                
+                <div className={`tab-content ${activeTab === 'current' ? 'active' : ''}`}>
+                  {currentConditions.length ? (
+                    <div className="conditions-list">
+                      {currentConditions.map((condition, i) => (
+                        <div key={i} className="condition-item current">
+                          <div className="condition-indicator"></div>
+                          <span className="condition-text">{condition}</span>
+                          <span className="condition-badge">Active</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="empty-state-small">
+                      <p>No current conditions recorded</p>
+                    </div>
+                  )}
+                </div>
+                
+                <div className={`tab-content ${activeTab === 'past' ? 'active' : ''}`}>
+                  {pastConditions.length ? (
+                    <div className="conditions-list">
+                      {pastConditions.map((condition, i) => (
+                        <div key={i} className="condition-item past">
+                          <div className="condition-indicator"></div>
+                          <span className="condition-text">{condition}</span>
+                          <span className="condition-badge">Resolved</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="empty-state-small">
+                      <p>No past conditions recorded</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            {/* Allergies */}
+            <section className="modern-card allergies-card">
+              <div className="card-header">
+                <div className="header-icon">
+                  <i className="fas fa-exclamation-circle"></i>
+                </div>
+                <h3>Allergies & Reactions</h3>
+                <div className="header-actions">
+                  <span className="allergy-count">{allergies.length} known</span>
+                </div>
+              </div>
+              
+              {allergies.length ? (
+                <div className="allergies-list">
+                  {allergies.map((allergy, i) => (
+                    <div key={i} className="allergy-item">
+                      <div className="allergy-icon">
+                        <i className="fas fa-shield-alt"></i>
+                      </div>
+                      <span className="allergy-text">{allergy}</span>
+                      <span className="severity-indicator high">High Risk</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <i className="fas fa-check-circle"></i>
+                  <p>No known allergies</p>
+                  <span>Patient has no recorded allergic reactions</span>
+                </div>
+              )}
+            </section>
+          </div>
+        </div>
       </main>
 
       {/* Edit Profile Modal */}
@@ -481,19 +817,51 @@ const PatientDetails: React.FC = () => {
       {showAlertModal && (
         <div className="modal-backdrop">
           <div className="alert-modal">
-            <h2>Interaction & History Alerts</h2>
+            <div className="alert-modal-header">
+              <div className="alert-modal-icon">
+                <i className="fas fa-exclamation-triangle"></i>
+              </div>
+              <h2>Interaction & History Alerts</h2>
+            </div>
             
-            <div className="alert-card">
-              <h3>Drug–Drug Interaction Alerts</h3>
-              {alertData.ddi.length ? alertData.ddi.map((a, i) => <p key={i}>{a}</p>) : <p>No DDI alerts.</p>}
+            <div className="alert-modal-content">
+              {alertData.ddi.length === 0 && alertData.pdi.length === 0 ? (
+                <div className="no-alerts-state">
+                  <i className="fas fa-shield-alt"></i>
+                  <h3>All Clear!</h3>
+                  <p>No drug interactions or contraindications detected for this patient.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="alert-card">
+                    <div className="alert-card-header">
+                      <div className="alert-card-icon">
+                        <i className="fas fa-pills"></i>
+                      </div>
+                      <h3>Drug–Drug Interaction Alerts</h3>
+                    </div>
+                    {alertData.ddi.length ? alertData.ddi.map((a, i) => <p key={i}>{a}</p>) : <p>No DDI alerts detected.</p>}
+                  </div>
+
+                  <div className="alert-card">
+                    <div className="alert-card-header">
+                      <div className="alert-card-icon">
+                        <i className="fas fa-user-md"></i>
+                      </div>
+                      <h3>Patient History Alerts</h3>
+                    </div>
+                    {alertData.pdi.length ? alertData.pdi.map((a, i) => <p key={i}>{a}</p>) : <p>No contraindication alerts detected.</p>}
+                  </div>
+                </>
+              )}
             </div>
 
-            <div className="alert-card">
-              <h3>Patient History Alerts</h3>
-              {alertData.pdi.length ? alertData.pdi.map((a, i) => <p key={i}>{a}</p>) : <p>No contraindication alerts.</p>}
+            <div className="alert-modal-footer">
+              <button className="close-btn" onClick={() => setShowAlertModal(false)}>
+                <i className="fas fa-check"></i>
+                Understood
+              </button>
             </div>
-
-            <button className="close-btn" onClick={() => setShowAlertModal(false)}>Close</button>
           </div>
         </div>
       )}

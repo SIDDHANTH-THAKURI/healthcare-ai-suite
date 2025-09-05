@@ -33,6 +33,23 @@ prescriptions_collection = mongo_client[DB_NAME][MEDS_DB]
 accounts_collection = mongo_client[DB_NAME][USER_DB]
 chatbot_history_collection = mongo_client[DB_NAME][CHAT_DB]
 
+# ─── HEALTH CHECK ─────────────────────────────────────────────────────
+@app.get("/health")
+def health_check():
+    try:
+        # Test MongoDB connection
+        mongo_client.admin.command('ping')
+        mongo_status = "connected"
+    except Exception:
+        mongo_status = "disconnected"
+    
+    return {
+        "status": "healthy",
+        "service": "ml-service",
+        "timestamp": datetime.now().isoformat(),
+        "mongodb": mongo_status
+    }
+
 # ─── MODELS ───────────────────────────────────────────────────────────
 class HistoryInput(BaseModel):
     patientId: str

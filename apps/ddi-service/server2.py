@@ -1,7 +1,13 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-from models.deidentifier import deidentify_text 
+try:
+    from models.deidentifier import deidentify_text
+    print("✅ Loaded advanced deidentifier with ML model")
+except Exception as e:
+    print(f"⚠️  Could not load ML deidentifier: {e}")
+    print("🔄 Falling back to regex-based deidentifier")
+    from models.deidentifier_fallback import deidentify_text 
 from models.DLTypeClassificationInference import predict_ddi, label_map
 from models.hybrid_binary_ddi_inference import predict_hybrid_binary_ddi
 from fastapi import FastAPI, Query
@@ -22,6 +28,23 @@ app.add_middleware(
 
 mongo_client = MongoClient(MONGO_URI)
 drugdb = mongo_client[DB_NAME][COLLECTION_NAME]
+
+# ─── HEALTH CHECK ─────────────────────────────────────────────────────
+@app.get("/health")
+def health_check():
+    try:
+        # Test MongoDB connection
+        mongo_client.admin.command('ping')
+        mongo_status = "connected"
+    except Exception:
+        mongo_status = "disconnected"
+    
+    return {
+        "status": "healthy",
+        "service": "ddi-service",
+        "timestamp": "2025-01-09T00:00:00Z",  # Static timestamp since datetime not imported
+        "mongodb": mongo_status
+    }
 
 # ─── Request Schema ──────────────────────────────────────────────
 class DeIDRequest(BaseModel):

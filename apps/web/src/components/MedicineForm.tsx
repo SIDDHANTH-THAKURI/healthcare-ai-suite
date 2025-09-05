@@ -1,4 +1,5 @@
 import React from 'react';
+import './MedicineForm.css';
 
 interface MedicineFormProps {
   medicine: {
@@ -62,7 +63,7 @@ const MedicineForm: React.FC<MedicineFormProps> = ({
         />
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+      <div className="form-actions">
         <button onClick={onCancel} className="cancel-btn">Cancel</button>
         <button onClick={onSave} disabled={saveDisabled}>Save</button>
       </div>

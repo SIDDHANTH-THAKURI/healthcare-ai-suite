@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import './CreatePrescription.css';
 import { BASE_URL_1, BASE_URL_2 } from '../base';
+import { encodePatientId } from '../utils/patientSecurity';
 
 interface Medicine {
   id: number;
@@ -318,7 +319,7 @@ const CreatePrescription: React.FC = () => {
   
       //  Fetch alerts
       const alerts = await axios.get(`${BASE_URL_2}/api/check-alerts?patientId=${patientId}`);
-      navigate(`/patient-details/${patientId}`, { state: { alerts: alerts.data } });
+      navigate(`/patient-details/${encodePatientId(patientId)}`, { state: { alerts: alerts.data } });
   
     } catch (err: any) {
       alert(err.response?.data?.error || 'Could not update prescription.');
@@ -338,16 +339,29 @@ const CreatePrescription: React.FC = () => {
                 </div>
             </div>
             )}
-      <div className="prescription-header">
-        <h2>Create New Prescription</h2>
-        <p className="subtitle">Add medications for your patient</p>
-      </div>
+      <div className="prescription-wrapper">
+        <div className="prescription-header">
+          <div className="prescription-header-content">
+            <div className="prescription-header-icon">
+              <i className="fas fa-prescription-bottle-alt"></i>
+            </div>
+            <div className="prescription-header-text">
+              <h2>Create New Prescription</h2>
+              <p className="subtitle">Add medications for your patient with intelligent drug interaction checking</p>
+            </div>
+          </div>
+        </div>
 
       <div className="prescription-content">
         <div className="medicine-section">
           <div className="section-header">
-            <h3>Suggested Medications</h3>
-            <p>Commonly prescribed medicines for this patient</p>
+            <div className="section-icon">
+              <i className="fas fa-pills"></i>
+            </div>
+            <div className="section-header-text">
+              <h3>Suggested Medications</h3>
+              <p>Commonly prescribed medicines for this patient</p>
+            </div>
           </div>
           <div className="medicine-chips">
             {currentMedicines.map(med => (
@@ -357,8 +371,10 @@ const CreatePrescription: React.FC = () => {
                 onClick={() => handleAddChipClick(med)}
                 disabled={isMedicineAdded(med.id)}
               >
-                <span className="chip-name">{med.name}</span>
-                <span className="chip-dosage">{med.dosage}</span>
+                <div className="chip-info">
+                  <span className="chip-name">{med.name}</span>
+                  <span className="chip-dosage">{med.dosage}</span>
+                </div>
                 <span className="chip-add">{isMedicineAdded(med.id) ? '✓' : '+'}</span>
               </button>
             ))}
@@ -388,8 +404,13 @@ const CreatePrescription: React.FC = () => {
 
         <div className="medicine-section">
           <div className="section-header">
-            <h3>Custom Medication</h3>
-            <p>Add a medication not listed above</p>
+            <div className="section-icon">
+              <i className="fas fa-plus-circle"></i>
+            </div>
+            <div className="section-header-text">
+              <h3>Custom Medication</h3>
+              <p>Add a medication not listed above</p>
+            </div>
           </div>
           {!showNewMedicineForm && !showEditForm && (
             <button 
@@ -423,8 +444,13 @@ const CreatePrescription: React.FC = () => {
 
         <div className="medicine-section added-medicines">
           <div className="section-header">
-            <h3>Current Prescription</h3>
-            <p>{addedMedicines.length} medication{addedMedicines.length !== 1 ? 's' : ''} added</p>
+            <div className="section-icon">
+              <i className="fas fa-clipboard-list"></i>
+            </div>
+            <div className="section-header-text">
+              <h3>Current Prescription</h3>
+              <p>{addedMedicines.length} medication{addedMedicines.length !== 1 ? 's' : ''} added</p>
+            </div>
           </div>
           {addedMedicines.length === 0 ? (
             <div className="empty-state">
@@ -467,6 +493,7 @@ const CreatePrescription: React.FC = () => {
             Save Prescription
           </button>
         </div>
+      </div>
       </div>
     </div>
   );

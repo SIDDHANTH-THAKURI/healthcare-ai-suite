@@ -1,0 +1,247 @@
+/* ===============================
+   Medicine Form Component Styling
+=============================== */
+
+.medicine-form {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  padding: 2rem;
+  margin: 1rem 0;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .medicine-form {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.medicine-form:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.medicine-form .form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.5rem;
+}
+
+.medicine-form .form-group label {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  position: relative;
+}
+
+.dark .medicine-form .form-group label {
+  color: var(--text-light);
+}
+
+.medicine-form .form-group label::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 20px;
+  height: 2px;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  border-radius: 1px;
+}
+
+.medicine-form .form-group input {
+  padding: 0.875rem 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  color: var(--text-dark);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.dark .medicine-form .form-group input {
+  background: rgba(0, 0, 0, 0.1);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-light);
+}
+
+.medicine-form .form-group input::placeholder {
+  color: rgba(43, 45, 66, 0.5);
+  opacity: 1;
+}
+
+.dark .medicine-form .form-group input::placeholder {
+  color: rgba(244, 244, 244, 0.5);
+}
+
+.medicine-form .form-group input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.1);
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.dark .medicine-form .form-group input:focus {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.medicine-form .form-group input:hover {
+  border-color: rgba(42, 157, 143, 0.3);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.dark .medicine-form .form-group input:hover {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+/* Form Actions */
+.medicine-form .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dark .medicine-form .form-actions {
+  border-top-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Button Styling */
+.medicine-form button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  position: relative;
+  overflow: hidden;
+  min-width: 100px;
+}
+
+.medicine-form button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.medicine-form button:hover::before {
+  left: 100%;
+}
+
+/* Save Button */
+.medicine-form button:not(.cancel-btn) {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(42, 157, 143, 0.3);
+}
+
+.medicine-form button:not(.cancel-btn):hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--primary-dark) 0%, #1d3557 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(42, 157, 143, 0.4);
+}
+
+.medicine-form button:not(.cancel-btn):disabled {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.6;
+}
+
+/* Cancel Button */
+.medicine-form .cancel-btn {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  color: var(--text-dark);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.dark .medicine-form .cancel-btn {
+  background: rgba(0, 0, 0, 0.1);
+  color: var(--text-light);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.medicine-form .cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.dark .medicine-form .cancel-btn:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .medicine-form {
+    padding: 1.5rem;
+    margin: 0.5rem 0;
+  }
+  
+  .medicine-form .form-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .medicine-form button {
+    width: 100%;
+  }
+}
+
+/* Focus states for accessibility */
+.medicine-form button:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .medicine-form {
+    border: 2px solid var(--text-dark);
+  }
+  
+  .dark .medicine-form {
+    border-color: var(--text-light);
+  }
+  
+  .medicine-form .form-group input {
+    border: 2px solid var(--text-dark);
+  }
+  
+  .dark .medicine-form .form-group input {
+    border-color: var(--text-light);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .medicine-form,
+  .medicine-form .form-group input,
+  .medicine-form button {
+    transition: none;
+  }
+  
+  .medicine-form button::before {
+    display: none;
+  }
+}

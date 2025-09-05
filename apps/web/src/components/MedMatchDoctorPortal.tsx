@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import "./MedMatchDoctorPortal.css";
 import { DocSidebar } from './PortalSidebar';
 import { BASE_URL_1 } from "../base";
+import { encodePatientId } from '../utils/patientSecurity';
+
+
 
 interface DoctorProfile {
   fullName: string;
@@ -41,7 +44,11 @@ const MedMatchDoctorPortal: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddPatientModal, setShowAddPatientModal] = useState(false);
   const [newPatient, setNewPatient] = useState({ name: "", age: 0, gender: "", dob: "" });
+  const [showEditPatientModal, setShowEditPatientModal] = useState(false);
+  const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isNavigating, setIsNavigating] = useState(false);
 
   // Fetch profile and patients
   useEffect(() => {
@@ -53,11 +60,20 @@ const MedMatchDoctorPortal: React.FC = () => {
           setDoctorProfile(data.doctorProfile);
           setEditForm(data.doctorProfile);
         }
+      })
+      .catch(error => {
+        console.error('Failed to fetch doctor profile:', error.message);
       });
+
     fetch(`${BASE_URL_1}/api/patients`, { headers: { Authorization: `Bearer ${token}` } })
       .then(res => res.json())
       .then(data => {
-        if (data.patients) setPatients(data.patients);
+        if (data.patients) {
+          setPatients(data.patients);
+        }
+      })
+      .catch(error => {
+        console.error('Failed to fetch patients:', error.message);
       });
   }, []);
 
@@ -92,8 +108,8 @@ const MedMatchDoctorPortal: React.FC = () => {
 
   const handleAddPatient = async () => {
     const token = localStorage.getItem("token");
-    const id = "P" + (Math.floor(Math.random() * 9000) + 1000);
-    const entry = { ...newPatient, id, lastVisit: "Today" };
+    // Remove ID generation from frontend - let backend handle it
+    const entry = { ...newPatient, lastVisit: "Today" };
     if (!entry.name || entry.age <= 0 || !entry.gender || !entry.dob) {
       alert("All fields are required"); return;
     }
@@ -106,6 +122,40 @@ const MedMatchDoctorPortal: React.FC = () => {
     if (res.ok) setPatients(prev => [...prev, data.patient]);
     setShowAddPatientModal(false);
     setNewPatient({ name: "", age: 0, gender: "", dob: "" });
+  };
+
+  const handleEditPatient = (patient: Patient) => {
+    setEditingPatient({ ...patient });
+    setShowEditPatientModal(true);
+  };
+
+  const handleUpdatePatient = async () => {
+    if (!editingPatient) return;
+
+    const token = localStorage.getItem("token");
+    const res = await fetch(`${BASE_URL_1}/api/patients/${editingPatient.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(editingPatient),
+    });
+
+    if (res.ok) {
+      setPatients(prev => prev.map(p => p.id === editingPatient.id ? editingPatient : p));
+      setShowEditPatientModal(false);
+      setEditingPatient(null);
+    } else {
+      alert("Failed to update patient");
+    }
+  };
+
+  const onEditPatientChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    if (editingPatient) {
+      setEditingPatient(prev => ({
+        ...prev!,
+        [name]: type === "number" ? Number(value) : value
+      }));
+    }
   };
 
   return (
@@ -140,7 +190,15 @@ const MedMatchDoctorPortal: React.FC = () => {
       </div>
       <main className="dashboard-main">
         <div className="dashboard-header">
-          <div className="search-bar"><i className="fas fa-search"></i><input type="text" placeholder="Search patients, medications..." /></div>
+          <div className="search-bar">
+            <i className="fas fa-search"></i>
+            <input
+              type="text"
+              placeholder="Search Patients"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
           <div className="header-actions"><i className="fas fa-bell"></i><i className="fas fa-envelope"></i></div>
         </div>
 
@@ -153,21 +211,49 @@ const MedMatchDoctorPortal: React.FC = () => {
         <section className="patient-management">
           <div className="section-header"><h2>Patient Records</h2><button onClick={() => setShowAddPatientModal(true)}><i className="fas fa-plus"></i> Add Patient</button></div>
           <div className="patient-list">
-            {patients.map(p => (
-              <div key={p.id} className="patient-item" onClick={() => navigate(`/patient-details/${p.id}`)}>
-                <div className="patient-info"><h4>{p.name}</h4><p>ID: {p.id} | Last Visit: {p.lastVisit}</p></div>
-                <div className="patient-actions">
-                  <button><i className="fas fa-edit"></i></button>
-                  <button onClick={e => {
-                    e.stopPropagation(); if (window.confirm('Delete?')) {
-                      const token = localStorage.getItem('token');
-                      fetch(`${BASE_URL_1}/api/patients/${p.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
-                        .then(r => r.json()).then(d => { if (d.message === 'Patient deleted') setPatients(prev => prev.filter(x => x.id !== p.id)); });
-                    }
-                  }}><i className="fas fa-trash-alt"></i></button>
+            {patients
+              .filter(p => {
+                if (!searchTerm) return true;
+                const search = searchTerm.toLowerCase();
+                return (
+                  p.name.toLowerCase().includes(search) ||
+                  p.id.toLowerCase().includes(search) ||
+                  p.gender.toLowerCase().includes(search) ||
+                  p.age.toString().includes(search)
+                );
+              })
+              .map(p => (
+                <div key={p.id} className="patient-item" onClick={() => {
+                  try {
+                    setIsNavigating(true);
+                    const encodedId = encodePatientId(p.id);
+                    
+                    // Beautiful 2-second loading animation
+                    setTimeout(() => {
+                      navigate(`/patient-details/${encodedId}`);
+                      setIsNavigating(false);
+                    }, 2000);
+                  } catch (error) {
+                    console.error('Failed to navigate to patient details:', error);
+                    setIsNavigating(false);
+                  }
+                }}>
+                  <div className="patient-info"><h4>{p.name}</h4><p>ID: {p.id} | Last Visit: {p.lastVisit}</p></div>
+                  <div className="patient-actions">
+                    <button onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditPatient(p);
+                    }}><i className="fas fa-edit"></i></button>
+                    <button onClick={e => {
+                      e.stopPropagation(); if (window.confirm('Delete?')) {
+                        const token = localStorage.getItem('token');
+                        fetch(`${BASE_URL_1}/api/patients/${p.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } })
+                          .then(r => r.json()).then(d => { if (d.message === 'Patient deleted') setPatients(prev => prev.filter(x => x.id !== p.id)); });
+                      }
+                    }}><i className="fas fa-trash-alt"></i></button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         </section>
       </main>
@@ -321,6 +407,83 @@ const MedMatchDoctorPortal: React.FC = () => {
             <div className="modal-actions">
               <button className="modal-btn cancel-btn" onClick={() => setShowAddPatientModal(false)}>Cancel</button>
               <button className="modal-btn confirm-btn" onClick={handleAddPatient}>Add</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Patient Modal */}
+      {showEditPatientModal && editingPatient && (
+        <div className="modal-overlay">
+          <div className="modal-box" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+            <h3 className="modal-title">Edit Patient</h3>
+            <div className="modal-contents">
+              <label htmlFor="edit-name">Name</label>
+              <input
+                id="edit-name"
+                name="name"
+                className="modal-input"
+                value={editingPatient.name}
+                onChange={onEditPatientChange}
+              />
+              <label htmlFor="edit-age">Age</label>
+              <input
+                id="edit-age"
+                name="age"
+                type="number"
+                className="modal-input"
+                value={editingPatient.age}
+                onChange={onEditPatientChange}
+              />
+              <label htmlFor="edit-gender">Gender</label>
+              <select
+                id="edit-gender"
+                name="gender"
+                className="modal-input"
+                value={editingPatient.gender}
+                onChange={onEditPatientChange}
+              >
+                <option value="">Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+              <label htmlFor="edit-dob">Date of Birth</label>
+              <input
+                id="edit-dob"
+                name="dob"
+                type="date"
+                className="modal-input"
+                value={editingPatient.dob}
+                onChange={onEditPatientChange}
+              />
+            </div>
+            <div className="modal-actions">
+              <button className="modal-btn cancel-btn" onClick={() => {
+                setShowEditPatientModal(false);
+                setEditingPatient(null);
+              }}>Cancel</button>
+              <button className="modal-btn confirm-btn" onClick={handleUpdatePatient}>Update</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Beautiful Loading Animation */}
+      {isNavigating && (
+        <div className="beautiful-loading-overlay">
+          <div className="loading-content">
+            <div className="loading-spinner">
+              <div className="spinner-ring"></div>
+              <div className="spinner-ring"></div>
+              <div className="spinner-ring"></div>
+            </div>
+            <h3>Loading Patient Details</h3>
+            <p>Please wait while we prepare the patient information...</p>
+            <div className="loading-dots">
+              <span></span>
+              <span></span>
+              <span></span>
             </div>
           </div>
         </div>
