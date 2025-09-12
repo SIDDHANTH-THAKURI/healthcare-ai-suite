@@ -119,7 +119,7 @@ export const TermsOfServicePopup: React.FC<UnderConstructionPopupProps> = ({ vis
         <div className="popup-section">
           <p><strong>Effective Date:</strong> May 23, 2025</p>
           <p>
-            MedMatch is an academic prototype built by Master’s students at the University of Wollongong.
+            DrugNexusAI is an academic prototype built by Master’s students at the University of Wollongong.
             By using this system, you agree to the following:
           </p>
           <ul className="styled-list">
@@ -146,7 +146,7 @@ export const PrivacyPolicyPopup: React.FC<UnderConstructionPopupProps> = ({ visi
         <div className="popup-section">
           <p><strong>Effective Date:</strong> May 23, 2025</p>
           <p>
-            MedMatch prioritizes privacy. Here's how your data is handled:
+            DrugNexusAI prioritizes privacy. Here's how your data is handled:
           </p>
           <ul className="styled-list">
             <li><b>🙈 No Personal Data:</b> We don’t collect or store identifying information.</li>

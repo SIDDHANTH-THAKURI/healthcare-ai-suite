@@ -133,7 +133,7 @@ Description: "${description}"`;
                                 Authorization: `Bearer ${OPENROUTER_API_KEY}`,
                                 'Content-Type': 'application/json',
                                 'HTTP-Referer': 'http://localhost:5173',
-                                'X-Title': 'MedMatch DDI Checker',
+                                'X-Title': 'DrugNexusAI DDI Checker',
                             },
                         }
                     );

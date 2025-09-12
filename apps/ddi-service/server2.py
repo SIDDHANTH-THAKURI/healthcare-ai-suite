@@ -126,4 +126,4 @@ def predict_hybrid_binary(request: ChembertaDDIRequest):  # reusing same pydanti
 
 @app.get("/")
 def index():
-    return {"message": "MedMatch API is running."}
+    return {"message": "DrugNexusAI API is running."}

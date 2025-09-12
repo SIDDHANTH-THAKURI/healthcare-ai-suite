@@ -1,7 +1,7 @@
-# 💊🧠 Personalized Drug-Drug Interaction (DDI) Checker  
-### 🧬 Smart Medical Assistant for Safer Prescriptions
+# 💊🧠 DrugNexusAI: Personalized Drug-Drug Interaction (DDI) Checker  
+### 🧬 AI-Powered Drug Interaction Intelligence Platform
 
-![Project Banner](https://img.shields.io/badge/MEDMATCH-DDI%20Checker-2A9D8F?style=for-the-badge&logo=medchart&logoColor=white)
+![Project Banner](https://img.shields.io/badge/DRUGNEXUSAI-DDI%20Checker-2A9D8F?style=for-the-badge&logo=medchart&logoColor=white)
 
 > Built with ❤️ by Team DDI – CSIT998 Capstone Project @ University of Wollongong (2025)
 
@@ -9,27 +9,27 @@
 
 ## 🚀 About the Project
 
-👨‍⚕️ **MedMatch: Personalized DDI Checker** is an intelligent Clinical Decision Support System (CDSS) that helps doctors and patients identify **potentially dangerous drug-drug interactions** 💥 by combining:
+👨‍⚕️ **DrugNexusAI** is an intelligent Clinical Decision Support System (CDSS) that leverages advanced AI to help doctors and patients identify **potentially dangerous drug-drug interactions** 💥 by combining:
 
-- 🧠 Deep learning for DDI classification
-- 💬 A natural chatbot assistant
-- 📝 Real-time analysis of patient history and prescribed medications
-- 💾 MongoDB for structured medical data
-- 🔐 Secure, role-based doctor/patient portals
+- 🧠 Advanced deep learning models for precise DDI classification
+- 💬 AI-powered natural language chatbot assistant
+- 📝 Real-time intelligent analysis of patient history and prescribed medications
+- 💾 Secure MongoDB integration for structured medical data management
+- 🔐 Role-based secure doctor/patient portals with comprehensive access control
 
 ---
 
 ## 🖥️ Features
 
-✨ Here’s what makes our system special:
+✨ Here’s what makes DrugNexusAI special:
 
-- 🧬 **AI-Powered Interaction Detection** – Get instant alerts on harmful combinations  
-- 🤖 **Interactive Chatbot Assistant** – Ask anything about your prescriptions, conditions, or risks  
-- 👨‍⚕️ **Doctor Portal** – Add/manage patients, view consultation history, and prescribe safely  
-- 🧑‍⚕️ **Patient Portal** – Understand risks in plain English, track medications  
-- 📋 **Auto Summarization** – Upload your history; we’ll clean, summarize, and analyze it  
-- ⚠️ **Alerts Panel** – Know what to avoid, and why  
-- 🌗 **Light/Dark Mode** – Because your eyes deserve it
+- 🧬 **AI-Powered Interaction Detection** – Get instant, intelligent alerts on harmful drug combinations  
+- 🤖 **Interactive AI Chatbot Assistant** – Ask anything about your prescriptions, conditions, or interaction risks  
+- 👨‍⚕️ **Doctor Portal** – Comprehensive patient management, consultation history, and safe prescribing tools  
+- 🧑‍⚕️ **Patient Portal** – Understand medication risks in plain English, track prescriptions intelligently  
+- 📋 **AI Auto Summarization** – Upload your history; we’ll clean, summarize, and analyze it  
+- ⚠️ **Smart Alerts Panel** – Know what to avoid, why it matters, and get AI-powered recommendations  
+- 🌗 **Professional Interface** – Clean, intuitive design optimized for healthcare workflows
 
 ---
 
@@ -61,12 +61,13 @@ full architecture diagram yet to upload
 
 ---
 
-## 🧠 AI Models Used
+## 🧠 AI Models & Intelligence
 
-- 🤖 **ChemBERTa** – Classifies drug interaction severity
-- 🔬 **Binary DDI** – SMILES-based interaction prediction
-- 💬 **Custom LLMs** – GPT-based chatbot for plain-language explanations
-- 🧹 **Deidentifier** – Removes sensitive data from patient records
+- 🤖 **ChemBERTa** – Advanced transformer model for precise drug interaction severity classification
+- 🔬 **Binary DDI Predictor** – SMILES-based molecular interaction prediction with deep learning
+- 💬 **Custom LLMs** – GPT-powered chatbot for intelligent, plain-language medical explanations
+- 🧹 **AI Deidentifier** – Intelligent removal of sensitive data from patient records
+- 🧬 **DrugNexusAI Core** – Proprietary AI engine combining multiple models for comprehensive DDI analysis
 
 ---
 
@@ -83,8 +84,8 @@ full architecture diagram yet to upload
 
 ```bash
 # Clone the repo
-git clone https://github.com/SIDDHANTH-THAKURI/healthcare-ai-suite.git
-cd healthcare-ai-suite
+git clone https://github.com/Team-DDI-CSIT998/Personalised_DDI_Checker.git
+cd Personalised_DDI_Checker
 
 # Install all dependencies
 npm run install:all
@@ -111,7 +112,7 @@ npm run dev:ddi      # DDI Service (Python) - http://localhost:9000
 ## 📁 Project Structure
 
 ```
-healthcare-ai-suite/
+Personalised_DDI_Checker/
 ├── apps/
 │   ├── web/                    # React frontend
 │   ├── api-gateway/            # Node.js API gateway
@@ -128,7 +129,7 @@ healthcare-ai-suite/
 
 🔒 HIPAA Guidelines
 
-💡 MedMatch Capstone 2025 Docs
+💡 DrugNexusAI Capstone 2025 Docs
 
 ## 🐞 Bugs? Glitches? Quirks?
 
@@ -145,10 +146,11 @@ Feel free to report issues or weirdness [here] (https://github.com/Team-DDI-CSIT
 
 
 📬 Contact
-Have questions or want to collaborate?
+Have questions or want to collaborate with DrugNexusAI?
 
-📧 Email us: medmatch.project2025@gmail.com
+📧 Email us: thakurisiddhanth3@gmail.com
 🌐 Project Page: Team-DDI-CSIT998 GitHub
+🏢 DrugNexusAI Technologies
 
 ⭐ Show Your Support
 If you liked this project, give it a ⭐ on GitHub!

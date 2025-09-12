@@ -164,7 +164,7 @@ const handleSignUp = async (confirmRoleAddition = false) => {
               true
             );
             toast.success("Role added successfully!");
-            navigate(userType === "patient" ? "/PatientPortal" : "/DoctorPortal");
+            navigate(userType === "patient" ? "/PatientPortal" : "/DrugNexusAIDoctorPortal");
           } catch (err2: any) {
             const msg =
               err2 instanceof ApiError
@@ -228,7 +228,7 @@ const handleSignUp = async (confirmRoleAddition = false) => {
         // Already has this role.
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
-        navigate(userType === "patient" ? "/PatientPortal" : "/MedMatchDoctorPortal");
+        navigate(userType === "patient" ? "/PatientPortal" : "/DrugNexusAIDoctorPortal");
         toast.success("Login successful!");
       }
     } catch (error: any) {
@@ -268,7 +268,7 @@ const handleSignUp = async (confirmRoleAddition = false) => {
       <div className="auth-wrapper">
         <div className="auth-container">
           <div className="form-header">
-            <h1>Med Match</h1>
+            <h1>DrugNexusAI</h1>
             <p>Your Gateway to Safe Medication Management</p>
           </div>
 

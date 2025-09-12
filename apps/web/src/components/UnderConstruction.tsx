@@ -1,5 +1,6 @@
 // UnderConstruction.tsx - With Glitch Easter Egg
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Lottie from 'lottie-react';
 import constructionAnim from '../assets/construction.json';
 import './UnderConstruction.css';
@@ -15,6 +16,7 @@ const facts = [
 ];
 
 export default function UnderConstruction() {
+  const navigate = useNavigate();
   const [keys, setKeys] = useState<string[]>([]);
   const [eggUnlocked, setEggUnlocked] = useState(false);
   const [factIndex, setFactIndex] = useState(0);
@@ -43,8 +45,18 @@ export default function UnderConstruction() {
     return () => window.removeEventListener('keydown', handleKey);
   }, [keys]);
 
+  const handleBackToPortal = () => {
+    navigate('/DrugNexusAIDoctorPortal');
+  };
+
   return (
     <div className="uc-container">
+      {/* Back Button */}
+      <button className="back-to-portal-btn" onClick={handleBackToPortal}>
+        <i className="fas fa-arrow-left"></i>
+        <span>Back to Portal</span>
+      </button>
+
       <div className="lottie-wrapper" onClick={() => {
         setClicks(c => {
           if (c + 1 >= 10) setShowMorse(true);

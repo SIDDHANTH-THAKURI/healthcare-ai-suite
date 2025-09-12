@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import './MedMatchDoctorPortal.css';
+import './DrugNexusAIDoctorPortal.css';
 import './PatientDetails.css';
 import { DocSidebar } from './PortalSidebar';
 import { BASE_URL_1, BASE_URL_2 } from '../base';
@@ -114,7 +114,7 @@ const PatientDetails: React.FC = () => {
     if (!patientId || !isValidPatientIdFormat(patientId)) {
       logger.patientValidation(patientId || 'null', false, 'Invalid patient ID format');
       setError('Invalid patient ID');
-      navigate('/MedMatchDoctorPortal');
+      navigate('/DrugNexusAIDoctorPortal');
       return;
     }
 
@@ -187,7 +187,7 @@ const PatientDetails: React.FC = () => {
           .catch(() => {
             setError('Patient not found or access denied');
             setTimeout(() => {
-              navigate('/MedMatchDoctorPortal');
+              navigate('/DrugNexusAIDoctorPortal');
             }, 3000);
           });
       });
@@ -409,7 +409,7 @@ const PatientDetails: React.FC = () => {
             </button>
             <button
               className="btn-secondary-error"
-              onClick={() => navigate('/MedMatchDoctorPortal')}
+              onClick={() => navigate('/DrugNexusAIDoctorPortal')}
             >
               <i className="fas fa-arrow-left"></i>
               Back to Portal
@@ -426,21 +426,20 @@ const PatientDetails: React.FC = () => {
 
   if (!doctorProfile || !patientBio || !hasAccess) {
     return (
-      <div className="loading-page-container">
-        <div className="loading-content-page">
-          <div className="loading-spinner-page">
-            <div className="spinner-ring-page"></div>
-            <div className="spinner-ring-page"></div>
-            <div className="spinner-ring-page"></div>
+      <div className="fullscreen-loader">
+        <div className="loader-content">
+          <div className="loading-spinner">
+            <div className="spinner-ring"></div>
+            <div className="spinner-ring"></div>
+            <div className="spinner-ring"></div>
           </div>
           <h3>Loading Patient Details</h3>
           <p>Please wait while we securely fetch the patient information...</p>
-          <div className="loading-progress">
-            <div className="progress-bar"></div>
+          <div className="loading-dots">
+            <span></span>
+            <span></span>
+            <span></span>
           </div>
-          <p className="patient-id-info">
-            Patient ID: {patientId || 'Validating...'}
-          </p>
         </div>
       </div>
     );
@@ -477,8 +476,18 @@ const PatientDetails: React.FC = () => {
       {isLoading && (
         <div className="fullscreen-loader">
           <div className="loader-content">
-            <i className="fas fa-spinner fa-spin fa-2x"></i>
-            <p>Loading... Please wait.</p>
+            <div className="loading-spinner">
+              <div className="spinner-ring"></div>
+              <div className="spinner-ring"></div>
+              <div className="spinner-ring"></div>
+            </div>
+            <h3>Processing Request</h3>
+            <p>Please wait while we save your consultation notes...</p>
+            <div className="loading-dots">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
           </div>
         </div>
       )}

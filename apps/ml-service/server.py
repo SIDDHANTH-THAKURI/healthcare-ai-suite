@@ -5,9 +5,9 @@ import uuid, os, tempfile, json, re
 from pymongo.collection import Collection
 import aiofiles
 import patientHistoryCheck as PHC
-from medmatchpipeline4 import process_single_question
-from medmatchpipeline4 import FULL_ROUTER_PROMPT  
-from medmatchpipeline4 import extract_two_drugs, lookup_interaction  
+from drugnexusaipipeline4 import process_single_question
+from drugnexusaipipeline4 import FULL_ROUTER_PROMPT  
+from drugnexusaipipeline4 import extract_two_drugs, lookup_interaction  
 from fastapi import FastAPI, UploadFile, File, HTTPException, Body, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
@@ -18,7 +18,7 @@ import requests
 from openrouter_config import OPENROUTER_API_URL, HEADERS, MODEL_NAME
 
 # ─── FASTAPI SETUP ────────────────────────────────────────────────────
-app = FastAPI(title="MedMatch Backend")
+app = FastAPI(title="DrugNexusAI Backend")
 
 app.add_middleware(
     CORSMiddleware,
@@ -62,7 +62,7 @@ class UpdateRequest(BaseModel):
 
 # ─── HELPERS ──────────────────────────────────────────────────────────
 def _temp_path(original: str) -> Path:
-    root = Path(tempfile.gettempdir()) / "medmatch_uploads"
+    root = Path(tempfile.gettempdir()) / "drugnexusai_uploads"
     root.mkdir(exist_ok=True)
     safe = Path(original).name.replace("\\", "_").replace("/", "_")
     return root / f"{uuid.uuid4().hex}_{safe}"

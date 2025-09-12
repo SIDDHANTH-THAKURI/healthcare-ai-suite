@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import './PortalSidebar.css';
-import './MedMatchDoctorPortal.css';
+import './DrugNexusAIDoctorPortal.css';
 
 type NavItem = {
   to: string;
@@ -64,7 +64,7 @@ export const patientNavItems: NavItem[] = [
 ];
 
 export const doctorNavItems: NavItem[] = [
-  { to: '/MedMatchDoctorPortal', icon: 'fa-tachometer-alt', label: 'Dashboard' },
+  { to: '/DrugNexusAIDoctorPortal', icon: 'fa-tachometer-alt', label: 'Dashboard' },
   { to: '/UnderConstruction', icon: 'fa-users', label: 'Patients' },
   { to: '/UnderConstruction', icon: 'fa-calendar-check', label: 'Appointments' },
   { to: '/UnderConstruction', icon: 'fa-vial', label: 'Lab Requests' },

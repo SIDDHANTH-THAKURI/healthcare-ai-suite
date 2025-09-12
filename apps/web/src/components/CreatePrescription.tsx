@@ -330,15 +330,26 @@ const CreatePrescription: React.FC = () => {
   
 
   return (
-    <div className="prescription-container">
+    <>
       {isLoading && (
             <div className="fullscreen-loader">
                 <div className="loader-content">
-                <i className="fas fa-spinner fa-spin fa-2x"></i>
-                <p>Loading... Please wait.</p>
+                  <div className="loading-spinner">
+                    <div className="spinner-ring"></div>
+                    <div className="spinner-ring"></div>
+                    <div className="spinner-ring"></div>
+                  </div>
+                  <h3>Saving Prescription</h3>
+                  <p>Please wait while we process and save your prescription...</p>
+                  <div className="loading-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
                 </div>
             </div>
             )}
+    <div className="prescription-container">
       <div className="prescription-wrapper">
         <div className="prescription-header">
           <div className="prescription-header-content">
@@ -496,6 +507,7 @@ const CreatePrescription: React.FC = () => {
       </div>
       </div>
     </div>
+    </>
   );
 };
 

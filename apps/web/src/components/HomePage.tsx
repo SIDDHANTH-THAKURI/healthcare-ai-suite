@@ -261,7 +261,7 @@ const HomePage: React.FC = () => {
 
       <section id="features" className="features">
         <div className="container">
-          <h3>Why Choose MedMatch?</h3>
+          <h3>Why Choose DrugNexusAI?</h3>
           <div className="feature-grid">
             {features.map((feature, index) => (
               <div className="feature-card" key={index}>

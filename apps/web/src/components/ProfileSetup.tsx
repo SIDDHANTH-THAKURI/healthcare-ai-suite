@@ -142,7 +142,7 @@ const ProfileSetup: React.FC = () => {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Profile update failed");
       toast.success("Profile updated successfully!");
-      navigate(role === "doctor" ? "/MedMatchDoctorPortal" : "/PatientPortal");
+      navigate(role === "doctor" ? "/DrugNexusAIDoctorPortal" : "/PatientPortal");
     } catch (err: any) {
       toast.error(err.message || "Profile update failed");
     } finally {

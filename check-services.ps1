@@ -1,4 +1,4 @@
-Write-Host "Checking MedMatch Services..." -ForegroundColor Green
+Write-Host "Checking DrugNexusAI Services..." -ForegroundColor Green
 Write-Host ""
 
 $services = @(

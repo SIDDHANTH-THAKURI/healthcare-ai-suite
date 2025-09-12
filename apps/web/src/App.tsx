@@ -6,7 +6,7 @@ import HomePage from './components/HomePage';
 import Authentication from './components/Authentication';
 import PatientPortal from "./components/PatientPortal";
 import HowItWorks from './components/HowItWorks';
-import MedMatchDoctorPortal from "./components/MedMatchDoctorPortal";
+import DrugNexusAIDoctorPortal from "./components/DrugNexusAIDoctorPortal";
 import ProfileSetup from "./components/ProfileSetup";
 import NotFound from "./components/NotFound";
 import Chatbot from "./components/Chatbot";
@@ -29,7 +29,7 @@ function App() {
         <Route path="/patientLabResults" element={<ProtectedRoute><Layout><PatientLabResults /></Layout></ProtectedRoute>} />
         <Route path="/patient-details/:patientId" element={<ProtectedRoute><Layout><PatientDetails /></Layout></ProtectedRoute>} />
         <Route path="/create-prescription" element={<ProtectedRoute><Layout><CreatePrescription /></Layout></ProtectedRoute>} />
-        <Route path="/MedMatchDoctorPortal" element={<ProtectedRoute><Layout><MedMatchDoctorPortal/></Layout></ProtectedRoute>} />
+        <Route path="/DrugNexusAIDoctorPortal" element={<ProtectedRoute><Layout><DrugNexusAIDoctorPortal/></Layout></ProtectedRoute>} />
         <Route path="/ProfileSetup" element={<ProtectedRoute><Layout><ProfileSetup /></Layout></ProtectedRoute>} />
         <Route path="/Chatbot" element={<ProtectedRoute><Layout><Chatbot /></Layout></ProtectedRoute>} />
         <Route path="/UnderConstruction" element={<Layout><UnderConstruction /></Layout>} />

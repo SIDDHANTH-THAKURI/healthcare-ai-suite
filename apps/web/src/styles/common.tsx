@@ -21,7 +21,7 @@ interface LayoutProps {
 const shouldShowNavLinks = (pathname: string): boolean => {
   const hiddenRoutes = [
     '/Authentication',
-    '/MedMatchDoctorPortal',
+    '/DrugNexusAIDoctorPortal',
     '/patient-details',
     '/create-prescription',
     "/chatbot",
@@ -79,7 +79,7 @@ const Header: React.FC = () => {
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       >
         <i className="fas fa-clinic-medical"></i>
-        <span>MedMatch</span>
+        <span>DrugNexusAI</span>
       </Link>
 
       <button
@@ -142,7 +142,7 @@ const Header: React.FC = () => {
                     Patient Portal
                   </Link>
                   <Link 
-                    to="/MedMatchDoctorPortal" 
+                    to="/DrugNexusAIDoctorPortal" 
                     className="dropdown-link"
                     onClick={() => setIsMobileOpen(false)}
                   >
@@ -240,7 +240,7 @@ const Footer: React.FC = () => {
         <div className="footer-left">
           <div className="footer-logo">
             <i className="fas fa-clinic-medical"></i>
-            <h2>MedMatch</h2>
+            <h2>DrugNexusAI</h2>
           </div>
           <p>
             Innovating healthcare with AI-driven solutions and a commitment to patient safety.
@@ -281,7 +281,7 @@ const Footer: React.FC = () => {
       </div>
 
       <div className="footer-bottom">
-        <p>&copy; 2024 MedMatch Technologies. All rights reserved.</p>
+        <p>&copy; 2024 DrugNexusAI Technologies. All rights reserved.</p>
       </div>
     </footer>
   );

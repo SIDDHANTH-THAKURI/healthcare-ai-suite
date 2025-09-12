@@ -1,4 +1,4 @@
-Write-Host "Starting MedMatch Services..." -ForegroundColor Green
+Write-Host "Starting DrugNexusAI Services..." -ForegroundColor Green
 Write-Host ""
 
 Write-Host "Starting API Gateway (Port 5000)..." -ForegroundColor Yellow
