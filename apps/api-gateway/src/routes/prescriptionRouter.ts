@@ -52,6 +52,9 @@ router.post(
                     dosage: string;
                     frequency?: string;
                     duration?: string;
+                    status?: 'active' | 'inactive';
+                    startDate?: string;
+                    endDate?: string;
                 }>;
             };
 

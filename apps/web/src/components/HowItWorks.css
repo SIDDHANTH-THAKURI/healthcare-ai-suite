@@ -929,7 +929,6 @@ anced Step Card Styles */
     color: var(--accent);
     filter: drop-shadow(0 0 15px rgba(231, 111, 81, 0.4));
 }
-}
 
 .ai-feature h4 {
     font-size: 1.3rem;

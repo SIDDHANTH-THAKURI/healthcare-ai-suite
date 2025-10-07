@@ -11,6 +11,9 @@ interface Medicine {
   dosage: string;
   frequency?: string;
   duration?: string;
+  status?: 'active' | 'inactive';
+  startDate?: string;
+  endDate?: string;
 }
 
 interface LocationState {
@@ -174,25 +177,8 @@ const CreatePrescription: React.FC = () => {
   const [availableMedicines, setAvailableMedicines] = useState<string[]>([]);
   const [filteredMedicines, setFilteredMedicines] = useState<string[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [hasConsultationNote, setHasConsultationNote] = useState(false);
 
-  useEffect(() => {
-    const fetchConsultationNote = async () => {
-      const token = localStorage.getItem('token');
-      try {
-        const response = await axios.get(`${BASE_URL_2}/api/patient-history?patientId=${patientId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (response.data.notes && response.data.notes.length > 0) {
-          setHasConsultationNote(true);
-        }
-      } catch {
-        setHasConsultationNote(false);
-      }
-    };
-
-    fetchConsultationNote();
-  }, [patientId]);
+  // Removed consultation note requirement - prescriptions can be saved independently
 
 
   useEffect(() => {
@@ -252,13 +238,55 @@ const CreatePrescription: React.FC = () => {
     );
   };
 
+  const calculateEndDate = (startDate: string, duration: string): string | undefined => {
+    if (!duration || duration.toLowerCase() === 'ongoing') return undefined;
+    
+    const start = new Date(startDate);
+    const durationMatch = duration.match(/(\d+)\s*(day|week|month|year)s?/i);
+    
+    if (durationMatch) {
+      const amount = parseInt(durationMatch[1]);
+      const unit = durationMatch[2].toLowerCase();
+      
+      switch (unit) {
+        case 'day':
+          start.setDate(start.getDate() + amount);
+          break;
+        case 'week':
+          start.setDate(start.getDate() + (amount * 7));
+          break;
+        case 'month':
+          start.setMonth(start.getMonth() + amount);
+          break;
+        case 'year':
+          start.setFullYear(start.getFullYear() + amount);
+          break;
+      }
+      
+      return start.toISOString().split('T')[0];
+    }
+    
+    return undefined;
+  };
+
   const handleSaveMedicine = () => {
     if (!editingMedicine || !validateMedicine(editingMedicine)) return;
+    
+    const startDate = new Date().toISOString().split('T')[0];
+    const endDate = calculateEndDate(startDate, editingMedicine.duration || '');
+    
+    const medicineWithStatus: Medicine = {
+      ...editingMedicine,
+      status: 'active',
+      startDate,
+      endDate
+    };
+    
     setAddedMedicines(prev => {
       const exists = prev.find(m => m.id === editingMedicine.id);
       return exists
-        ? prev.map(m => (m.id === editingMedicine.id ? editingMedicine : m))
-        : [...prev, editingMedicine];
+        ? prev.map(m => (m.id === editingMedicine.id ? medicineWithStatus : m))
+        : [...prev, medicineWithStatus];
     });
     setEditingMedicine(null);
     setShowEditForm(false);
@@ -266,7 +294,18 @@ const CreatePrescription: React.FC = () => {
 
   const handleAddNewMedicine = () => {
     if (!validateMedicine(newMedicine)) return;
-    const newMed: Medicine = { ...newMedicine, id: Date.now() };
+    
+    const startDate = new Date().toISOString().split('T')[0];
+    const endDate = calculateEndDate(startDate, newMedicine.duration || '');
+    
+    const newMed: Medicine = {
+      ...newMedicine,
+      id: Date.now(),
+      status: 'active',
+      startDate,
+      endDate
+    };
+    
     setAddedMedicines(prev => [...prev, newMed]);
     setNewMedicine({ id: 0, name: '', dosage: '', frequency: '', duration: '' });
     setShowNewMedicineForm(false);
@@ -297,32 +336,91 @@ const CreatePrescription: React.FC = () => {
 
   const handleSavePrescription = async () => {
     if (!patientId || addedMedicines.length === 0) return alert('Add medicines first.');
-    if (!hasConsultationNote) return alert('You must write a consultation note first.');
   
     const token = localStorage.getItem('token');
     setIsLoading(true);
   
     try {
-      // Get latest consultation note
-      const notesRes = await axios.get(`${BASE_URL_2}/api/patient-history?patientId=${patientId}`, {
+      // Fetch existing prescriptions first
+      const existingRes = await axios.get(`${BASE_URL_1}/api/prescriptions?patientId=${patientId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const latestNote = notesRes.data.notes[0];
-      if (!latestNote) return alert('No consultation note found.');
-  
-      await axios.put(`${BASE_URL_2}/api/patient-history/${latestNote.id}`, {
-        rawText: latestNote.rawText || '',
-        medicines: addedMedicines   // send manually added medicines
+      
+      const existingMedicines = existingRes.data?.prescription?.medicines || [];
+      
+      // Merge: Keep all existing medicines and add new ones from addedMedicines
+      // Create a map of existing medicines by a unique key (name + dosage)
+      const existingMap = new Map<string, Medicine>(
+        existingMedicines.map((m: Medicine) => [`${m.name}-${m.dosage}`, m])
+      );
+      
+      // Add new medicines from addedMedicines (only if they don't exist)
+      // If they exist, preserve the existing medication's status
+      addedMedicines.forEach(med => {
+        const key = `${med.name}-${med.dosage}`;
+        const existing = existingMap.get(key);
+        
+        if (existing) {
+          // Medicine already exists - preserve its status and other fields
+          // Only update if it's truly a new prescription (different dates/details)
+          existingMap.set(key, {
+            ...existing,
+            // Keep the existing status (active/inactive)
+            status: existing.status || 'active',
+            // Update other fields only if they're different
+            frequency: med.frequency || existing.frequency,
+            duration: med.duration || existing.duration,
+            startDate: existing.startDate,
+            endDate: existing.endDate
+          });
+        } else {
+          // New medicine - add it with active status
+          existingMap.set(key, med);
+        }
+      });
+      
+      // Convert map back to array
+      const allMedicines = Array.from(existingMap.values());
+      
+      // Save merged prescription
+      const response = await axios.post(`${BASE_URL_1}/api/prescriptions`, {
+        patientId,
+        medicines: allMedicines
       }, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}` 
+        }
       });
   
-      //  Fetch alerts
-      const alerts = await axios.get(`${BASE_URL_2}/api/check-alerts?patientId=${patientId}`);
-      navigate(`/patient-details/${encodePatientId(patientId)}`, { state: { alerts: alerts.data } });
+      console.log('Prescription saved:', response.data);
+      
+      // Navigate back to patient details
+      navigate(`/patient-details/${encodePatientId(patientId)}`);
   
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Could not update prescription.');
+      console.error('Save error:', err);
+      
+      // If fetch fails (404), just save the new medicines
+      if (err.response?.status === 404) {
+        try {
+          await axios.post(`${BASE_URL_1}/api/prescriptions`, {
+            patientId,
+            medicines: addedMedicines
+          }, {
+            headers: { 
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}` 
+            }
+          });
+          navigate(`/patient-details/${encodePatientId(patientId)}`);
+          return;
+        } catch (retryErr) {
+          console.error('Retry save error:', retryErr);
+        }
+      }
+      
+      alert(err.response?.data?.error || err.message || 'Could not save prescription.');
     } finally {
       setIsLoading(false);
     }
@@ -499,7 +597,7 @@ const CreatePrescription: React.FC = () => {
           <button 
             className="primary-btn" 
             onClick={handleSavePrescription}
-            disabled={addedMedicines.length === 0 || !hasConsultationNote}
+            disabled={addedMedicines.length === 0}
           >
             Save Prescription
           </button>

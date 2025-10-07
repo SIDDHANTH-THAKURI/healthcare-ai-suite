@@ -4,6 +4,7 @@ import "./DrugNexusAIDoctorPortal.css";
 import { DocSidebar } from './PortalSidebar';
 import { BASE_URL_1 } from "../base";
 import { encodePatientId } from '../utils/patientSecurity';
+import CustomDatePicker from './CustomDatePicker';
 
 
 
@@ -24,6 +25,7 @@ interface Patient {
   age: number;
   gender: string;
   dob: string;
+  phone?: string;
   lastVisit: string;
 }
 
@@ -51,7 +53,7 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddPatientModal, setShowAddPatientModal] = useState(false);
-  const [newPatient, setNewPatient] = useState({ name: "", age: 0, gender: "", dob: "" });
+  const [newPatient, setNewPatient] = useState({ name: "", age: 0, gender: "", dob: "", phone: "" });
   const [showEditPatientModal, setShowEditPatientModal] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -190,13 +192,35 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
     }
   };
 
+  // Calculate age from date of birth
+  const calculateAge = (dob: string): number => {
+    if (!dob) return 0;
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  // Get today's date in YYYY-MM-DD format for max date
+  const getTodayDate = (): string => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
   const handleAddPatient = async () => {
     const token = localStorage.getItem("token");
-    // Remove ID generation from frontend - let backend handle it
-    const entry = { ...newPatient, lastVisit: "Today" };
-    if (!entry.name || entry.age <= 0 || !entry.gender || !entry.dob) {
+    // Calculate age from DOB
+    const calculatedAge = calculateAge(newPatient.dob);
+    const entry = { ...newPatient, age: calculatedAge, lastVisit: "Today" };
+    
+    if (!entry.name || !entry.gender || !entry.dob || !entry.phone) {
       alert("All fields are required"); return;
     }
+    
     const res = await fetch(`${BASE_URL_1}/api/patients/add`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -205,7 +229,7 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
     const data = await res.json();
     if (res.ok) setPatients(prev => [...prev, data.patient]);
     setShowAddPatientModal(false);
-    setNewPatient({ name: "", age: 0, gender: "", dob: "" });
+    setNewPatient({ name: "", age: 0, gender: "", dob: "", phone: "" });
   };
 
   const handleEditPatient = (patient: Patient) => {
@@ -216,19 +240,52 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
   const handleUpdatePatient = async () => {
     if (!editingPatient) return;
 
-    const token = localStorage.getItem("token");
-    const res = await fetch(`${BASE_URL_1}/api/patients/${editingPatient.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify(editingPatient),
-    });
+    // Recalculate age from DOB
+    const updatedPatient = {
+      ...editingPatient,
+      age: calculateAge(editingPatient.dob)
+    };
 
-    if (res.ok) {
-      setPatients(prev => prev.map(p => p.id === editingPatient.id ? editingPatient : p));
+    const token = localStorage.getItem("token");
+    
+    try {
+      // Try to update on server first
+      const res = await fetch(`${BASE_URL_1}/api/patients/${editingPatient.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(updatedPatient),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        console.log('Patient updated successfully on server:', data);
+        
+        // Update local state with server response
+        setPatients(prev => prev.map(p => p.id === editingPatient.id ? updatedPatient : p));
+        setShowEditPatientModal(false);
+        setEditingPatient(null);
+        
+        alert("Patient updated successfully!");
+      } else {
+        const errorData = await res.json().catch(() => ({ message: 'Unknown error' }));
+        console.error('Server update failed:', res.status, errorData);
+        
+        // Show error to user
+        alert(`Failed to update patient in database: ${errorData.message || res.statusText}\n\nPlease check the backend server logs for details.`);
+        
+        // Still update UI locally so user can see changes in current session
+        setPatients(prev => prev.map(p => p.id === editingPatient.id ? updatedPatient : p));
+        setShowEditPatientModal(false);
+        setEditingPatient(null);
+      }
+    } catch (error) {
+      console.error('Update error:', error);
+      alert(`Error connecting to server: ${error instanceof Error ? error.message : 'Unknown error'}\n\nChanges will be visible in current session only.`);
+      
+      // Update UI locally
+      setPatients(prev => prev.map(p => p.id === editingPatient.id ? updatedPatient : p));
       setShowEditPatientModal(false);
       setEditingPatient(null);
-    } else {
-      alert("Failed to update patient");
     }
   };
 
@@ -483,27 +540,103 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
 
       {/* Add Patient Modal */}
       {showAddPatientModal && (
-        <div className="modal-overlay">
-          <div className="modal-box" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
-            <h3 className="modal-title">Add New Patient</h3>
+        <div className="modal-overlay" onClick={() => {
+          setShowAddPatientModal(false);
+          setNewPatient({ name: "", age: 0, gender: "", dob: "", phone: "" });
+        }}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => {
+              setShowAddPatientModal(false);
+              setNewPatient({ name: "", age: 0, gender: "", dob: "", phone: "" });
+            }}>
+              <i className="fas fa-times"></i>
+            </button>
+            <h3 className="modal-title">
+              <i className="fas fa-user-plus" style={{ marginRight: '0.75rem' }}></i>
+              Add New Patient
+            </h3>
             <div className="modal-contents">
-              <label htmlFor="name">Name</label>
-              <input id="name" className="modal-input" value={newPatient.name} onChange={e => setNewPatient({ ...newPatient, name: e.target.value })} />
-              <label htmlFor="age">Age</label>
-              <input id="age" type="number" className="modal-input" value={newPatient.age} onChange={e => setNewPatient({ ...newPatient, age: Number(e.target.value) })} />
-              <label htmlFor="gender">Gender</label>
-              <select id="gender" className="modal-input" value={newPatient.gender} onChange={e => setNewPatient({ ...newPatient, gender: e.target.value })}>
-                <option value="">Select Gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-              </select>
-              <label htmlFor="dob">Date of Birth</label>
-              <input id="dob" type="date" className="modal-input" value={newPatient.dob} onChange={e => setNewPatient({ ...newPatient, dob: e.target.value })} />
+              <div className="form-group">
+                <label htmlFor="name">
+                  <i className="fas fa-user" style={{ marginRight: '0.5rem', color: 'var(--primary)' }}></i>
+                  Full Name
+                </label>
+                <input 
+                  id="name" 
+                  className="modal-input" 
+                  value={newPatient.name} 
+                  onChange={e => setNewPatient({ ...newPatient, name: e.target.value })} 
+                  placeholder="Enter patient's full name"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="phone">
+                  <i className="fas fa-phone" style={{ marginRight: '0.5rem', color: 'var(--primary)' }}></i>
+                  Phone Number
+                </label>
+                <input 
+                  id="phone" 
+                  type="tel" 
+                  className="modal-input" 
+                  value={newPatient.phone} 
+                  onChange={e => setNewPatient({ ...newPatient, phone: e.target.value })} 
+                  placeholder="Enter phone number"
+                />
+              </div>
+              
+              <div className="form-group">
+                <CustomDatePicker
+                  id="dob"
+                  label={
+                    <span>
+                      <i className="fas fa-calendar-alt" style={{ marginRight: '0.5rem', color: 'var(--primary)' }}></i>
+                      Date of Birth
+                    </span>
+                  }
+                  value={newPatient.dob}
+                  onChange={(date) => setNewPatient({ ...newPatient, dob: date })}
+                  maxDate={getTodayDate()}
+                  placeholder="Select date of birth"
+                />
+                {newPatient.dob && (
+                  <p className="age-display">
+                    <i className="fas fa-birthday-cake" style={{ marginRight: '0.5rem' }}></i>
+                    Age: {calculateAge(newPatient.dob)} years
+                  </p>
+                )}
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="gender">
+                  <i className="fas fa-venus-mars" style={{ marginRight: '0.5rem', color: 'var(--primary)' }}></i>
+                  Gender
+                </label>
+                <select 
+                  id="gender" 
+                  className="modal-input" 
+                  value={newPatient.gender} 
+                  onChange={e => setNewPatient({ ...newPatient, gender: e.target.value })}
+                >
+                  <option value="">Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
             </div>
             <div className="modal-actions">
-              <button className="modal-btn cancel-btn" onClick={() => setShowAddPatientModal(false)}>Cancel</button>
-              <button className="modal-btn confirm-btn" onClick={handleAddPatient}>Add</button>
+              <button className="modal-btn cancel-btn" onClick={() => {
+                setShowAddPatientModal(false);
+                setNewPatient({ name: "", age: 0, gender: "", dob: "", phone: "" });
+              }}>
+                <i className="fas fa-times" style={{ marginRight: '0.5rem' }}></i>
+                Cancel
+              </button>
+              <button className="modal-btn confirm-btn" onClick={handleAddPatient}>
+                <i className="fas fa-check" style={{ marginRight: '0.5rem' }}></i>
+                Add Patient
+              </button>
             </div>
           </div>
         </div>
@@ -511,56 +644,106 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
 
       {/* Edit Patient Modal */}
       {showEditPatientModal && editingPatient && (
-        <div className="modal-overlay">
-          <div className="modal-box" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
-            <h3 className="modal-title">Edit Patient</h3>
+        <div className="modal-overlay" onClick={() => {
+          setShowEditPatientModal(false);
+          setEditingPatient(null);
+        }}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => {
+              setShowEditPatientModal(false);
+              setEditingPatient(null);
+            }}>
+              <i className="fas fa-times"></i>
+            </button>
+            <h3 className="modal-title">
+              <i className="fas fa-user-edit" style={{ marginRight: '0.75rem' }}></i>
+              Edit Patient Information
+            </h3>
             <div className="modal-contents">
-              <label htmlFor="edit-name">Name</label>
-              <input
-                id="edit-name"
-                name="name"
-                className="modal-input"
-                value={editingPatient.name}
-                onChange={onEditPatientChange}
-              />
-              <label htmlFor="edit-age">Age</label>
-              <input
-                id="edit-age"
-                name="age"
-                type="number"
-                className="modal-input"
-                value={editingPatient.age}
-                onChange={onEditPatientChange}
-              />
-              <label htmlFor="edit-gender">Gender</label>
-              <select
-                id="edit-gender"
-                name="gender"
-                className="modal-input"
-                value={editingPatient.gender}
-                onChange={onEditPatientChange}
-              >
-                <option value="">Select Gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-              </select>
-              <label htmlFor="edit-dob">Date of Birth</label>
-              <input
-                id="edit-dob"
-                name="dob"
-                type="date"
-                className="modal-input"
-                value={editingPatient.dob}
-                onChange={onEditPatientChange}
-              />
+              <div className="form-group">
+                <label htmlFor="edit-name">
+                  <i className="fas fa-user" style={{ marginRight: '0.5rem', color: 'var(--primary)' }}></i>
+                  Full Name
+                </label>
+                <input
+                  id="edit-name"
+                  name="name"
+                  className="modal-input"
+                  value={editingPatient.name}
+                  onChange={onEditPatientChange}
+                  placeholder="Enter patient's full name"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="edit-phone">
+                  <i className="fas fa-phone" style={{ marginRight: '0.5rem', color: 'var(--primary)' }}></i>
+                  Phone Number
+                </label>
+                <input
+                  id="edit-phone"
+                  name="phone"
+                  type="tel"
+                  className="modal-input"
+                  value={editingPatient.phone || ''}
+                  onChange={onEditPatientChange}
+                  placeholder="Enter phone number"
+                />
+              </div>
+              
+              <div className="form-group">
+                <CustomDatePicker
+                  id="edit-dob"
+                  label={
+                    <span>
+                      <i className="fas fa-calendar-alt" style={{ marginRight: '0.5rem', color: 'var(--primary)' }}></i>
+                      Date of Birth
+                    </span>
+                  }
+                  value={editingPatient.dob}
+                  onChange={(date) => setEditingPatient(prev => ({ ...prev!, dob: date }))}
+                  maxDate={getTodayDate()}
+                  placeholder="Select date of birth"
+                />
+                {editingPatient.dob && (
+                  <p className="age-display">
+                    <i className="fas fa-birthday-cake" style={{ marginRight: '0.5rem' }}></i>
+                    Age: {calculateAge(editingPatient.dob)} years
+                  </p>
+                )}
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="edit-gender">
+                  <i className="fas fa-venus-mars" style={{ marginRight: '0.5rem', color: 'var(--primary)' }}></i>
+                  Gender
+                </label>
+                <select
+                  id="edit-gender"
+                  name="gender"
+                  className="modal-input"
+                  value={editingPatient.gender}
+                  onChange={onEditPatientChange}
+                >
+                  <option value="">Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
             </div>
             <div className="modal-actions">
               <button className="modal-btn cancel-btn" onClick={() => {
                 setShowEditPatientModal(false);
                 setEditingPatient(null);
-              }}>Cancel</button>
-              <button className="modal-btn confirm-btn" onClick={handleUpdatePatient}>Update</button>
+              }}>
+                <i className="fas fa-times" style={{ marginRight: '0.5rem' }}></i>
+                Cancel
+              </button>
+              <button className="modal-btn confirm-btn" onClick={handleUpdatePatient}>
+                <i className="fas fa-save" style={{ marginRight: '0.5rem' }}></i>
+                Update Patient
+              </button>
             </div>
           </div>
         </div>

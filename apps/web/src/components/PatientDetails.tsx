@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import './DrugNexusAIDoctorPortal.css';
 import './PatientDetails.css';
 import { DocSidebar } from './PortalSidebar';
 import { BASE_URL_1, BASE_URL_2 } from '../base';
 import { decodePatientId, isValidPatientIdFormat } from '../utils/patientSecurity';
 import { logger } from '../utils/logger';
+import DDIAlertSystem from './DDIAlertSystem';
 
 interface DoctorProfile {
   fullName: string;
@@ -24,6 +25,7 @@ interface Patient {
   age: number;
   gender: string;
   dob: string;
+  phone?: string;
   lastVisit: string;
   profileImage?: string;
   conditions?: string[];
@@ -35,7 +37,9 @@ interface Medicine {
   dosage: string;
   frequency?: string;
   duration?: string;
-  status?: string;
+  status?: 'active' | 'inactive';
+  startDate?: string;
+  endDate?: string;
 }
 
 interface HistoryNote {
@@ -54,9 +58,7 @@ interface PrescriptionResp {
   prescription: { medicines: Medicine[] } | null;
 }
 
-interface LocationState {
-  alerts?: { ddi: string[], pdi: string[] };
-}
+
 
 const defaultPatientAvatars: Record<string, string> = {
   male: 'https://img.icons8.com/color/96/user-male-circle.png',
@@ -69,8 +71,8 @@ const NOTES_PER_PAGE = 4;
 const PatientDetails: React.FC = () => {
   const { patientId: encodedPatientId } = useParams<{ patientId: string }>();
   const navigate = useNavigate();
-  const location = useLocation() as { state?: LocationState };
-  const [initialAlertsShown, setInitialAlertsShown] = useState(false);
+
+
 
   // Decode the patient ID and validate access
   const patientId = encodedPatientId ? decodePatientId(encodedPatientId) : null;
@@ -102,94 +104,239 @@ const PatientDetails: React.FC = () => {
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [editText, setEditText] = useState('');
   const [error, setError] = useState<string | null>(null);
-
-  const [alertData, setAlertData] = useState<{ ddi: string[], pdi: string[] }>({ ddi: [], pdi: [] });
-  const [showAlertModal, setShowAlertModal] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [serviceStatus, setServiceStatus] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
+  const [medicationTab, setMedicationTab] = useState<'active' | 'past'>('active');
+  const [showAlertsModal, setShowAlertsModal] = useState(false);
+  const [activeAlertsCount, setActiveAlertsCount] = useState(0);
+
+  // Format date to DD-MM-YYYY
+  const formatDateToDDMMYYYY = (dateString: string): string => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
+  // Calculate age from DOB
+  const calculateAgeFromDOB = (dob: string): number => {
+    if (!dob) return 0;
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  // Load active alerts count from localStorage on mount
+  useEffect(() => {
+    if (patientId) {
+      const savedAlerts = localStorage.getItem(`ddi_alerts_${patientId}`);
+      if (savedAlerts) {
+        try {
+          const parsed = JSON.parse(savedAlerts);
+          const activeCount = parsed.active?.length || 0;
+          setActiveAlertsCount(activeCount);
+        } catch (error) {
+          console.error('Failed to parse saved alerts:', error);
+        }
+      }
+    }
+  }, [patientId]);
+
+  // Check if medication is still active based on end date AND manual status
+  const isMedicationActive = (medication: Medicine): boolean => {
+    // Respect manually set status - if it's inactive, keep it inactive
+    if (medication.status === 'inactive') return false;
+    
+    // If no end date, it's ongoing and active
+    if (!medication.endDate) return true;
+    
+    // Check if medication has expired based on end date
+    const today = new Date();
+    const endDate = new Date(medication.endDate);
+    return today <= endDate;
+  };
+
+  // Update medication status ONLY for auto-expiration (not for manually set inactive)
+  const updateMedicationStatus = (medications: Medicine[]): Medicine[] => {
+    return medications.map(med => {
+      // Preserve the status from database - don't recalculate
+      // The status in the database is the source of truth
+      return {
+        ...med,
+        status: med.status || 'active' // Default to active if no status set
+      };
+    });
+  };
+
+  // Separate active and inactive medications - recalculate when currentMedications changes
+  const activeMedications = React.useMemo(() => {
+    return currentMedications.filter(med => isMedicationActive(med));
+  }, [currentMedications]);
+
+  const inactiveMedications = React.useMemo(() => {
+    return currentMedications.filter(med => !isMedicationActive(med));
+  }, [currentMedications]);
+
+  // Toggle medication status manually
+  const toggleMedicationStatus = async (medicationIndex: number) => {
+    if (!patientId) return;
+    
+    const updatedMedications = currentMedications.map((med, idx) => {
+      if (idx === medicationIndex) {
+        return {
+          ...med,
+          status: med.status === 'active' ? 'inactive' as const : 'active' as const
+        };
+      }
+      return med;
+    });
+    
+    setCurrentMedications(updatedMedications);
+    
+    // Save all medications to backend
+    const token = localStorage.getItem('token');
+    try {
+      const response = await fetch(`${BASE_URL_1}/api/prescriptions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          patientId,
+          medicines: updatedMedications
+        })
+      });
+      
+      if (response.ok) {
+        console.log('Medication status updated successfully');
+      } else {
+        console.error('Failed to save medication status');
+      }
+    } catch (error) {
+      console.error('Failed to update medication status:', error);
+    }
+  };
+
+  // Check ML service health
+  const checkServiceHealth = async () => {
+    try {
+      setServiceStatus('Checking...');
+      const res = await fetch(`${BASE_URL_2}/health`, { 
+        method: 'GET',
+        signal: AbortSignal.timeout(5000) // 5 second timeout
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setServiceStatus(`✅ ML Service is running (${data.service || 'ml-service'})`);
+        console.log('Service health:', data);
+      } else {
+        setServiceStatus(`⚠️ ML Service responded with status ${res.status}`);
+      }
+    } catch (err: any) {
+      console.error('Service health check failed:', err);
+      if (err.name === 'TimeoutError' || err.name === 'AbortError') {
+        setServiceStatus(`❌ ML Service timeout - not responding at ${BASE_URL_2}`);
+      } else {
+        setServiceStatus(`❌ Cannot connect to ML Service at ${BASE_URL_2}`);
+      }
+    }
+  };
 
   useEffect(() => {
+    console.log('PatientDetails useEffect triggered for patientId:', patientId);
     const token = localStorage.getItem('token');
+    
+    if (!token) {
+      console.error('No authentication token found');
+      setError('Authentication required. Please log in again.');
+      navigate('/login');
+      return;
+    }
+    
     if (!patientId || !isValidPatientIdFormat(patientId)) {
+      console.error('Invalid patient ID:', patientId);
       logger.patientValidation(patientId || 'null', false, 'Invalid patient ID format');
       setError('Invalid patient ID');
       navigate('/DrugNexusAIDoctorPortal');
       return;
     }
 
+    console.log('Patient ID validation passed:', patientId);
     logger.patientValidation(patientId, true, 'Patient ID format valid');
 
-    if (!initialAlertsShown && location.state?.alerts) {
-      setAlertData(location.state.alerts);
-      setShowAlertModal(true);
-      setInitialAlertsShown(true);
-      window.history.replaceState({}, document.title);
-    }
-
-    if (!location.state?.alerts) {
-      fetch(`${BASE_URL_2}/api/check-alerts?patientId=${patientId}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.ddi.length || data.pdi.length) {
-            setAlertData(data);
-          }
-        })
-        .catch(err => console.error("Alert fetch failed:", err));
-    }
+    // Alert functionality disabled
 
     // Fetch doctor profile
+    console.log('Fetching doctor profile...');
     fetch(`${BASE_URL_1}/api/profile/me`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => res.json())
-      .then(data => {
-        if (data.doctorProfile) {
-          setDoctorProfile(data.doctorProfile);
-          setEditForm(data.doctorProfile);
-        }
-      })
-      .catch(() => setError('Failed to fetch doctor profile'));
-
-    // Validate patient access first
-    fetch(`${BASE_URL_1}/api/patients/${patientId}/validate`, { headers: { Authorization: `Bearer ${token}` } })
       .then(res => {
         if (!res.ok) {
-          throw new Error(`Access validation failed: ${res.status} ${res.statusText}`);
+          throw new Error(`Doctor profile fetch failed: ${res.status} ${res.statusText}`);
         }
         return res.json();
       })
       .then(data => {
-        if (data.hasAccess && data.patient) {
-          setPatientBio(data.patient);
-          setHasAccess(true);
-          logger.patientDataFetch(patientId, 'validate', true, { patientName: data.patient.name });
+        console.log('Doctor profile response:', data);
+        if (data.doctorProfile) {
+          setDoctorProfile(data.doctorProfile);
+          setEditForm(data.doctorProfile);
         } else {
-          throw new Error('Access denied - no patient data returned');
+          console.warn('No doctor profile found in response');
         }
       })
       .catch((error) => {
-        logger.patientDataFetch(patientId, 'validate', false, { error: error.message });
+        console.error('Doctor profile fetch error:', error);
+        setError(`Failed to fetch doctor profile: ${error.message}`);
+      });
 
-        // Try to fetch patient data directly from the patients list as fallback
-        fetch(`${BASE_URL_1}/api/patients`, { headers: { Authorization: `Bearer ${token}` } })
-          .then(res => res.json())
-          .then(data => {
-            if (data.patients) {
-              const patient = data.patients.find((p: Patient) => p.id === patientId);
-              if (patient) {
-                setPatientBio(patient);
-                setHasAccess(true);
-                setError(null);
-                return;
-              }
-            }
-            throw new Error('Patient not found in fallback');
-          })
-          .catch(() => {
-            setError('Patient not found or access denied');
-            setTimeout(() => {
-              navigate('/DrugNexusAIDoctorPortal');
-            }, 3000);
-          });
+    // Try to fetch patient data directly from the patients list (simplified approach)
+    console.log('Fetching patient data for ID:', patientId);
+    fetch(`${BASE_URL_1}/api/patients`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => {
+        console.log('Patient fetch response status:', res.status);
+        if (!res.ok) {
+          throw new Error(`Failed to fetch patients: ${res.status} ${res.statusText}`);
+        }
+        return res.json();
+      })
+      .then(data => {
+        console.log('Patient fetch response data:', data);
+        if (data.patients) {
+          console.log('Looking for patient with ID:', patientId, 'in', data.patients.length, 'patients');
+          const patient = data.patients.find((p: Patient) => p.id === patientId);
+          if (patient) {
+            console.log('Patient found:', patient);
+            setPatientBio(patient);
+            setHasAccess(true);
+            setError(null);
+            logger.patientDataFetch(patientId, 'direct_fetch', true, { patientName: patient.name });
+            return;
+          } else {
+            console.error('Patient not found in list. Available patient IDs:', data.patients.map((p: Patient) => p.id));
+          }
+        } else {
+          console.error('No patients array in response');
+        }
+        throw new Error('Patient not found in patient list');
+      })
+      .catch((error) => {
+        console.error('Patient fetch error:', error);
+        logger.patientDataFetch(patientId, 'direct_fetch', false, { error: error.message });
+        setError(`Unable to load patient data: ${error.message}`);
+        setTimeout(() => {
+          navigate('/DrugNexusAIDoctorPortal');
+        }, 5000);
       });
 
     // Fetch prescriptions
@@ -206,8 +353,12 @@ const PatientDetails: React.FC = () => {
         }
       })
       .then((data: PrescriptionResp) => {
+        console.log('Prescriptions data:', data);
         if (data.prescription?.medicines) {
-          setCurrentMedications(data.prescription.medicines);
+          console.log('Setting medications:', data.prescription.medicines);
+          // Update status based on current date
+          const updatedMeds = updateMedicationStatus(data.prescription.medicines);
+          setCurrentMedications(updatedMeds);
           logger.patientDataFetch(patientId, 'prescriptions', true, {
             medicineCount: data.prescription.medicines.length
           });
@@ -215,7 +366,8 @@ const PatientDetails: React.FC = () => {
       })
       .catch((error) => {
         logger.patientDataFetch(patientId, 'prescriptions', false, { error: error.message });
-        setError('Failed to fetch prescriptions');
+        console.warn('Failed to fetch prescriptions:', error.message);
+        // Don't set error for prescriptions as it's not critical for page load
       });
 
     // Fetch history notes
@@ -227,21 +379,27 @@ const PatientDetails: React.FC = () => {
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           );
           setHistoryNotes(sortedNotes);
-          // Apply latest structured data
+          // Apply latest structured data (but don't overwrite medications from prescriptions)
           const latest = sortedNotes[0];
           if (latest?.structured) {
-            setCurrentMedications(latest.structured.medications || []);
+            // Only update medications if we don't have any from prescriptions
+            if (latest.structured.medications && latest.structured.medications.length > 0) {
+              const updatedMeds = updateMedicationStatus(latest.structured.medications);
+              setCurrentMedications(prev => prev.length > 0 ? prev : updatedMeds);
+            }
             setCurrentConditions(latest.structured.conditions?.current || []);
             setPastConditions(latest.structured.conditions?.past || []);
             setAllergies(latest.structured.allergies || []);
           }
         }
       })
-      .catch(() => setError('Failed to fetch patient history'));
+      .catch((error) => {
+        console.warn('Failed to fetch patient history:', error);
+        // Don't set error for history as it's not critical for page load
+      });
 
     return () => {
-      setAlertData({ ddi: [], pdi: [] });
-      setInitialAlertsShown(false);
+      // Cleanup function
     };
   }, [patientId]);
 
@@ -249,18 +407,38 @@ const PatientDetails: React.FC = () => {
 
   const handleSaveNote = async () => {
     if (!noteInput.trim()) return;
-    setError(null);
+    setSaveError(null); // Clear previous save errors
     setIsLoading(true); // 🔄 Show loading
     const token = localStorage.getItem('token');
+    
+    // Set a timeout for the request
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+    
     try {
+      console.log('Saving consultation note for patient:', patientId);
+      console.log('API endpoint:', `${BASE_URL_2}/api/patient-history`);
+      console.log('Request payload:', { patientId, notes: noteInput.substring(0, 50) + '...' });
+      
       const res = await fetch(`${BASE_URL_2}/api/patient-history`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ patientId, notes: noteInput })
+        body: JSON.stringify({ patientId, notes: noteInput }),
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
+      console.log('Response status:', res.status, res.statusText);
+      
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({ detail: 'Unknown error' }));
+        throw new Error(errorData.detail || `HTTP ${res.status}: ${res.statusText}`);
+      }
+
       const result = await res.json();
-      if (res.ok && result.note) {
+      console.log('Save response:', result);
+      
+      if (result.success && result.note) {
         // Update notes
         setHistoryNotes(prev => [result.note, ...prev]);
 
@@ -276,11 +454,30 @@ const PatientDetails: React.FC = () => {
         // Cleanup
         setNoteInput('');
         setCurrentPage(1);
+        setSaveError(null); // Clear any previous errors
+        console.log('Consultation note saved successfully');
       } else {
-        setError('Failed to save note');
+        throw new Error('Invalid response format from server');
       }
-    } catch (err) {
-      setError('Error saving note');
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      console.error('Error saving consultation note:', err);
+      console.error('Error details:', {
+        name: err.name,
+        message: err.message,
+        stack: err.stack
+      });
+      
+      // Use setSaveError instead of setError to avoid triggering error page
+      if (err.name === 'AbortError') {
+        setSaveError('Request timed out after 60 seconds. The ML service may be slow or unresponsive.');
+      } else if (err.message === 'Failed to fetch') {
+        setSaveError(`Cannot connect to ML service at ${BASE_URL_2}. Please ensure the ML service is running on port 8000.`);
+      } else if (err.message) {
+        setSaveError(`Failed to save note: ${err.message}`);
+      } else {
+        setSaveError('Error saving note. Please try again.');
+      }
     } finally {
       setIsLoading(false); // ✅ Hide loading
     }
@@ -326,17 +523,18 @@ const PatientDetails: React.FC = () => {
           setAllergies([]);
         }
         setShowNoteModal(false);
+        setSaveError(null);
       } else {
-        setError('Failed to delete note');
+        setSaveError('Failed to delete note');
       }
     } catch (err) {
-      setError('Error deleting note');
+      setSaveError('Error deleting note');
     }
   };
 
   const handleSaveEdit = async () => {
     if (!selectedNote) return;
-    setError(null);
+    setSaveError(null);
     const token = localStorage.getItem('token');
     try {
       const res = await fetch(`${BASE_URL_2}/api/patient-history/${selectedNote.id}`, {
@@ -357,11 +555,12 @@ const PatientDetails: React.FC = () => {
           setAllergies(s.allergies || []);
         }
         setShowNoteModal(false);
+        setSaveError(null);
       } else {
-        setError('Failed to update note');
+        setSaveError('Failed to update note');
       }
     } catch (err) {
-      setError('Error updating note');
+      setSaveError('Error updating note');
     }
   };
 
@@ -525,7 +724,7 @@ const PatientDetails: React.FC = () => {
                 <div className="meta-item">
                   <i className="fas fa-birthday-cake"></i>
                   <span className="meta-label">Age</span>
-                  <span className="meta-value">{patientBio.age} years</span>
+                  <span className="meta-value">{calculateAgeFromDOB(patientBio.dob)} years</span>
                 </div>
                 <div className="meta-item">
                   <i className="fas fa-venus-mars"></i>
@@ -535,21 +734,31 @@ const PatientDetails: React.FC = () => {
                 <div className="meta-item">
                   <i className="fas fa-calendar-alt"></i>
                   <span className="meta-label">Date of Birth</span>
-                  <span className="meta-value">{patientBio.dob}</span>
+                  <span className="meta-value">{formatDateToDDMMYYYY(patientBio.dob)}</span>
                 </div>
+                {patientBio.phone && (
+                  <div className="meta-item">
+                    <i className="fas fa-phone"></i>
+                    <span className="meta-label">Phone Number</span>
+                    <span className="meta-value">{patientBio.phone}</span>
+                  </div>
+                )}
               </div>
             </div>
             <div className="patient-actions">
-              <button className="alert-btn-modern" onClick={() => setShowAlertModal(true)}>
-                <i className="fas fa-exclamation-triangle"></i>
-                <span>Alerts</span>
-                {alertData.ddi.length + alertData.pdi.length > 0 && (
-                  <span className="alert-badge">{alertData.ddi.length + alertData.pdi.length}</span>
-                )}
-              </button>
               <button className="prescription-btn" onClick={() => navigate('/create-prescription', { state: { patientId } })}>
                 <i className="fas fa-prescription-bottle-alt"></i>
                 <span>Manage Prescription</span>
+              </button>
+              <button 
+                className="prescription-btn alerts-btn" 
+                onClick={() => setShowAlertsModal(true)}
+              >
+                <i className="fas fa-shield-alt"></i>
+                <span>Interaction Alerts</span>
+                {activeAlertsCount > 0 && (
+                  <span className="alert-badge-btn">{activeAlertsCount}</span>
+                )}
               </button>
             </div>
           </div>
@@ -584,6 +793,53 @@ const PatientDetails: React.FC = () => {
                   Save Note
                 </button>
               </div>
+
+              {saveError && (
+                <div className="save-error-message" style={{ 
+                  padding: '12px', 
+                  margin: '10px 0', 
+                  backgroundColor: '#fee', 
+                  border: '1px solid #fcc', 
+                  borderRadius: '8px', 
+                  color: '#c33'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                    <i className="fas fa-exclamation-circle"></i>
+                    <span style={{ flex: 1 }}>{saveError}</span>
+                    <button 
+                      onClick={() => setSaveError(null)} 
+                      style={{ 
+                        background: 'none', 
+                        border: 'none', 
+                        cursor: 'pointer',
+                        fontSize: '18px',
+                        color: '#c33'
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  {saveError.includes('Cannot connect') && (
+                    <div style={{ marginTop: '8px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <button 
+                        onClick={checkServiceHealth}
+                        style={{
+                          padding: '6px 12px',
+                          backgroundColor: '#fff',
+                          border: '1px solid #c33',
+                          borderRadius: '4px',
+                          color: '#c33',
+                          cursor: 'pointer',
+                          fontSize: '12px'
+                        }}
+                      >
+                        Check Service Status
+                      </button>
+                      {serviceStatus && <span style={{ fontSize: '12px' }}>{serviceStatus}</span>}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="notes-timeline">
                 {currentNotes.length ? (
@@ -621,52 +877,148 @@ const PatientDetails: React.FC = () => {
               )}
             </section>
 
-            {/* Current Medications */}
+            {/* Medications Section with Active/Past Tabs */}
             <section className="modern-card medications-card">
               <div className="card-header">
                 <div className="header-icon">
                   <i className="fas fa-pills"></i>
                 </div>
-                <h3>Current Medications</h3>
-                <div className="header-actions">
-                  <span className="medication-count">{currentMedications.length} active</span>
-                </div>
+                <h3>Medications</h3>
               </div>
 
-              {currentMedications.length ? (
-                <div className="medications-grid">
-                  {currentMedications.map((med, idx) => (
-                    <div key={idx} className="medication-item">
-                      <div className="medication-header">
-                        <h4 className="medication-name">{med.name || 'Unknown Medication'}</h4>
-                        <span className={`medication-status ${(med.status || 'active').toLowerCase()}`}>
-                          {med.status || 'Active'}
-                        </span>
-                      </div>
-                      <div className="medication-details">
-                        <div className="detail-row">
-                          <i className="fas fa-weight"></i>
-                          <span>Dosage: {med.dosage || 'Not specified'}</span>
+              <div className="conditions-tabs">
+                <div className="tab-header">
+                  <button
+                    className={`tab-btn ${medicationTab === 'active' ? 'active' : ''}`}
+                    onClick={() => setMedicationTab('active')}
+                  >
+                    Active ({activeMedications.length})
+                  </button>
+                  <button
+                    className={`tab-btn ${medicationTab === 'past' ? 'active' : ''}`}
+                    onClick={() => setMedicationTab('past')}
+                  >
+                    Past ({inactiveMedications.length})
+                  </button>
+                </div>
+
+                {/* Active Medications Tab */}
+                <div className={`tab-content ${medicationTab === 'active' ? 'active' : ''}`}>
+                  {activeMedications.length ? (
+                    <div className="medications-grid">
+                      {activeMedications.map((med, idx) => {
+                        const originalIndex = currentMedications.findIndex(m => m === med);
+                        return (
+                        <div key={idx} className="medication-item active-med">
+                          <div className="medication-header">
+                            <h4 className="medication-name">{med.name || 'Unknown Medication'}</h4>
+                            <button
+                              className="status-toggle-btn active"
+                              onClick={() => toggleMedicationStatus(originalIndex)}
+                              title="Mark as inactive"
+                            >
+                              <i className="fas fa-check-circle"></i>
+                            </button>
+                          </div>
+                          <div className="medication-details">
+                            <div className="detail-row">
+                              <i className="fas fa-weight"></i>
+                              <span>Dosage: {med.dosage || 'Not specified'}</span>
+                            </div>
+                            <div className="detail-row">
+                              <i className="fas fa-clock"></i>
+                              <span>Frequency: {med.frequency || 'Not specified'}</span>
+                            </div>
+                            <div className="detail-row">
+                              <i className="fas fa-calendar"></i>
+                              <span>Duration: {med.duration || 'Ongoing'}</span>
+                            </div>
+                            {med.startDate && (
+                              <div className="detail-row">
+                                <i className="fas fa-calendar-plus"></i>
+                                <span>Started: {new Date(med.startDate).toLocaleDateString()}</span>
+                              </div>
+                            )}
+                            {med.endDate && (
+                              <div className="detail-row">
+                                <i className="fas fa-calendar-check"></i>
+                                <span>Ends: {new Date(med.endDate).toLocaleDateString()}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div className="detail-row">
-                          <i className="fas fa-clock"></i>
-                          <span>Frequency: {med.frequency || 'Not specified'}</span>
-                        </div>
-                        <div className="detail-row">
-                          <i className="fas fa-calendar"></i>
-                          <span>Duration: {med.duration || 'Ongoing'}</span>
-                        </div>
-                      </div>
+                      );
+                      })}
                     </div>
-                  ))}
+                  ) : (
+                    <div className="empty-state-small">
+                      <i className="fas fa-prescription-bottle"></i>
+                      <p>No active medications</p>
+                      <span>Add medications via prescription management</span>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="empty-state">
-                  <i className="fas fa-prescription-bottle"></i>
-                  <p>No current medications</p>
-                  <span>Add medications via prescription management</span>
+
+                {/* Past Medications Tab */}
+                <div className={`tab-content ${medicationTab === 'past' ? 'active' : ''}`}>
+                  {inactiveMedications.length ? (
+                    <div className="medications-grid">
+                      {inactiveMedications.map((med, idx) => {
+                        const originalIndex = currentMedications.findIndex(m => m === med);
+                        return (
+                        <div key={idx} className="medication-item inactive-med">
+                          <div className="medication-header">
+                            <h4 className="medication-name">{med.name || 'Unknown Medication'}</h4>
+                            <button
+                              className="status-toggle-btn inactive"
+                              onClick={() => toggleMedicationStatus(originalIndex)}
+                              title="Mark as active"
+                            >
+                              <i className="fas fa-times-circle"></i>
+                            </button>
+                          </div>
+                          <div className="medication-details">
+                            <div className="detail-row">
+                              <i className="fas fa-weight"></i>
+                              <span>Dosage: {med.dosage || 'Not specified'}</span>
+                            </div>
+                            <div className="detail-row">
+                              <i className="fas fa-clock"></i>
+                              <span>Frequency: {med.frequency || 'Not specified'}</span>
+                            </div>
+                            <div className="detail-row">
+                              <i className="fas fa-calendar"></i>
+                              <span>Duration: {med.duration || 'Ongoing'}</span>
+                            </div>
+                            {med.startDate && (
+                              <div className="detail-row">
+                                <i className="fas fa-calendar-plus"></i>
+                                <span>Started: {new Date(med.startDate).toLocaleDateString()}</span>
+                              </div>
+                            )}
+                            {med.endDate && (
+                              <div className="detail-row">
+                                <i className="fas fa-calendar-times"></i>
+                                <span>Ended: {new Date(med.endDate).toLocaleDateString()}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="inactive-badge">
+                            <i className="fas fa-history"></i>
+                            Discontinued
+                          </div>
+                        </div>
+                      );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="empty-state-small">
+                      <i className="fas fa-history"></i>
+                      <p>No past medications</p>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </section>
           </div>
 
@@ -823,53 +1175,27 @@ const PatientDetails: React.FC = () => {
         </div>
       )}
 
-      {showAlertModal && (
-        <div className="modal-backdrop">
-          <div className="alert-modal">
-            <div className="alert-modal-header">
-              <div className="alert-modal-icon">
-                <i className="fas fa-exclamation-triangle"></i>
-              </div>
-              <h2>Interaction & History Alerts</h2>
-            </div>
-
-            <div className="alert-modal-content">
-              {alertData.ddi.length === 0 && alertData.pdi.length === 0 ? (
-                <div className="no-alerts-state">
-                  <i className="fas fa-shield-alt"></i>
-                  <h3>All Clear!</h3>
-                  <p>No drug interactions or contraindications detected for this patient.</p>
-                </div>
-              ) : (
-                <>
-                  <div className="alert-card">
-                    <div className="alert-card-header">
-                      <div className="alert-card-icon">
-                        <i className="fas fa-pills"></i>
-                      </div>
-                      <h3>Drug–Drug Interaction Alerts</h3>
-                    </div>
-                    {alertData.ddi.length ? alertData.ddi.map((a, i) => <p key={i}>{a}</p>) : <p>No DDI alerts detected.</p>}
-                  </div>
-
-                  <div className="alert-card">
-                    <div className="alert-card-header">
-                      <div className="alert-card-icon">
-                        <i className="fas fa-user-md"></i>
-                      </div>
-                      <h3>Patient History Alerts</h3>
-                    </div>
-                    {alertData.pdi.length ? alertData.pdi.map((a, i) => <p key={i}>{a}</p>) : <p>No contraindication alerts detected.</p>}
-                  </div>
-                </>
-              )}
-            </div>
-
-            <div className="alert-modal-footer">
-              <button className="close-btn" onClick={() => setShowAlertModal(false)}>
-                <i className="fas fa-check"></i>
-                Understood
-              </button>
+      {/* DDI Alerts Modal */}
+      {showAlertsModal && patientId && patientBio && (
+        <div className="modal-overlay" onClick={() => setShowAlertsModal(false)}>
+          <div className="modal-box alerts-modal-box" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setShowAlertsModal(false)}>
+              <i className="fas fa-times"></i>
+            </button>
+            <h3 className="modal-title">
+              <i className="fas fa-shield-alt" style={{ marginRight: '0.75rem' }}></i>
+              Interaction Alerts
+            </h3>
+            <div className="modal-contents alerts-modal-content">
+              <DDIAlertSystem
+                patientId={patientId}
+                currentMedications={activeMedications}
+                conditions={[...currentConditions, ...pastConditions]}
+                allergies={allergies}
+                patientAge={calculateAgeFromDOB(patientBio.dob)}
+                patientGender={patientBio.gender}
+                onAlertsUpdate={(alerts) => setActiveAlertsCount(alerts.length)}
+              />
             </div>
           </div>
         </div>

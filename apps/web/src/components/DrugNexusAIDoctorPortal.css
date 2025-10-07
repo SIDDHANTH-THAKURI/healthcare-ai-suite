@@ -1189,81 +1189,64 @@
     padding: 1rem 1.25rem;
     font-size: 1rem;
     border-radius: 12px;
-    border: 2px solid rgba(42, 157, 143, 0.1);
-    background: rgba(255, 255, 255, 0.8);
-    color: var(--text-dark);
-    transition: all var(--transition);
-    position: relative;
+    border: 2px solid rgba(42, 157, 143, 0.2);
+    background: rgba(255, 255, 255, 0.5);
     backdrop-filter: blur(10px);
-}
-
-.dark .doctor-dashboard .modal-input {
-    background: rgba(0, 0, 0, 0.2);
-    border-color: rgba(255, 255, 255, 0.1);
-    color: var(--text-light);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: var(--text-dark);
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .doctor-dashboard .modal-input:focus {
-    border-color: var(--primary);
     outline: none;
+    border-color: var(--primary);
+    background: rgba(255, 255, 255, 0.8);
     box-shadow: 
         0 0 0 4px rgba(42, 157, 143, 0.1),
-        0 8px 25px -8px rgba(42, 157, 143, 0.2);
+        0 4px 12px rgba(42, 157, 143, 0.15);
     transform: translateY(-2px);
-    background: rgba(255, 255, 255, 1);
-}
-
-.dark .doctor-dashboard .modal-input:focus {
-    background: rgba(0, 0, 0, 0.3);
-    box-shadow: 
-        0 0 0 4px rgba(42, 157, 143, 0.2),
-        0 8px 25px -8px rgba(42, 157, 143, 0.3);
 }
 
 .doctor-dashboard .modal-input::placeholder {
-    color: rgba(43, 45, 66, 0.5);
+    color: var(--text-dark);
+    opacity: 0.5;
 }
 
-.dark .doctor-dashboard .modal-input::placeholder {
-    color: rgba(244, 244, 244, 0.5);
+.dark .doctor-dashboard .modal-input {
+    background: rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--text-light);
 }
 
-/* File input special styling */
-.doctor-dashboard .modal-input[type="file"] {
-    padding: 0.75rem;
-    cursor: pointer;
-    border-style: dashed;
-}
-
-.doctor-dashboard .modal-input[type="file"]:hover {
+.dark .doctor-dashboard .modal-input:focus {
+    background: rgba(0, 0, 0, 0.4);
     border-color: var(--accent);
-    background: rgba(231, 111, 81, 0.05);
 }
 
-/* Profile image preview */
+/* Image preview */
 .doctor-dashboard .image-preview {
     margin-top: 1rem;
-    text-align: center;
+    display: flex;
+    justify-content: center;
 }
 
 .doctor-dashboard .image-preview img {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
+    max-width: 150px;
+    max-height: 150px;
+    border-radius: 12px;
     object-fit: cover;
-    border: 4px solid var(--primary);
-    box-shadow: 0 8px 25px -8px rgba(42, 157, 143, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* Action buttons */
+/* Modal actions footer */
 .doctor-dashboard .modal-actions {
     display: flex;
-    justify-content: flex-end;
     gap: 1rem;
-    padding: 2rem;
+    justify-content: flex-end;
+    padding: 1.5rem 2rem;
     background: rgba(0, 0, 0, 0.02);
     border-top: 1px solid rgba(0, 0, 0, 0.05);
-    flex-shrink: 0;
 }
 
 .dark .doctor-dashboard .modal-actions {
@@ -1272,38 +1255,385 @@
 }
 
 .doctor-dashboard .modal-btn {
-    padding: 0.75rem 1.5rem;
-    font-size: 0.95rem;
-    border-radius: var(--border-radius);
+    padding: 0.875rem 2rem;
     border: none;
+    border-radius: 12px;
     cursor: pointer;
-    font-weight: 600;
-    transition: var(--transition);
-    min-width: 80px;
+    font-weight: 700;
+    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 120px;
+    position: relative;
+    overflow: hidden;
 }
 
-.doctor-dashboard .modal-btn.cancel-btn {
-    background: #f0f0f0;
-    color: #333;
+.doctor-dashboard .modal-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
 }
 
-.doctor-dashboard .modal-btn.confirm-btn {
-    background: var(--accent);
+.doctor-dashboard .modal-btn:hover::before {
+    left: 100%;
+}
+
+.doctor-dashboard .cancel-btn {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--text-dark);
+    border: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.doctor-dashboard .cancel-btn:hover {
+    background: rgba(0, 0, 0, 0.1);
+    border-color: rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dark .doctor-dashboard .cancel-btn {
+    background: rgba(255, 255, 255, 0.05);
     color: var(--text-light);
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
-.doctor-dashboard .modal-btn.cancel-btn:hover {
-    background: #e0e0e0;
-    transform: translateY(-1px);
+.dark .doctor-dashboard .cancel-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
 }
 
-.doctor-dashboard .modal-btn.confirm-btn:hover {
-    background: var(--primary-dark);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.doctor-dashboard .confirm-btn {
+    background: linear-gradient(135deg, var(--accent), #d85a3a);
+    color: white;
+    box-shadow: 0 4px 15px rgba(231, 111, 81, 0.3);
 }
 
-/* Animations */
+.doctor-dashboard .confirm-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(231, 111, 81, 0.4);
+}
+
+.doctor-dashboard .confirm-btn:active,
+.doctor-dashboard .cancel-btn:active {
+    transform: translateY(0);
+}
+
+/* ===============================
+   BEAUTIFUL CALENDAR STYLES
+=============================== */
+
+/* Enhanced Calendar Input Field */
+.doctor-dashboard .modal-input[type="date"] {
+    position: relative;
+    cursor: pointer;
+    padding-right: 3.5rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    background: linear-gradient(135deg, rgba(42, 157, 143, 0.05), rgba(231, 111, 81, 0.05));
+    border: 2px solid rgba(42, 157, 143, 0.3);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232a9d8f' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 24px;
+    box-shadow: 
+        0 4px 12px rgba(42, 157, 143, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.doctor-dashboard .modal-input[type="date"]:hover {
+    border-color: var(--primary);
+    background: linear-gradient(135deg, rgba(42, 157, 143, 0.1), rgba(231, 111, 81, 0.1));
+    box-shadow: 
+        0 6px 16px rgba(42, 157, 143, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.doctor-dashboard .modal-input[type="date"]:focus {
+    border-color: var(--primary);
+    background: linear-gradient(135deg, rgba(42, 157, 143, 0.15), rgba(231, 111, 81, 0.15));
+    box-shadow: 
+        0 0 0 4px rgba(42, 157, 143, 0.15),
+        0 8px 20px rgba(42, 157, 143, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+/* Hide default calendar icon, show our custom one */
+.doctor-dashboard .modal-input[type="date"]::-webkit-calendar-picker-indicator {
+    position: absolute;
+    right: 1rem;
+    cursor: pointer;
+    opacity: 0;
+    width: 24px;
+    height: 24px;
+    z-index: 2;
+}
+
+/* Style the date text fields */
+.doctor-dashboard .modal-input[type="date"]::-webkit-datetime-edit {
+    padding: 0;
+    display: flex;
+    align-items: center;
+}
+
+.doctor-dashboard .modal-input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.doctor-dashboard .modal-input[type="date"]::-webkit-datetime-edit-text {
+    color: var(--primary);
+    padding: 0 0.25rem;
+    font-weight: 700;
+}
+
+/* Individual date field styling */
+.doctor-dashboard .modal-input[type="date"]::-webkit-datetime-edit-month-field,
+.doctor-dashboard .modal-input[type="date"]::-webkit-datetime-edit-day-field,
+.doctor-dashboard .modal-input[type="date"]::-webkit-datetime-edit-year-field {
+    color: var(--text-dark);
+    font-weight: 700;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px solid transparent;
+}
+
+.doctor-dashboard .modal-input[type="date"]::-webkit-datetime-edit-month-field:hover,
+.doctor-dashboard .modal-input[type="date"]::-webkit-datetime-edit-day-field:hover,
+.doctor-dashboard .modal-input[type="date"]::-webkit-datetime-edit-year-field:hover {
+    background: rgba(42, 157, 143, 0.15);
+    border-color: rgba(42, 157, 143, 0.3);
+    transform: scale(1.05);
+}
+
+.doctor-dashboard .modal-input[type="date"]::-webkit-datetime-edit-month-field:focus,
+.doctor-dashboard .modal-input[type="date"]::-webkit-datetime-edit-day-field:focus,
+.doctor-dashboard .modal-input[type="date"]::-webkit-datetime-edit-year-field:focus {
+    background: rgba(42, 157, 143, 0.25);
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(42, 157, 143, 0.2);
+}
+
+/* Placeholder styling when empty */
+.doctor-dashboard .modal-input[type="date"]::-webkit-datetime-edit-month-field[aria-valuenow="0"],
+.doctor-dashboard .modal-input[type="date"]::-webkit-datetime-edit-day-field[aria-valuenow="0"],
+.doctor-dashboard .modal-input[type="date"]::-webkit-datetime-edit-year-field[aria-valuenow="0"] {
+    color: rgba(43, 45, 66, 0.4);
+    font-style: italic;
+}
+
+/* Dark mode calendar input */
+.dark .doctor-dashboard .modal-input[type="date"] {
+    background: linear-gradient(135deg, rgba(42, 157, 143, 0.1), rgba(231, 111, 81, 0.1));
+    border-color: rgba(231, 111, 81, 0.3);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23e76f51' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E");
+    box-shadow: 
+        0 4px 12px rgba(231, 111, 81, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.dark .doctor-dashboard .modal-input[type="date"]:hover {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(42, 157, 143, 0.15), rgba(231, 111, 81, 0.15));
+}
+
+.dark .doctor-dashboard .modal-input[type="date"]:focus {
+    border-color: var(--accent);
+    box-shadow: 
+        0 0 0 4px rgba(231, 111, 81, 0.2),
+        0 8px 20px rgba(231, 111, 81, 0.25);
+}
+
+.dark .doctor-dashboard .modal-input[type="date"]::-webkit-datetime-edit-month-field,
+.dark .doctor-dashboard .modal-input[type="date"]::-webkit-datetime-edit-day-field,
+.dark .doctor-dashboard .modal-input[type="date"]::-webkit-datetime-edit-year-field {
+    color: var(--text-light);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.dark .doctor-dashboard .modal-input[type="date"]::-webkit-datetime-edit-month-field:hover,
+.dark .doctor-dashboard .modal-input[type="date"]::-webkit-datetime-edit-day-field:hover,
+.dark .doctor-dashboard .modal-input[type="date"]::-webkit-datetime-edit-year-field:hover {
+    background: rgba(231, 111, 81, 0.2);
+    border-color: rgba(231, 111, 81, 0.4);
+}
+
+.dark .doctor-dashboard .modal-input[type="date"]::-webkit-datetime-edit-month-field:focus,
+.dark .doctor-dashboard .modal-input[type="date"]::-webkit-datetime-edit-day-field:focus,
+.dark .doctor-dashboard .modal-input[type="date"]::-webkit-datetime-edit-year-field:focus {
+    background: rgba(231, 111, 81, 0.3);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(231, 111, 81, 0.3);
+}
+
+/* Style the calendar popup (limited browser support) */
+.doctor-dashboard .modal-input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 0.1;
+    background: rgba(42, 157, 143, 0.1);
+    border-radius: 50%;
+}
+
+/* Apply color scheme to influence native calendar colors */
+.doctor-dashboard .modal-input[type="date"] {
+    color-scheme: light;
+}
+
+.dark .doctor-dashboard .modal-input[type="date"] {
+    color-scheme: dark;
+}
+
+/* Additional visual enhancement - add a subtle pulse animation on focus */
+@keyframes calendarPulse {
+    0%, 100% {
+        box-shadow: 
+            0 0 0 4px rgba(42, 157, 143, 0.15),
+            0 8px 20px rgba(42, 157, 143, 0.2);
+    }
+    50% {
+        box-shadow: 
+            0 0 0 6px rgba(42, 157, 143, 0.1),
+            0 10px 25px rgba(42, 157, 143, 0.25);
+    }
+}
+
+.doctor-dashboard .modal-input[type="date"]:focus {
+    animation: calendarPulse 2s ease-in-out infinite;
+}
+
+/* Add a subtle shine effect */
+.doctor-dashboard .modal-input[type="date"]::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+    pointer-events: none;
+}
+
+.doctor-dashboard .modal-input[type="date"]:hover::before {
+    left: 100%;
+}
+
+/* Enhanced select dropdown */
+.doctor-dashboard .modal-input[type="text"],
+.doctor-dashboard .modal-input[type="tel"],
+.doctor-dashboard .modal-input[type="number"],
+.doctor-dashboard select.modal-input {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+.doctor-dashboard select.modal-input {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%232a9d8f' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 12px;
+    padding-right: 3rem;
+    cursor: pointer;
+}
+
+.dark .doctor-dashboard select.modal-input {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23e76f51' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+}
+
+/* Date input wrapper for extra styling */
+.doctor-dashboard .date-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.doctor-dashboard .date-input-wrapper::after {
+    content: '📅';
+    position: absolute;
+    right: 1rem;
+    font-size: 1.5rem;
+    pointer-events: none;
+    animation: calendarIconBounce 2s ease-in-out infinite;
+}
+
+@keyframes calendarIconBounce {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* Age display styling */
+.doctor-dashboard .age-display {
+    margin: 0.75rem 0 0 0;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, rgba(42, 157, 143, 0.15), rgba(231, 111, 81, 0.15));
+    border-radius: 12px;
+    border-left: 4px solid var(--primary);
+    font-weight: 700;
+    font-size: 1.05rem;
+    display: inline-block;
+    animation: ageDisplaySlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 4px 12px rgba(42, 157, 143, 0.15);
+    color: var(--primary);
+    letter-spacing: 0.5px;
+}
+
+.dark .doctor-dashboard .age-display {
+    background: linear-gradient(135deg, rgba(42, 157, 143, 0.2), rgba(231, 111, 81, 0.2));
+    border-left-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 4px 12px rgba(231, 111, 81, 0.2);
+}
+
+@keyframes ageDisplaySlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Responsive modal adjustments */
+@media (max-width: 767px) {
+    .doctor-dashboard .modal-box {
+        max-width: 95%;
+        margin: 1rem;
+    }
+    
+    .doctor-dashboard .modal-title {
+        font-size: 1.25rem;
+        padding: 1.5rem 1rem 1rem;
+    }
+    
+    .doctor-dashboard .modal-contents {
+        padding: 1.5rem;
+    }
+    
+    .doctor-dashboard .modal-actions {
+        flex-direction: column;
+        padding: 1rem;
+    }
+    
+    .doctor-dashboard .modal-btn {
+        width: 100%;
+    }
+}
+
+/* Animation keyframes */
 @keyframes overlayFadeIn {
     from {
         opacity: 0;
@@ -1316,11 +1646,42 @@
 @keyframes modalSlideIn {
     from {
         opacity: 0;
-        transform: translateY(-50px) scale(0.9);
+        transform: translateY(-30px) scale(0.95);
     }
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes metricsSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes patientSectionSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes patientListFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
     }
 }
 
@@ -1702,4 +2063,449 @@
     .doctor-dashboard .patient-actions button {
         border-width: 2px;
     }
+}
+
+
+/* ===============================
+   Enhanced Modal Styles
+=============================== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: modalOverlayFadeIn 0.3s ease-out;
+    padding: 1rem;
+}
+
+@keyframes modalOverlayFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.modal-box {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    width: 100%;
+    max-width: 520px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.25),
+        0 0 0 1px rgba(0, 0, 0, 0.05);
+    padding: 2.5rem;
+    position: relative;
+    animation: modalContentSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalContentSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.dark .modal-box {
+    background: rgba(38, 70, 83, 0.98);
+    box-shadow: 
+        0 25px 50px -12px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.modal-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    border-radius: 24px 24px 0 0;
+}
+
+.modal-close {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: rgba(0, 0, 0, 0.05);
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-dark);
+    font-size: 1.25rem;
+    z-index: 1;
+}
+
+.dark .modal-close {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-light);
+}
+
+.modal-close:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    transform: rotate(90deg) scale(1.1);
+}
+
+.modal-title {
+    margin: 0 0 2rem 0;
+    color: var(--text-dark);
+    font-size: 1.875rem;
+    font-weight: 700;
+    line-height: 1.3;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.dark .modal-title {
+    color: var(--text-light);
+}
+
+.modal-title i {
+    color: var(--primary);
+    font-size: 1.75rem;
+}
+
+.modal-contents {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.modal-contents label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.dark .modal-contents label {
+    color: var(--text-light);
+}
+
+.modal-input {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 2px solid rgba(42, 157, 143, 0.2);
+    border-radius: 12px;
+    font-size: 1rem;
+    font-family: var(--font-family);
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(10px);
+    color: var(--text-dark);
+    box-sizing: border-box;
+}
+
+.dark .modal-input {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--text-light);
+}
+
+.modal-input::placeholder {
+    color: rgba(43, 45, 66, 0.5);
+}
+
+.dark .modal-input::placeholder {
+    color: rgba(244, 244, 244, 0.5);
+}
+
+.modal-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(42, 157, 143, 0.1);
+    background: rgba(255, 255, 255, 0.8);
+    transform: translateY(-1px);
+}
+
+.dark .modal-input:focus {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.modal-input:hover:not(:focus) {
+    border-color: rgba(42, 157, 143, 0.4);
+    background: rgba(255, 255, 255, 0.6);
+}
+
+.dark .modal-input:hover:not(:focus) {
+    background: rgba(0, 0, 0, 0.25);
+}
+
+/* Enhanced Date Input Styling */
+.modal-input[type="date"] {
+    position: relative;
+    cursor: pointer;
+    padding-right: 2.5rem;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%232A9D8F'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'/%3e%3c/svg%3e");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5rem 1.5rem;
+}
+
+.dark .modal-input[type="date"] {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23FDFEFE'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'/%3e%3c/svg%3e");
+}
+
+/* Style the calendar icon */
+.modal-input[type="date"]::-webkit-calendar-picker-indicator {
+    position: absolute;
+    right: 0.75rem;
+    cursor: pointer;
+    opacity: 0;
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+/* Style the date input text */
+.modal-input[type="date"]::-webkit-datetime-edit {
+    padding: 0;
+}
+
+.modal-input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+    padding: 0;
+}
+
+.modal-input[type="date"]::-webkit-datetime-edit-text {
+    color: var(--text-dark);
+    padding: 0 0.25rem;
+}
+
+.dark .modal-input[type="date"]::-webkit-datetime-edit-text {
+    color: var(--text-light);
+}
+
+.modal-input[type="date"]::-webkit-datetime-edit-month-field,
+.modal-input[type="date"]::-webkit-datetime-edit-day-field,
+.modal-input[type="date"]::-webkit-datetime-edit-year-field {
+    color: var(--text-dark);
+    padding: 0.125rem 0.25rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.dark .modal-input[type="date"]::-webkit-datetime-edit-month-field,
+.dark .modal-input[type="date"]::-webkit-datetime-edit-day-field,
+.dark .modal-input[type="date"]::-webkit-datetime-edit-year-field {
+    color: var(--text-light);
+}
+
+.modal-input[type="date"]::-webkit-datetime-edit-month-field:focus,
+.modal-input[type="date"]::-webkit-datetime-edit-day-field:focus,
+.modal-input[type="date"]::-webkit-datetime-edit-year-field:focus {
+    background: rgba(42, 157, 143, 0.1);
+    color: var(--primary);
+}
+
+/* Select dropdown styling */
+.modal-input[type="select"],
+select.modal-input {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%232A9D8F' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25rem 1.25rem;
+    padding-right: 2.5rem;
+}
+
+.dark select.modal-input {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23FDFEFE' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+}
+
+/* Image preview */
+.image-preview {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+}
+
+.image-preview img {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 12px;
+    object-fit: cover;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    border: 3px solid var(--primary);
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dark .modal-actions {
+    border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.modal-btn {
+    padding: 0.875rem 2rem;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    min-width: 120px;
+    font-family: var(--font-family);
+}
+
+.modal-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s;
+}
+
+.modal-btn:hover::before {
+    left: 100%;
+}
+
+.confirm-btn {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    box-shadow: 0 4px 15px rgba(42, 157, 143, 0.3);
+}
+
+.confirm-btn:hover {
+    background: linear-gradient(135deg, var(--primary-dark), #1d3557);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(42, 157, 143, 0.4);
+}
+
+.confirm-btn:active {
+    transform: translateY(0);
+}
+
+.cancel-btn {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    color: var(--text-dark);
+    border: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.dark .cancel-btn {
+    background: rgba(0, 0, 0, 0.2);
+    color: var(--text-light);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.cancel-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.dark .cancel-btn:hover {
+    background: rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.cancel-btn:active {
+    transform: translateY(0);
+}
+
+/* Scrollbar styling for modal */
+.modal-box::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-box::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+.modal-box::-webkit-scrollbar-thumb {
+    background: rgba(42, 157, 143, 0.3);
+    border-radius: 4px;
+}
+
+.modal-box::-webkit-scrollbar-thumb:hover {
+    background: rgba(42, 157, 143, 0.5);
+}
+
+/* Responsive modal adjustments */
+@media (max-width: 640px) {
+    .modal-box {
+        padding: 2rem 1.5rem;
+        max-width: 95%;
+        border-radius: 20px;
+    }
+
+    .modal-title {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .modal-contents {
+        gap: 1.25rem;
+    }
+
+    .modal-actions {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .modal-btn {
+        width: 100%;
+        min-width: unset;
+    }
+
+    .modal-close {
+        top: 1rem;
+        right: 1rem;
+        width: 32px;
+        height: 32px;
+    }
+}
+
+/* Animation for age display */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-contents p {
+    animation: fadeInUp 0.3s ease-out;
 }

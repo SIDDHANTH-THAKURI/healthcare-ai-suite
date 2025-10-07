@@ -5,6 +5,9 @@ export interface IMedicine {
     dosage: string;
     frequency?: string;
     duration?: string;
+    status?: 'active' | 'inactive';
+    startDate?: string;
+    endDate?: string;
 }
 
 export interface IPrescription extends Document {
@@ -21,6 +24,9 @@ const MedicineSchema = new Schema<IMedicine>(
         dosage: { type: String, required: true },
         frequency: { type: String },
         duration: { type: String },
+        status: { type: String, enum: ['active', 'inactive'], default: 'active' },
+        startDate: { type: String },
+        endDate: { type: String },
     },
     { _id: false }
 );

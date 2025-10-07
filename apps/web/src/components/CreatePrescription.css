@@ -169,6 +169,7 @@
 }
 
 .chip-name {
+  margin-right: 10px;
   font-weight: 500;
 }
 
@@ -934,4 +935,89 @@
   .dropdown-list {
     max-height: 150px;
   }
+}
+
+
+/* ===============================
+   Medicine Dropdown Styles
+=============================== */
+
+.dropdown-container {
+  position: relative;
+  width: 100%;
+}
+
+.dropdown-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 2px solid var(--primary);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  margin-top: -8px;
+  list-style: none;
+  padding: 0;
+}
+
+.dark .dropdown-list {
+  background: var(--secondary);
+  border-color: var(--accent);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.dropdown-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-dark);
+  font-weight: 500;
+}
+
+.dark .dropdown-item {
+  color: var(--text-light);
+}
+
+.dropdown-item:hover {
+  background: var(--primary);
+  color: white;
+}
+
+.dark .dropdown-item:hover {
+  background: var(--accent);
+}
+
+.dropdown-item:first-child {
+  padding-top: 1rem;
+}
+
+.dropdown-item:last-child {
+  padding-bottom: 1rem;
+}
+
+/* Scrollbar for dropdown */
+.dropdown-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dropdown-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.dropdown-list::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 4px;
+}
+
+.dropdown-list::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-dark);
+}
+
+.dark .dropdown-list::-webkit-scrollbar-thumb {
+  background: var(--accent);
 }

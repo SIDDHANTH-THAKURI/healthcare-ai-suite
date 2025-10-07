@@ -2810,3 +2810,183 @@ High specificity button styles for patient details page */
     align-self: flex-start;
   }
 }
+
+/* ===
+============================
+   Medication Status Management
+=============================== */
+
+/* Medication Status Toggle Button */
+.status-toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.25rem;
+  transition: all 0.3s ease;
+  padding: 0.25rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+}
+
+.status-toggle-btn.active {
+  color: #28a745;
+}
+
+.status-toggle-btn.active:hover {
+  background: rgba(40, 167, 69, 0.1);
+  transform: scale(1.1);
+}
+
+.status-toggle-btn.inactive {
+  color: #6c757d;
+}
+
+.status-toggle-btn.inactive:hover {
+  background: rgba(108, 117, 125, 0.1);
+  color: #28a745;
+  transform: scale(1.1);
+}
+
+/* Medication Item Variants */
+.medication-item.active-med {
+  border-left: 4px solid #28a745;
+}
+
+.medication-item.inactive-med {
+  border-left: 4px solid #6c757d;
+  opacity: 0.7;
+}
+
+.medication-item.inactive-med:hover {
+  opacity: 1;
+}
+
+/* Inactive Badge */
+.inactive-badge {
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  background: rgba(108, 117, 125, 0.1);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #6c757d;
+  font-weight: 600;
+}
+
+.inactive-badge i {
+  font-size: 1rem;
+}
+
+/* Empty State Small */
+.empty-state-small {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--text-dark);
+  opacity: 0.6;
+}
+
+.empty-state-small i {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+  display: block;
+  color: var(--primary);
+}
+
+.empty-state-small p {
+  margin: 0 0 0.25rem 0;
+  font-weight: 600;
+}
+
+.empty-state-small span {
+  font-size: 0.85rem;
+}
+
+.dark .empty-state-small {
+  color: var(--text-light);
+}
+
+
+/* ===============================
+   Drug Interaction Alerts Button
+=============================== */
+
+/* Alerts button uses same base styles as prescription-btn */
+.alerts-btn {
+  /* Inherits all styles from .prescription-btn */
+  position: relative;
+}
+
+/* Alert Badge on Button */
+.alert-badge-btn {
+  background: #dc3545;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  min-width: 24px;
+  text-align: center;
+  animation: pulse 2s infinite;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.4);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.4);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.6);
+  }
+}
+
+/* Alerts Modal */
+.alerts-modal-box {
+  max-width: 800px;
+  width: 95%;
+  max-height: 90vh;
+}
+
+.alerts-modal-content {
+  padding: 0;
+  max-height: calc(90vh - 150px);
+  overflow-y: auto;
+}
+
+/* Override DDI Alert System styles when in modal */
+.alerts-modal-content .ddi-alert-system {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 1.5rem;
+  margin-top: 0;
+}
+
+/* Responsive */
+@media (max-width: 767px) {
+  .patient-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .prescription-btn,
+  .alerts-btn {
+    width: 100%;
+  }
+
+  .alerts-modal-box {
+    max-width: 95%;
+    max-height: 95vh;
+  }
+
+  .alerts-modal-content {
+    max-height: calc(95vh - 120px);
+  }
+}

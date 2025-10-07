@@ -346,14 +346,13 @@ const handleSignUp = async (confirmRoleAddition = false) => {
               </div>
             )}
 
-            <button type="submit">
-              <span className="button-text">
-                {isSignUp ? "Create Secure Account" : "Secure Sign In"}
-              </span>
-              <div
-                className="loading-spinner"
-                style={{ display: isLoading ? "block" : "none" }}
-              ></div>
+            <button type="submit" disabled={isLoading}>
+              {!isLoading && (
+                <span className="button-text">
+                  {isSignUp ? "Create Secure Account" : "Secure Sign In"}
+                </span>
+              )}
+              {isLoading && <div className="loading-spinner"></div>}
             </button>
           </form>
 

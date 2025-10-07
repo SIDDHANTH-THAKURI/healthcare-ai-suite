@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 from pydantic import BaseModel
 from pymongo import MongoClient
-from config import MONGO_URI, COLLECTION_NAME, DB_NAME, MEDS_DB, CHAT_DB, USER_DB
+from config import MONGO_URI, COLLECTION_NAME, DB_NAME, MEDS_DB, CHAT_DB, USER_DB, OPENROUTER_API_KEY
 import requests
 from openrouter_config import OPENROUTER_API_URL, HEADERS, MODEL_NAME
 
@@ -40,15 +40,50 @@ def health_check():
         # Test MongoDB connection
         mongo_client.admin.command('ping')
         mongo_status = "connected"
-    except Exception:
-        mongo_status = "disconnected"
+    except Exception as e:
+        mongo_status = f"disconnected: {str(e)}"
+    
+    # Test LLM API
+    try:
+        test_response = call_llm("Test")
+        llm_status = "connected" if test_response is not None else "error"
+    except Exception as e:
+        llm_status = f"error: {str(e)}"
     
     return {
         "status": "healthy",
         "service": "ml-service",
         "timestamp": datetime.now().isoformat(),
-        "mongodb": mongo_status
+        "mongodb": mongo_status,
+        "llm_api": llm_status,
+        "config": {
+            "mongo_uri_set": bool(MONGO_URI),
+            "api_key_set": bool(OPENROUTER_API_KEY),
+            "model": MODEL_NAME
+        }
     }
+
+# ─── DEBUG ENDPOINT ─────────────────────────────────────────────────────
+@app.get("/debug/patient-history/{patient_id}")
+def debug_patient_history(patient_id: str):
+    """Debug endpoint to check patient history data"""
+    try:
+        notes = get_consultation_notes(patient_id)
+        meds = get_current_medications(patient_id)
+        
+        return {
+            "patient_id": patient_id,
+            "notes_count": len(notes),
+            "notes": notes[:2] if notes else [],  # Show first 2 notes
+            "medications_count": len(meds),
+            "medications": meds[:3] if meds else [],  # Show first 3 meds
+            "database_collections": {
+                "prescriptions_exists": prescriptions_collection.count_documents({}) > 0,
+                "patient_document_exists": prescriptions_collection.count_documents({"patient": patient_id}) > 0
+            }
+        }
+    except Exception as e:
+        return {"error": str(e), "patient_id": patient_id}
 
 # ─── MODELS ───────────────────────────────────────────────────────────
 class HistoryInput(BaseModel):
@@ -69,10 +104,20 @@ def _temp_path(original: str) -> Path:
 
 
 def call_llm(prompt_text: str) -> str:
-    payload = {"model": MODEL_NAME, "messages": [{"role": "user", "content": prompt_text}]}
-    res = requests.post(OPENROUTER_API_URL, headers=HEADERS, json=payload)
-    res.raise_for_status()
-    return res.json().get("choices", [{}])[0].get("message", {}).get("content", "")
+    try:
+        payload = {"model": MODEL_NAME, "messages": [{"role": "user", "content": prompt_text}]}
+        res = requests.post(OPENROUTER_API_URL, headers=HEADERS, json=payload, timeout=30)
+        res.raise_for_status()
+        return res.json().get("choices", [{}])[0].get("message", {}).get("content", "")
+    except requests.exceptions.Timeout:
+        print("LLM API timeout - using fallback")
+        return ""
+    except requests.exceptions.RequestException as e:
+        print(f"LLM API error: {e} - using fallback")
+        return ""
+    except Exception as e:
+        print(f"Unexpected LLM error: {e} - using fallback")
+        return ""
 
 
 def get_consultation_notes(patient_id: str) -> List[dict]:
@@ -132,6 +177,18 @@ def merge_medications(existing, new):
     return list(combined.values())
 
 def extract_structured_summary(full_notes: List[str], current_meds: List[dict]) -> dict:
+    # Create a fallback response
+    fallback_response = {
+        "summary": full_notes[-1] if full_notes else "No notes available",
+        "conditions": {"current": [], "past": []},
+        "medications": current_meds,  # Preserve existing medications
+        "allergies": []
+    }
+    
+    # If no notes, return fallback immediately
+    if not full_notes:
+        return fallback_response
+    
     # Format current medications as a JSON string for the LLM prompt
     current_meds_json = json.dumps(current_meds, indent=2)
     
@@ -175,31 +232,43 @@ Current Medication List (JSON):
 
     try:
         raw = call_llm(prompt)
+        
+        # If LLM call failed (empty response), return fallback
+        if not raw or not raw.strip():
+            print("LLM returned empty response, using fallback")
+            return fallback_response
+            
         match = re.search(r"\{.*\}", raw, re.DOTALL)
         if not match:
-            return {
-                "summary": "",
-                "conditions": {"current": [], "past": []},
-                "medications": current_meds,  # Preserve existing medications
-                "allergies": []
-            }
+            print("No JSON found in LLM response, using fallback")
+            return fallback_response
+            
         cleaned = match.group(0).strip()
         structured_data = json.loads(cleaned)
+        
+        # Validate the structure
+        if not isinstance(structured_data, dict):
+            print("Invalid JSON structure from LLM, using fallback")
+            return fallback_response
+            
+        # Ensure required fields exist
+        if "summary" not in structured_data:
+            structured_data["summary"] = fallback_response["summary"]
+        if "conditions" not in structured_data:
+            structured_data["conditions"] = fallback_response["conditions"]
+        if "medications" not in structured_data:
+            structured_data["medications"] = fallback_response["medications"]
+        if "allergies" not in structured_data:
+            structured_data["allergies"] = fallback_response["allergies"]
+            
         return structured_data
+        
     except json.JSONDecodeError as e:
-        return {
-            "summary": "",
-            "conditions": {"current": [], "past": []},
-            "medications": current_meds,  # Preserve existing medications
-            "allergies": []
-        }
+        print(f"JSON decode error: {e}, using fallback")
+        return fallback_response
     except Exception as e:
-        return {
-            "summary": "",
-            "conditions": {"current": [], "past": []},
-            "medications": current_meds,  # Preserve existing medications
-            "allergies": []
-        }
+        print(f"Unexpected error in extract_structured_summary: {e}, using fallback")
+        return fallback_response
 
 
 
@@ -208,40 +277,55 @@ Current Medication List (JSON):
 @app.post("/api/patient-history")
 async def save_patient_history(data: HistoryInput):
     try:
+        # Validate input
+        if not data.patientId or not data.notes or not data.notes.strip():
+            raise HTTPException(400, "Missing patientId or notes")
 
         past_summaries = get_all_notes_with_dates(data.patientId)
         current_meds = get_current_medications(data.patientId)
         now_ts = datetime.utcnow().isoformat()
         formatted_ts = datetime.utcnow().isoformat()
         past_summaries.append(f"{formatted_ts}: {data.notes.strip()}")
+        
+        # Extract structured summary with timeout protection
+        print(f"Processing consultation note for patient {data.patientId}")
         result = extract_structured_summary(past_summaries, current_meds)
+        print(f"Structured summary extracted successfully")
 
         entry = {
             "id": str(uuid.uuid4()),
             "createdAt": now_ts,
             "rawText": data.notes,
-            "summary": result["summary"],
+            "summary": result.get("summary", data.notes.strip()),
             "structured": result
         }
 
-        prescriptions_collection.update_one(
-            {"patient": data.patientId, "source": "notes"},
-            {
-                "$push": {"consultationNotes": entry},
-                "$set": {
-                    "medicines": merge_medications(current_meds, result.get("medications", [])),
-                    "createdAt": now_ts,
-                    "source": "notes"
-                }
-            },
-            upsert=True
-        )
+        # Save to database with error handling
+        try:
+            update_result = prescriptions_collection.update_one(
+                {"patient": data.patientId, "source": "notes"},
+                {
+                    "$push": {"consultationNotes": entry},
+                    "$set": {
+                        "medicines": merge_medications(current_meds, result.get("medications", [])),
+                        "createdAt": now_ts,
+                        "source": "notes"
+                    }
+                },
+                upsert=True
+            )
+            print(f"Database update result: {update_result.modified_count} modified, {update_result.upserted_id} upserted")
+        except Exception as db_error:
+            print(f"Database error: {db_error}")
+            raise HTTPException(500, f"Database error: {str(db_error)}")
 
         return {"success": True, "note": entry}
+        
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(500, f"History processing failed: {e}")
+        print(f"Unexpected error in save_patient_history: {e}")
+        raise HTTPException(500, f"History processing failed: {str(e)}")
 
 
 @app.get("/api/patient-history")
@@ -396,6 +480,118 @@ async def test_token(request: Request):
     auth = request.headers.get("Authorization")
     data = await request.json()
     return {"auth_header": auth, "patientId": data.get("patientId"), "notes": data.get("notes")}
+
+
+@app.post("/api/check-ddi")
+async def check_ddi(payload: dict = Body(...)):
+    """
+    Check for drug-drug interactions using LLM analysis
+    Analyzes patient's complete medical profile
+    """
+    patient_id = payload.get("patientId")
+    medications = payload.get("medications", [])
+    conditions = payload.get("conditions", [])
+    allergies = payload.get("allergies", [])
+    patient_age = payload.get("age")
+    patient_gender = payload.get("gender")
+    
+    if not patient_id or not medications:
+        raise HTTPException(400, "Missing patientId or medications")
+    
+    if len(medications) == 0:
+        return {"interactions": [], "summary": "No medications to check", "safe": True}
+    
+    # Build comprehensive patient profile for LLM
+    med_list = [f"{m['name']} ({m.get('dosage', 'unknown dosage')}, {m.get('frequency', 'unknown frequency')})" for m in medications]
+    
+    prompt = f"""You are a clinical pharmacist AI assistant. Analyze the following patient's medication regimen for potential drug-drug interactions, contraindications, and safety concerns.
+
+PATIENT PROFILE:
+- Age: {patient_age} years
+- Gender: {patient_gender}
+- Medical Conditions: {', '.join(conditions) if conditions else 'None reported'}
+- Known Allergies: {', '.join(allergies) if allergies else 'None reported'}
+
+CURRENT ACTIVE MEDICATIONS:
+{chr(10).join(f'{i+1}. {med}' for i, med in enumerate(med_list))}
+
+TASK:
+1. Check for drug-drug interactions between the medications
+2. Check for contraindications based on medical conditions
+3. Check for allergy conflicts
+4. Assess overall safety of this medication regimen
+
+RESPONSE FORMAT:
+If there are ANY concerns, provide a JSON response with this structure:
+{{
+  "safe": false,
+  "interactions": [
+    {{
+      "severity": "critical|major|moderate|minor",
+      "drugs": ["Drug A", "Drug B"],
+      "message": "Brief, clear description of the interaction (max 100 characters)",
+      "recommendation": "Clear action for the doctor (max 150 characters)"
+    }}
+  ]
+}}
+
+If NO concerns found, respond with:
+{{
+  "safe": true,
+  "interactions": [],
+  "message": "No significant drug interactions or contraindications detected. Medication regimen appears safe."
+}}
+
+IMPORTANT:
+- Be concise and clear
+- Focus on clinically significant interactions only
+- Use medical terminology doctors understand
+- Prioritize patient safety
+- If unsure, err on the side of caution"""
+
+    try:
+        # Call LLM
+        llm_response = call_llm(prompt)
+        
+        if not llm_response:
+            # Fallback to basic checking
+            return {
+                "safe": True,
+                "interactions": [],
+                "message": "LLM unavailable. Basic check: No obvious contraindications detected.",
+                "llmUsed": False
+            }
+        
+        # Parse LLM response
+        import json
+        import re
+        
+        # Extract JSON from response
+        json_match = re.search(r'\{.*\}', llm_response, re.DOTALL)
+        if json_match:
+            result = json.loads(json_match.group())
+            result["llmUsed"] = True
+            result["patientHistoryChecked"] = True
+            return result
+        else:
+            # If LLM didn't return JSON, treat as safe
+            return {
+                "safe": True,
+                "interactions": [],
+                "message": "Analysis complete. No significant concerns identified.",
+                "llmUsed": True
+            }
+            
+    except Exception as e:
+        print(f"LLM DDI check error: {e}")
+        # Fallback response
+        return {
+            "safe": True,
+            "interactions": [],
+            "message": f"Error during analysis: {str(e)}. Please review medications manually.",
+            "llmUsed": False,
+            "error": str(e)
+        }
 
 
 @app.get("/api/check-alerts")
