@@ -10,6 +10,10 @@ import patientRouter from "./routes/patientRouter";
 import prescriptionRouter from './routes/prescriptionRouter';
 import logRouter from './routes/logRouter';
 import ddiAlertRouter from './routes/ddiAlertRouter';
+import patientProfileRouter from './routes/patientProfileRouter';
+import medicationScheduleRouter from './routes/medicationScheduleRouter';
+import chatRouter from './routes/chatRouter';
+import documentRouter from './routes/documentRouter';
 import { MONGO_URI, COLLECTION_NAME, LLM_MODEL, OPENROUTER_API_KEY, OPENROUTER_URL } from './config';
 
 const app = express();
@@ -32,6 +36,10 @@ app.use("/api", patientRouter);
 app.use('/api/prescriptions', prescriptionRouter);
 app.use('/api', logRouter);
 app.use('/api/ddi-alerts', ddiAlertRouter);
+app.use('/api/patient-profile', patientProfileRouter);
+app.use('/api/medication-schedule', medicationScheduleRouter);
+app.use('/api/chat', chatRouter);
+app.use('/api/documents', documentRouter);
 
 
 mongoose

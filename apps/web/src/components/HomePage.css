@@ -8,6 +8,8 @@
     position: relative;
     animation: slideInLeft 1s ease forwards;
     opacity: 0;
+    margin-left: -20px;
+    margin-right: 10px;
 }
 
 @keyframes slideInLeft {

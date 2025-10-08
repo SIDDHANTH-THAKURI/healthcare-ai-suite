@@ -143,10 +143,17 @@ const handleSignUp = async (confirmRoleAddition = false) => {
       confirmRoleAddition
     );
     localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
     toast.success("Signup successful!");
-    navigate("/ProfileSetup", {
-      state: { role: userType }   // pass the chosen role
-    });
+    
+    // Redirect based on user type
+    if (userType === "patient") {
+      navigate("/patient-profile-setup");
+    } else {
+      navigate("/ProfileSetup", {
+        state: { role: userType }
+      });
+    }
   } catch (err: any) {
     if (err instanceof ApiError && err.status === 409 && err.body.addNewRole) {
       // server told us to ask for role addition
@@ -163,8 +170,16 @@ const handleSignUp = async (confirmRoleAddition = false) => {
               userType,
               true
             );
+            localStorage.setItem("token", data2.token);
+            localStorage.setItem("user", JSON.stringify(data2.user));
             toast.success("Role added successfully!");
-            navigate(userType === "patient" ? "/PatientPortal" : "/DrugNexusAIDoctorPortal");
+            
+            // Redirect based on user type
+            if (userType === "patient") {
+              navigate("/patient-profile-setup");
+            } else {
+              navigate("/DrugNexusAIDoctorPortal");
+            }
           } catch (err2: any) {
             const msg =
               err2 instanceof ApiError
@@ -212,9 +227,15 @@ const handleSignUp = async (confirmRoleAddition = false) => {
               localStorage.setItem("user", JSON.stringify(data.user)); 
 
               toast.success("Role linked successfully!");
-              navigate("/ProfileSetup", {
-                state: { role: userType } 
-              });
+              
+              // Redirect based on user type
+              if (userType === "patient") {
+                navigate("/patient-profile-setup");
+              } else {
+                navigate("/ProfileSetup", {
+                  state: { role: userType }
+                });
+              }
             } catch (error: any) {
               toast.error(error.response?.data?.error || error.message || "An error occurred linking the role.");
             }
@@ -228,7 +249,13 @@ const handleSignUp = async (confirmRoleAddition = false) => {
         // Already has this role.
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
-        navigate(userType === "patient" ? "/PatientPortal" : "/DrugNexusAIDoctorPortal");
+        
+        // Redirect based on user type
+        if (userType === "patient") {
+          navigate("/patient-portal");
+        } else {
+          navigate("/DrugNexusAIDoctorPortal");
+        }
         toast.success("Login successful!");
       }
     } catch (error: any) {
