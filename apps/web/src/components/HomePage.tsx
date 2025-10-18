@@ -15,8 +15,12 @@ import {
 } from 'react-icons/fa';
 import './HomePage.css';
 import { BASE_URL_1 } from '../base';
+import { useMobileRedirect } from '../hooks/useMobileRedirect';
 
 const HomePage: React.FC = () => {
+  // Redirect mobile users to warning page
+  useMobileRedirect();
+
   const [input, setInput] = useState<string>("");
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [activeSuggestion, setActiveSuggestion] = useState<number>(-1);
@@ -29,6 +33,30 @@ const HomePage: React.FC = () => {
     { pair: string; shortDescription: string }[]
   >([]);
   const [error, setError] = useState<string | null>(null);
+  
+  // Welcome modal state
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+
+  // Check for mobile device and show welcome on first visit
+  useEffect(() => {
+    const width = window.innerWidth;
+    const userAgent = navigator.userAgent.toLowerCase();
+    const mobileKeywords = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
+    
+    setIsMobileDevice(width < 1024 || mobileKeywords.test(userAgent));
+    
+    // Show welcome modal on first visit
+    const hasSeenWelcome = sessionStorage.getItem('hasSeenWelcome');
+    if (!hasSeenWelcome) {
+      setShowWelcome(true);
+    }
+  }, []);
+
+  const handleCloseWelcome = () => {
+    setShowWelcome(false);
+    sessionStorage.setItem('hasSeenWelcome', 'true');
+  };
 
   // Fetch available medicines from the backend
   useEffect(() => {
@@ -291,6 +319,80 @@ const HomePage: React.FC = () => {
               <p>No interactions found between the selected medications.</p>
             )}
             <button onClick={() => setShowPopup(false)}>Close</button>
+          </div>
+        </div>
+      )}
+
+      {/* Welcome Modal */}
+      {showWelcome && (
+        <div className="welcome-overlay">
+          <div className="welcome-modal">
+            <div className="welcome-modal-content">
+              <div className="welcome-header">
+                <div className="welcome-icon">
+                  {isMobileDevice ? '📱' : '💻'}
+                </div>
+                <h2>Welcome to DrugNexusAI</h2>
+                <p className="welcome-subtitle">AI-Powered Drug Interaction Platform</p>
+              </div>
+
+              <div className="welcome-content">
+                {isMobileDevice && (
+                  <div className="mobile-notice">
+                    <div className="notice-icon">⚠️</div>
+                    <h3>Desktop Experience Recommended</h3>
+                    <p>
+                      DrugNexusAI is optimized for desktop browsers. While you can browse on mobile, 
+                      some features may have limited functionality or display issues.
+                    </p>
+                    <p className="notice-recommendation">
+                      For the best experience, please access this platform from a desktop or laptop computer.
+                    </p>
+                  </div>
+                )}
+
+                <div className="welcome-features">
+                  <h3>What You Can Do:</h3>
+                  <div className="feature-list">
+                    <div className="feature-item">
+                      <i className="fas fa-pills"></i>
+                      <span>Check Drug Interactions</span>
+                    </div>
+                    <div className="feature-item">
+                      <i className="fas fa-robot"></i>
+                      <span>AI Medical Assistant</span>
+                    </div>
+                    <div className="feature-item">
+                      <i className="fas fa-user-md"></i>
+                      <span>Doctor & Patient Portals</span>
+                    </div>
+                    <div className="feature-item">
+                      <i className="fas fa-shield-alt"></i>
+                      <span>Secure & Private</span>
+                    </div>
+                  </div>
+                </div>
+
+                {!isMobileDevice && (
+                  <div className="desktop-info">
+                    <p>
+                      <i className="fas fa-check-circle"></i>
+                      You're using a desktop browser - perfect for the full experience!
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="welcome-footer">
+                <button className="welcome-btn" onClick={handleCloseWelcome}>
+                  {isMobileDevice ? 'Continue Anyway' : 'Get Started'}
+                  <i className="fas fa-arrow-right"></i>
+                </button>
+                {isMobileDevice && (
+                  <p className="mobile-disclaimer">Some features may not work as expected on mobile devices</p>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}

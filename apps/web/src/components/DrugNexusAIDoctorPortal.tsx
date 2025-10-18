@@ -39,6 +39,8 @@ interface HealthcareMetric {
 
 const DrugNexusAIDoctorPortal: React.FC = () => {
   const navigate = useNavigate();
+  
+  // All state declarations MUST come before any conditional returns
   const [doctorProfile, setDoctorProfile] = useState<DoctorProfile | null>(null);
   const [editForm, setEditForm] = useState<DoctorProfile>({
     fullName: "",
@@ -59,6 +61,26 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isNavigating, setIsNavigating] = useState(false);
+
+  // Welcome modal state
+  const [showDoctorWelcome, setShowDoctorWelcome] = useState(false);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+
+  // Check for mobile device and show welcome
+  useEffect(() => {
+    const width = window.innerWidth;
+    const userAgent = navigator.userAgent.toLowerCase();
+    const mobileKeywords = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
+    
+    setIsMobileDevice(width < 1024 || mobileKeywords.test(userAgent));
+    
+    // Always show welcome modal on entry
+    setShowDoctorWelcome(true);
+  }, []);
+
+  const handleCloseDoctorWelcome = () => {
+    setShowDoctorWelcome(false);
+  };
 
   // Calculate healthcare-relevant metrics
   const calculateHealthcareMetrics = (): HealthcareMetric[] => {
@@ -335,7 +357,7 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
             <i className="fas fa-search"></i>
             <input
               type="text"
-              placeholder="Search patients by name, ID, or details..."
+              placeholder={window.innerWidth < 768 ? "Search patients..." : "Search patients by name, ID, or details..."}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -764,6 +786,83 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
               <span></span>
               <span></span>
               <span></span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Doctor Portal Welcome Modal */}
+      {showDoctorWelcome && (
+        <div className="doctor-welcome-overlay">
+          <div className="doctor-welcome-modal">
+            <div className="doctor-welcome-header">
+              <div className="welcome-icon-large">
+                {isMobileDevice ? '📱' : '🖥️'}
+              </div>
+              <h2>Welcome to Doctor Portal</h2>
+              <p className="welcome-badge">Professional Medical Platform</p>
+            </div>
+
+            <div className="doctor-welcome-content">
+              {isMobileDevice && (
+                <div className="mobile-warning">
+                  <div className="warning-icon">⚠️</div>
+                  <h3>Desktop Recommended</h3>
+                  <p>
+                    For the best experience with patient management, prescription creation, 
+                    and data analysis, we strongly recommend using a desktop or laptop computer.
+                  </p>
+                </div>
+              )}
+
+              <div className="welcome-info">
+                <h3>What You Can Do Here:</h3>
+                <div className="capabilities-grid">
+                  <div className="capability-card">
+                    <i className="fas fa-users"></i>
+                    <span>Manage Patients</span>
+                  </div>
+                  <div className="capability-card">
+                    <i className="fas fa-prescription"></i>
+                    <span>Create Prescriptions</span>
+                  </div>
+                  <div className="capability-card">
+                    <i className="fas fa-exclamation-triangle"></i>
+                    <span>Check Drug Interactions</span>
+                  </div>
+                  <div className="capability-card">
+                    <i className="fas fa-chart-bar"></i>
+                    <span>View Analytics</span>
+                  </div>
+                </div>
+              </div>
+
+              {!isMobileDevice && (
+                <div className="desktop-benefits">
+                  <div className="benefit-item">
+                    <i className="fas fa-check-circle"></i>
+                    <span>Optimized for large screens and complex workflows</span>
+                  </div>
+                  <div className="benefit-item">
+                    <i className="fas fa-check-circle"></i>
+                    <span>Enhanced security for sensitive medical data</span>
+                  </div>
+                  <div className="benefit-item">
+                    <i className="fas fa-check-circle"></i>
+                    <span>Full keyboard shortcuts and efficient navigation</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="doctor-welcome-footer">
+              <button className="continue-btn" onClick={handleCloseDoctorWelcome}>
+                {isMobileDevice ? 'Continue Anyway' : 'Get Started'}
+                <i className="fas fa-arrow-right"></i>
+              </button>
+              {isMobileDevice && (
+                <p className="mobile-note">Some features may have limited functionality on mobile</p>
+              )}
             </div>
           </div>
         </div>

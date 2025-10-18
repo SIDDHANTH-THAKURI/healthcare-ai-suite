@@ -5,11 +5,15 @@ import ThemeToggle from './ThemeToggle';
 import { FiLogOut } from 'react-icons/fi';
 import './common.css';
 
-import UnderConstructionPopup, {
+import {
   TeamPopup,
   AboutUsPopup,
   TermsOfServicePopup,
-  PrivacyPolicyPopup
+  PrivacyPolicyPopup,
+  FuturePlanPopup,
+  HelpCenterPopup,
+  FAQPopup,
+  BlogPopup
 } from './popUp';
 
 
@@ -195,11 +199,14 @@ const Header: React.FC = () => {
 };
 
 const Footer: React.FC = () => {
-  const [popupVisible, setPopupVisible] = useState(false);
+  const [futurePlanVisible, setFuturePlanVisible] = useState(false);
   const [aboutVisible, setAboutVisible] = useState(false);
   const [teamVisible, setTeamVisible] = useState(false);
   const [termsVisible, setTermsVisible] = useState(false);
   const [privacyVisible, setPrivacyVisible] = useState(false);
+  const [helpVisible, setHelpVisible] = useState(false);
+  const [faqVisible, setFaqVisible] = useState(false);
+  const [blogVisible, setBlogVisible] = useState(false);
 
   const handleTermsOpen = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
@@ -210,11 +217,10 @@ const Footer: React.FC = () => {
     e.preventDefault();
     setPrivacyVisible(true);
   };
-  
 
-  const handlePopupOpen = (e: React.MouseEvent<HTMLAnchorElement>) => {
+  const handleFuturePlanOpen = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
-    setPopupVisible(true);
+    setFuturePlanVisible(true);
   };
 
   const handleAboutOpen = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -227,13 +233,31 @@ const Footer: React.FC = () => {
     setTeamVisible(true);
   };
 
+  const handleHelpOpen = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    setHelpVisible(true);
+  };
+
+  const handleFaqOpen = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    setFaqVisible(true);
+  };
+
+  const handleBlogOpen = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    setBlogVisible(true);
+  };
+
   return (
     <footer className="custom-footer" id="footer">
-      <UnderConstructionPopup visible={popupVisible} onClose={() => setPopupVisible(false)} />
+      <FuturePlanPopup visible={futurePlanVisible} onClose={() => setFuturePlanVisible(false)} />
       <TeamPopup visible={teamVisible} onClose={() => setTeamVisible(false)} />
       <AboutUsPopup visible={aboutVisible} onClose={() => setAboutVisible(false)} />
       <TermsOfServicePopup visible={termsVisible} onClose={() => setTermsVisible(false)} />
       <PrivacyPolicyPopup visible={privacyVisible} onClose={() => setPrivacyVisible(false)} />
+      <HelpCenterPopup visible={helpVisible} onClose={() => setHelpVisible(false)} />
+      <FAQPopup visible={faqVisible} onClose={() => setFaqVisible(false)} />
+      <BlogPopup visible={blogVisible} onClose={() => setBlogVisible(false)} />
 
 
       <div className="footer-container">
@@ -243,7 +267,7 @@ const Footer: React.FC = () => {
             <h2>DrugNexusAI</h2>
           </div>
           <p>
-            Innovating healthcare with AI-driven solutions and a commitment to patient safety.
+            AI-powered medication safety platform transforming healthcare through intelligent drug interaction detection and personalized clinical support.
           </p>
           <div className="social-links">{/* Social Icons Here */}</div>
         </div>
@@ -252,36 +276,26 @@ const Footer: React.FC = () => {
           <div className="footer-column">
             <h3>Company</h3>
             <ul>
-              <li><a href="#" onClick={handleAboutOpen}>About Us</a></li>
-              <li><a href="#" onClick={handleTeamOpen}>Team</a></li>
-              <li><a href="#" onClick={handlePopupOpen}>Future Plan</a></li>
-              <li><a href="#" onClick={handlePopupOpen}>Blog</a></li>
-            </ul>
-          </div>
-          <div className="footer-column">
-            <h3>Products</h3>
-            <ul>
-              <li><a href="#" onClick={handlePopupOpen}>DDI Checker</a></li>
-              <li><a href="#" onClick={handlePopupOpen}>Clinical Support</a></li>
-              <li><a href="#" onClick={handlePopupOpen}>Patient Safety</a></li>
-              <li><a href="#" onClick={handlePopupOpen}>Data Insights</a></li>
+              <li><a href="#" onClick={handleAboutOpen}>About</a></li>
+              <li><a href="#" onClick={handleTeamOpen}>Developer</a></li>
+              <li><a href="#" onClick={handleFuturePlanOpen}>Future Plans</a></li>
+              <li><a href="#" onClick={handleBlogOpen}>Blog</a></li>
             </ul>
           </div>
           <div className="footer-column">
             <h3>Support</h3>
             <ul>
-              <li><a href="#" onClick={handlePopupOpen}>Help Center</a></li>
-              <li><a href="#" onClick={handlePopupOpen}>FAQ</a></li>
+              <li><a href="#" onClick={handleHelpOpen}>Help Center</a></li>
+              <li><a href="#" onClick={handleFaqOpen}>FAQ</a></li>
               <li><a href="#" onClick={handleTermsOpen}>Terms of Service</a></li>
               <li><a href="#" onClick={handlePrivacyOpen}>Privacy Policy</a></li>
-
             </ul>
           </div>
         </div>
       </div>
 
       <div className="footer-bottom">
-        <p>&copy; 2024 DrugNexusAI Technologies. All rights reserved.</p>
+        <p>&copy; 2025 DrugNexusAI. All rights reserved.</p>
       </div>
     </footer>
   );

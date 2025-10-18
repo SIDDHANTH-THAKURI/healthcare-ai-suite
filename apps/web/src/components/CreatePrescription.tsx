@@ -10,6 +10,9 @@ interface Medicine {
   name: string;
   dosage: string;
   frequency?: string;
+  frequencyType?: 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom';
+  customFrequency?: string;
+  timesOfDay?: string[];
   duration?: string;
   status?: 'active' | 'inactive';
   startDate?: string;
@@ -121,14 +124,55 @@ const MedicineForm: React.FC<MedicineFormProps> = ({
         {errors.dosage && <span className="error-text">{errors.dosage}</span>}
       </div>
       <div className="form-group">
-        <label>Frequency</label>
-        <input
-          type="text"
-          placeholder="e.g., Twice daily"
-          value={medicine.frequency}
-          onChange={(e) => handleInputChange('frequency', e.target.value)}
-        />
-        {errors.frequency && <span className="error-text">{errors.frequency}</span>}
+        <label>Frequency Type</label>
+        <select
+          value={medicine.frequencyType || 'daily'}
+          onChange={(e) => {
+            const value = e.target.value as 'daily' | 'weekly' | 'monthly' | 'yearly' | 'custom';
+            onChange('frequencyType', value);
+            if (value !== 'custom') {
+              onChange('customFrequency', '');
+            }
+          }}
+        >
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+          <option value="yearly">Yearly</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+      {medicine.frequencyType === 'custom' && (
+        <div className="form-group">
+          <label>Custom Frequency</label>
+          <input
+            type="text"
+            placeholder="e.g., Every 3 days"
+            value={medicine.customFrequency || ''}
+            onChange={(e) => onChange('customFrequency', e.target.value)}
+          />
+        </div>
+      )}
+      <div className="form-group">
+        <label>Times of Day</label>
+        <div className="times-of-day-selector">
+          {['Morning', 'Afternoon', 'Evening', 'Night'].map((time) => (
+            <label key={time} className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={medicine.timesOfDay?.includes(time) || false}
+                onChange={(e) => {
+                  const currentTimes = medicine.timesOfDay || [];
+                  const newTimes = e.target.checked
+                    ? [...currentTimes, time]
+                    : currentTimes.filter(t => t !== time);
+                  onChange('timesOfDay', JSON.stringify(newTimes));
+                }}
+              />
+              <span>{time}</span>
+            </label>
+          ))}
+        </div>
       </div>
       <div className="form-group">
         <label>Duration</label>
@@ -172,7 +216,15 @@ const CreatePrescription: React.FC = () => {
   const [editingMedicine, setEditingMedicine] = useState<Medicine | null>(null);
   const [showEditForm, setShowEditForm] = useState(false);
   const [showNewMedicineForm, setShowNewMedicineForm] = useState(false);
-  const [newMedicine, setNewMedicine] = useState<Medicine>({ id: 0, name: '', dosage: '', frequency: '', duration: '' });
+  const [newMedicine, setNewMedicine] = useState<Medicine>({ 
+    id: 0, 
+    name: '', 
+    dosage: '', 
+    frequencyType: 'daily',
+    customFrequency: '',
+    timesOfDay: [],
+    duration: '' 
+  });
   const [medicineName, setMedicineName] = useState('');
   const [availableMedicines, setAvailableMedicines] = useState<string[]>([]);
   const [filteredMedicines, setFilteredMedicines] = useState<string[]>([]);
@@ -221,19 +273,35 @@ const CreatePrescription: React.FC = () => {
   const isMedicineAdded = (id: number) => addedMedicines.some(med => med.id === id);
 
   const handleInputChange = (field: string, value: string) => {
-    if (editingMedicine) setEditingMedicine({ ...editingMedicine, [field]: value });
+    if (editingMedicine) {
+      if (field === 'timesOfDay') {
+        setEditingMedicine({ ...editingMedicine, timesOfDay: JSON.parse(value) });
+      } else {
+        setEditingMedicine({ ...editingMedicine, [field]: value });
+      }
+    }
   };
 
   const handleNewMedicineChange = (field: string, value: string) => {
-    setNewMedicine({ ...newMedicine, [field]: value });
+    if (field === 'timesOfDay') {
+      setNewMedicine({ ...newMedicine, timesOfDay: JSON.parse(value) });
+    } else {
+      setNewMedicine({ ...newMedicine, [field]: value });
+    }
   };
 
   const validateMedicine = (med: Medicine) => {
+    const hasFrequency = med.frequencyType === 'custom' 
+      ? med.customFrequency?.trim() !== '' 
+      : med.frequencyType !== undefined;
+    const hasTimesOfDay = med.timesOfDay && med.timesOfDay.length > 0;
+    
     return (
       med.name.trim() !== '' &&
       availableMedicines.includes(med.name) &&
       med.dosage.trim() !== '' &&
-      med.frequency?.trim() !== '' &&
+      hasFrequency &&
+      hasTimesOfDay &&
       med.duration?.trim() !== ''
     );
   };
@@ -307,14 +375,30 @@ const CreatePrescription: React.FC = () => {
     };
     
     setAddedMedicines(prev => [...prev, newMed]);
-    setNewMedicine({ id: 0, name: '', dosage: '', frequency: '', duration: '' });
+    setNewMedicine({ 
+      id: 0, 
+      name: '', 
+      dosage: '', 
+      frequencyType: 'daily',
+      customFrequency: '',
+      timesOfDay: [],
+      duration: '' 
+    });
     setShowNewMedicineForm(false);
   };
 
   const handleEditMedicine = (id: number) => {
     const med = addedMedicines.find(m => m.id === id);
     if (med) {
-      setEditingMedicine(med);
+      // Ensure timesOfDay is properly set
+      const medToEdit = {
+        ...med,
+        timesOfDay: med.timesOfDay || [],
+        frequencyType: med.frequencyType || 'daily',
+        customFrequency: med.customFrequency || ''
+      };
+      setEditingMedicine(medToEdit);
+      setMedicineName(med.name);
       setShowEditForm(true);
       setShowNewMedicineForm(false);
     }
@@ -326,7 +410,15 @@ const CreatePrescription: React.FC = () => {
   };
 
   const handleCancelNewMedicine = () => {
-    setNewMedicine({ id: 0, name: '', dosage: '', frequency: '', duration: '' });
+    setNewMedicine({ 
+      id: 0, 
+      name: '', 
+      dosage: '', 
+      frequencyType: 'daily',
+      customFrequency: '',
+      timesOfDay: [],
+      duration: '' 
+    });
     setShowNewMedicineForm(false);
   };
 
@@ -570,22 +662,31 @@ const CreatePrescription: React.FC = () => {
             </div>
           ) : (
             <ul className="medicine-list">
-              {addedMedicines.map(med => (
-                <li key={med.id} className="medicine-item">
-                  <div className="medicine-info">
-                    <span className="medicine-name">{med.name}</span>
-                    <span className="medicine-details">{med.dosage} • {med.frequency} • {med.duration}</span>
-                  </div>
-                  <div className="medicine-actions">
-                    <button className="edit-btn" onClick={() => handleEditMedicine(med.id)}>
-                      Edit
-                    </button>
-                    <button className="remove-btn" onClick={() => handleRemoveMedicine(med.id)}>
-                      Remove
-                    </button>
-                  </div>
-                </li>
-              ))}
+              {addedMedicines.map(med => {
+                const frequencyDisplay = med.frequencyType === 'custom' 
+                  ? med.customFrequency 
+                  : (med.frequencyType ? med.frequencyType.charAt(0).toUpperCase() + med.frequencyType.slice(1) : 'Daily');
+                const timesDisplay = med.timesOfDay?.join(', ') || '';
+                
+                return (
+                  <li key={med.id} className="medicine-item">
+                    <div className="medicine-info">
+                      <span className="medicine-name">{med.name}</span>
+                      <span className="medicine-details">
+                        {med.dosage} • {frequencyDisplay} • {timesDisplay} • {med.duration}
+                      </span>
+                    </div>
+                    <div className="medicine-actions">
+                      <button className="edit-btn" onClick={() => handleEditMedicine(med.id)}>
+                        Edit
+                      </button>
+                      <button className="remove-btn" onClick={() => handleRemoveMedicine(med.id)}>
+                        Remove
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

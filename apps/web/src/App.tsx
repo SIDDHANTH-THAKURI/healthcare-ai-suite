@@ -18,6 +18,7 @@ import UnderConstruction from "./components/UnderConstruction";
 import ModelsPlayground from "./components/ModelsPlayground";
 import PatientProfileSetup from "./components/PatientProfileSetup";
 import PatientPortalNew from "./components/PatientPortal";
+import MobileNotSupported from "./components/MobileNotSupported";
 
 
 function App() {
@@ -26,7 +27,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout><HomePage /></Layout>} />
         <Route path="/Authentication" element={<Layout><Authentication /></Layout>} />
-        <Route path="/PatientPortal" element={<ProtectedRoute><Layout><PatientPortal /></Layout></ProtectedRoute>} />
+        <Route path="/PatientPortal" element={<ProtectedRoute><PatientPortal /></ProtectedRoute>} />
         <Route path="/how-it-works" element={<Layout><HowItWorks /></Layout>} />
         <Route path="/patientLabResults" element={<ProtectedRoute><Layout><PatientLabResults /></Layout></ProtectedRoute>} />
         <Route path="/patient-details/:patientId" element={<ProtectedRoute><Layout><PatientDetails /></Layout></ProtectedRoute>} />
@@ -39,6 +40,7 @@ function App() {
         <Route path="/patient-profile-setup" element={<PatientProfileSetup />} />
         <Route path="/patient-portal-new" element={<PatientPortalNew />} />
         <Route path="/patient-portal" element={<PatientPortalNew />} />
+        <Route path="/mobile-not-supported" element={<MobileNotSupported />} />
         <Route path="*" element={<Layout><NotFound /></Layout>} />
 
       </Routes>

@@ -14,6 +14,8 @@ import patientProfileRouter from './routes/patientProfileRouter';
 import medicationScheduleRouter from './routes/medicationScheduleRouter';
 import chatRouter from './routes/chatRouter';
 import documentRouter from './routes/documentRouter';
+import appointmentRouter from './routes/appointmentRouter';
+import adherenceRouter from './routes/adherenceRouter';
 import { MONGO_URI, COLLECTION_NAME, LLM_MODEL, OPENROUTER_API_KEY, OPENROUTER_URL } from './config';
 
 const app = express();
@@ -23,8 +25,8 @@ app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
-    res.status(200).json({ 
-        status: 'healthy', 
+    res.status(200).json({
+        status: 'healthy',
         service: 'api-gateway',
         timestamp: new Date().toISOString(),
         mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
@@ -40,6 +42,8 @@ app.use('/api/patient-profile', patientProfileRouter);
 app.use('/api/medication-schedule', medicationScheduleRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/documents', documentRouter);
+app.use('/api/appointments', appointmentRouter);
+app.use('/api/adherence', adherenceRouter);
 
 
 mongoose

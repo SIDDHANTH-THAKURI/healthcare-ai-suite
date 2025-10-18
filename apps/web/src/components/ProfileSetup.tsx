@@ -49,7 +49,7 @@ const ProfileSetup: React.FC = () => {
 
   useEffect(() => {
     const genderKey = role === "doctor" ? form.gender : form.patientGender;
-  
+
     if (
       role &&
       genderKey &&
@@ -58,9 +58,9 @@ const ProfileSetup: React.FC = () => {
     ) {
       const defaultImage =
         defaultAvatars[role as "doctor" | "patient"][
-          genderKey as "male" | "female"
+        genderKey as "male" | "female"
         ];
-  
+
       setForm(prev => ({ ...prev, profileImage: defaultImage }));
       setPreviewImage(defaultImage);
     }
@@ -105,28 +105,28 @@ const ProfileSetup: React.FC = () => {
     const profileData =
       role === "doctor"
         ? {
-            doctorProfile: {
-              fullName: form.fullName,
-              phone: form.phone,
-              specialization: form.specialization,
-              qualifications: form.qualifications,
-              experienceYears: form.experienceYears,
-              age: form.age,
-              gender: form.gender,
-              profileImage: form.profileImage,
-            },
-          }
+          doctorProfile: {
+            fullName: form.fullName,
+            phone: form.phone,
+            specialization: form.specialization,
+            qualifications: form.qualifications,
+            experienceYears: form.experienceYears,
+            age: form.age,
+            gender: form.gender,
+            profileImage: form.profileImage,
+          },
+        }
         : {
-            patientProfile: {
-              fullName: form.fullName,
-              phone: form.phone,
-              age: form.patientAge,
-              gender: form.patientGender,
-              height: form.height,
-              weight: form.weight,
-              profileImage: form.profileImage,
-            },
-          };
+          patientProfile: {
+            fullName: form.fullName,
+            phone: form.phone,
+            age: form.patientAge,
+            gender: form.patientGender,
+            height: form.height,
+            weight: form.weight,
+            profileImage: form.profileImage,
+          },
+        };
 
 
     try {
@@ -235,7 +235,7 @@ const ProfileSetup: React.FC = () => {
             </>
           )}
 
-          
+
 
           <button type="submit" className="btn-submit" disabled={submitting}>
             {submitting ? "Saving..." : "Save Profile"}

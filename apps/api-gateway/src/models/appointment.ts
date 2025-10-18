@@ -2,14 +2,13 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IAppointment extends Document {
   patientId: string;
-  doctorId: string;
   doctorName: string;
   specialty: string;
-  dateTime: Date;
-  type: string;
-  status: string;
-  notes: string;
-  prescription?: string;
+  date: Date;
+  time: string;
+  location: string;
+  notes?: string;
+  status: 'scheduled' | 'completed' | 'cancelled';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -17,18 +16,21 @@ export interface IAppointment extends Document {
 const AppointmentSchema: Schema = new Schema(
   {
     patientId: { type: String, required: true, index: true },
-    doctorId: { type: String, required: true },
     doctorName: { type: String, required: true },
-    specialty: { type: String },
-    dateTime: { type: Date, required: true, index: true },
-    type: { type: String, enum: ['checkup', 'followup', 'emergency', 'consultation'], default: 'checkup' },
-    status: { type: String, enum: ['scheduled', 'completed', 'cancelled', 'rescheduled'], default: 'scheduled' },
+    specialty: { type: String, required: true },
+    date: { type: Date, required: true, index: true },
+    time: { type: String, required: true },
+    location: { type: String, required: true },
     notes: { type: String },
-    prescription: { type: String }
+    status: { 
+      type: String, 
+      enum: ['scheduled', 'completed', 'cancelled'],
+      default: 'scheduled'
+    }
   },
   { timestamps: true }
 );
 
-AppointmentSchema.index({ patientId: 1, dateTime: 1 });
+AppointmentSchema.index({ patientId: 1, date: 1 });
 
 export default mongoose.model<IAppointment>('Appointment', AppointmentSchema);
