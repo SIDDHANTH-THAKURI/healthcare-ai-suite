@@ -27,19 +27,27 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout><HomePage /></Layout>} />
         <Route path="/Authentication" element={<Layout><Authentication /></Layout>} />
-        <Route path="/PatientPortal" element={<ProtectedRoute><PatientPortal /></ProtectedRoute>} />
+        
+        {/* Patient Routes - Require patient role */}
+        <Route path="/PatientPortal" element={<ProtectedRoute requiredRole="patient"><PatientPortal /></ProtectedRoute>} />
+        <Route path="/patient-profile-setup" element={<ProtectedRoute requiredRole="patient"><PatientProfileSetup /></ProtectedRoute>} />
+        <Route path="/patient-portal-new" element={<ProtectedRoute requiredRole="patient"><PatientPortalNew /></ProtectedRoute>} />
+        <Route path="/patient-portal" element={<ProtectedRoute requiredRole="patient"><PatientPortalNew /></ProtectedRoute>} />
+        
+        {/* Doctor Routes - Require doctor role */}
+        <Route path="/DrugNexusAIDoctorPortal" element={<ProtectedRoute requiredRole="doctor"><Layout><DrugNexusAIDoctorPortal /></Layout></ProtectedRoute>} />
+        <Route path="/patient-details/:patientId" element={<ProtectedRoute requiredRole="doctor"><Layout><PatientDetails /></Layout></ProtectedRoute>} />
+        <Route path="/create-prescription" element={<ProtectedRoute requiredRole="doctor"><Layout><CreatePrescription /></Layout></ProtectedRoute>} />
+        <Route path="/ProfileSetup" element={<ProtectedRoute requiredRole="doctor"><Layout><ProfileSetup /></Layout></ProtectedRoute>} />
+        <Route path="/patientLabResults" element={<ProtectedRoute requiredRole="doctor"><Layout><PatientLabResults /></Layout></ProtectedRoute>} />
+        
+        {/* Chatbot - Doctor only */}
+        <Route path="/Chatbot" element={<ProtectedRoute requiredRole="doctor"><Layout><Chatbot /></Layout></ProtectedRoute>} />
+        
+        {/* Public Routes */}
         <Route path="/how-it-works" element={<Layout><HowItWorks /></Layout>} />
-        <Route path="/patientLabResults" element={<ProtectedRoute><Layout><PatientLabResults /></Layout></ProtectedRoute>} />
-        <Route path="/patient-details/:patientId" element={<ProtectedRoute><Layout><PatientDetails /></Layout></ProtectedRoute>} />
-        <Route path="/create-prescription" element={<ProtectedRoute><Layout><CreatePrescription /></Layout></ProtectedRoute>} />
-        <Route path="/DrugNexusAIDoctorPortal" element={<ProtectedRoute><Layout><DrugNexusAIDoctorPortal /></Layout></ProtectedRoute>} />
-        <Route path="/ProfileSetup" element={<ProtectedRoute><Layout><ProfileSetup /></Layout></ProtectedRoute>} />
-        <Route path="/Chatbot" element={<ProtectedRoute><Layout><Chatbot /></Layout></ProtectedRoute>} />
         <Route path="/UnderConstruction" element={<Layout><UnderConstruction /></Layout>} />
         <Route path="/ModelsPlayground" element={<Layout><ModelsPlayground /></Layout>} />
-        <Route path="/patient-profile-setup" element={<PatientProfileSetup />} />
-        <Route path="/patient-portal-new" element={<PatientPortalNew />} />
-        <Route path="/patient-portal" element={<PatientPortalNew />} />
         <Route path="/mobile-not-supported" element={<MobileNotSupported />} />
         <Route path="*" element={<Layout><NotFound /></Layout>} />
 

@@ -28,7 +28,6 @@ const shouldShowNavLinks = (pathname: string): boolean => {
     '/DrugNexusAIDoctorPortal',
     '/patient-details',
     '/create-prescription',
-    "/chatbot",
     "/ModelsPlayground",
     "/PatientPortal"
   ];
@@ -160,14 +159,6 @@ const Header: React.FC = () => {
                   >
                     <i className="fas fa-vials" style={{ marginRight: '10px' }}></i>
                     ModelsPlayground
-                  </Link>
-                  <Link 
-                    to="/chatbot" 
-                    className="dropdown-link"
-                    onClick={() => setIsMobileOpen(false)}
-                  >
-                    <i className="fas fa-robot" style={{ marginRight: '10px' }}></i>
-                    ChatBot
                   </Link>
                   
                 </div>

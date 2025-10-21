@@ -96,7 +96,10 @@ const PatientProfileSchema: Schema = new Schema(
     },
     onboardingCompleted: { type: Boolean, default: false }
   },
-  { timestamps: true }
+  { 
+    timestamps: true,
+    collection: 'patientprofiles'
+  }
 );
 
 export default mongoose.model<IPatientProfile>('PatientProfile', PatientProfileSchema);

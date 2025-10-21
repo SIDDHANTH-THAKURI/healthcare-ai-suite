@@ -23,7 +23,7 @@ const MedicalDocumentSchema: Schema = new Schema(
     patientId: { type: String, required: true, index: true },
     fileName: { type: String, required: true },
     fileType: { type: String, required: true },
-    fileUrl: { type: String, required: true },
+    fileUrl: { type: String, default: '' },
     extractedText: { type: String },
     documentType: { 
       type: String, 

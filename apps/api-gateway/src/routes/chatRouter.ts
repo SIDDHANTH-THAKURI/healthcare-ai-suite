@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import ChatMessage from '../models/chatMessage';
 import MedicationSchedule from '../models/medicationSchedule';
 import Appointment from '../models/appointment';
+import MedicalDocument from '../models/medicalDocument';
 import axios from 'axios';
 import { OPENROUTER_API_KEY, OPENROUTER_URL, LLM_MODEL } from '../config';
 
@@ -10,14 +11,14 @@ const router = express.Router();
 // List of free models to try in order
 const FREE_MODELS = [
   'deepseek/deepseek-chat-v3.1:free',
-  'openai/gpt-oss-20b:free',
-  'meta-llama/llama-3.3-8b-instruct:free',
-  'google/gemma-3n-e2b-it:free',
-  'google/gemini-2.0-flash-exp:free',
   'mistralai/mistral-small-3.1-24b-instruct:free',
   'meta-llama/llama-4-scout:free',
+  'google/gemini-2.0-flash-exp:free',
+  'openai/gpt-oss-20b:free',
   'mistralai/mistral-7b-instruct:free',
-  'meta-llama/llama-3.2-3b-instruct:free'
+  'meta-llama/llama-3.3-8b-instruct:free',
+  'meta-llama/llama-3.2-3b-instruct:free',
+  'google/gemma-3n-e2b-it:free'
 ];
 
 // Helper function to call OpenRouter API with fallback models
@@ -102,9 +103,18 @@ router.post('/message', async (req: Request, res: Response): Promise<void> => {
   try {
     const { patientId, content } = req.body;
 
+    console.log('=== CHAT REQUEST START ===');
     console.log('Received chat message:', { patientId, content });
+    
+    // Validate input
+    if (!patientId || !content) {
+      console.error('❌ Missing required fields:', { patientId: !!patientId, content: !!content });
+      res.status(400).json({ message: 'Missing patientId or content' });
+      return;
+    }
 
     // Save user message
+    console.log('💾 Saving user message to database...');
     const userMessage = new ChatMessage({
       patientId,
       role: 'user',
@@ -112,6 +122,7 @@ router.post('/message', async (req: Request, res: Response): Promise<void> => {
       timestamp: new Date()
     });
     await userMessage.save();
+    console.log('✅ User message saved:', userMessage._id);
 
     // Use AI to detect intent and extract data
     const analysisPrompt = `Analyze this patient message and extract structured information:
@@ -193,11 +204,25 @@ Rules:
       }
     }
 
-    // Generate AI response using OpenRouter - NO FALLBACKS
+    // Fetch patient's medical document summaries
+    const medicalDocs = await MedicalDocument.find({ patientId }).sort({ uploadDate: -1 });
+    const medicalContext = medicalDocs
+      .filter(doc => doc.aiSummary)
+      .map(doc => doc.aiSummary)
+      .join('\n\n');
+
+    // Generate AI response using OpenRouter
     let aiContent = '';
     
     // Build context for AI
-    let aiPrompt = `Patient message: "${content}"\n\n`;
+    let aiPrompt = '';
+    
+    // Add medical context if available
+    if (medicalContext) {
+      aiPrompt += `PATIENT'S MEDICAL HISTORY:\n${medicalContext}\n\n`;
+    }
+    
+    aiPrompt += `Patient message: "${content}"\n\n`;
     
     if (intent === 'medication_add' && extractedData.medications?.length > 0) {
       const med = extractedData.medications[0];
@@ -206,10 +231,10 @@ Rules:
       const apt = extractedData.appointments[0];
       aiPrompt += `IMPORTANT: I've successfully scheduled an appointment with ${apt.doctorName} for ${apt.date} at ${apt.time} in the database. Confirm this in a warm, reassuring way.`;
     } else {
-      aiPrompt += `Respond to this patient message in a helpful, friendly way. You're a health assistant that can help with medications, appointments, and health questions.`;
+      aiPrompt += `Respond to this patient message in a helpful, friendly way. Use their medical history above to provide personalized advice. You're a health assistant that can help with medications, appointments, and health questions.`;
     }
     
-    // Call AI - if it fails, throw error (no fallbacks)
+    // Call AI
     aiContent = await callOpenRouterAPI(aiPrompt);
     
     console.log('AI response generated:', aiContent);
@@ -233,7 +258,10 @@ Rules:
       extractedData
     });
   } catch (error: any) {
-    console.error('Chat error:', error);
+    console.error('=== CHAT ERROR ===');
+    console.error('Error type:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
     
     // Check if it's an AI model failure
     if (error.message?.includes('All') && error.message?.includes('models failed')) {
@@ -242,10 +270,23 @@ Rules:
         error: 'All AI models are currently unavailable. This might be due to OpenRouter API settings or service issues. Please check https://openrouter.ai/settings/privacy',
         details: error.message
       });
+    } else if (error.name === 'ValidationError') {
+      res.status(400).json({ 
+        message: 'Database validation error', 
+        error: error.message,
+        details: 'Check if MongoDB models are properly defined'
+      });
+    } else if (error.name === 'MongoError' || error.name === 'MongoServerError') {
+      res.status(500).json({ 
+        message: 'Database error', 
+        error: error.message,
+        details: 'Check MongoDB connection'
+      });
     } else {
       res.status(500).json({ 
         message: 'Error processing message', 
-        error: error.message || 'Unknown error'
+        error: error.message || 'Unknown error',
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
       });
     }
   }

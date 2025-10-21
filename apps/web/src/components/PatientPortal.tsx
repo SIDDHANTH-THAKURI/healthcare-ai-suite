@@ -44,6 +44,10 @@ const PatientPortal: React.FC = () => {
   const [chatInput, setChatInput] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [manualText, setManualText] = useState('');
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [showMedications, setShowMedications] = useState(false);
   const [showAppointments, setShowAppointments] = useState(false);
@@ -52,6 +56,8 @@ const PatientPortal: React.FC = () => {
   const [showWelcomeModal, setShowWelcomeModal] = useState(true);
   const [showComingSoon, setShowComingSoon] = useState(false);
   const [comingSoonFeature, setComingSoonFeature] = useState('');
+  const [chatHeight, setChatHeight] = useState(600);
+  const [isResizingHeight, setIsResizingHeight] = useState(false);
 
   useEffect(() => {
     fetchPatientData();
@@ -64,6 +70,36 @@ const PatientPortal: React.FC = () => {
       setShowWelcomeModal(false);
     }
   }, []);
+
+  // Handle chat height resize
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isResizingHeight) {
+        const newHeight = window.innerHeight - e.clientY;
+        if (newHeight >= 300 && newHeight <= window.innerHeight - 100) {
+          setChatHeight(newHeight);
+        }
+      }
+    };
+
+    const handleMouseUp = () => {
+      setIsResizingHeight(false);
+    };
+
+    if (isResizingHeight) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = 'ns-resize';
+      document.body.style.userSelect = 'none';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizingHeight]);
 
   const handleCloseWelcome = () => {
     setShowWelcomeModal(false);
@@ -228,17 +264,46 @@ const PatientPortal: React.FC = () => {
     }
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (file) {
+      // Validate file size (10MB max)
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size must be less than 10MB');
+        return;
+      }
+      
+      // Validate file type
+      const allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain',
+        'image/jpeg',
+        'image/jpg',
+        'image/png'
+      ];
+      
+      if (!allowedTypes.includes(file.type)) {
+        alert('Please upload PDF, DOC, DOCX, TXT, or image files only');
+        return;
+      }
+      
+      setSelectedFile(file);
+    }
+  };
 
+  const handleFileUpload = async () => {
+    if (!selectedFile) return;
+
+    setIsUploading(true);
     const user = localStorage.getItem('user');
     const userId = user ? JSON.parse(user).email : 'demo-patient-001';
 
     const formData = new FormData();
-    formData.append('document', file);
+    formData.append('document', selectedFile);
     formData.append('patientId', userId);
-    formData.append('documentType', 'other');
+    formData.append('documentType', 'medical_history');
 
     try {
       const response = await fetch('http://localhost:5000/api/documents/upload', {
@@ -250,13 +315,89 @@ const PatientPortal: React.FC = () => {
         const data = await response.json();
         setChatMessages(prev => [...prev, {
           role: 'assistant',
-          content: `Document "${file.name}" uploaded successfully! ${data.document.aiSummary || 'I\'ve processed and stored it for reference.'}`,
+          content: `📄 Document "${selectedFile.name}" uploaded and processed successfully!\n\n${data.document.aiSummary || 'I\'ve extracted and stored the medical information for reference in our conversations.'}`,
           timestamp: new Date()
         }]);
+        
+        // Clear selection
+        setSelectedFile(null);
+        setShowUpload(false);
+        
+        // Auto-scroll to bottom
+        setTimeout(() => {
+          const container = document.getElementById('chat-messages-container');
+          if (container) {
+            container.scrollTop = container.scrollHeight;
+          }
+        }, 100);
+      } else {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        console.error('Upload error response:', errorData);
+        alert(`Upload failed: ${errorData.message || errorData.error || 'Unknown error'}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading file:', error);
+      alert(`Failed to upload document: ${error.message || 'Please check if the backend is running.'}`);
+    } finally {
+      setIsUploading(false);
     }
+  };
+
+  const handleManualTextSubmit = async () => {
+    if (!manualText.trim()) return;
+
+    setIsUploading(true);
+    const user = localStorage.getItem('user');
+    const userId = user ? JSON.parse(user).email : 'demo-patient-001';
+
+    try {
+      const response = await fetch('http://localhost:5000/api/documents/upload-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          patientId: userId,
+          text: manualText,
+          documentType: 'medical_history'
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setChatMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `📝 Medical history text processed successfully!\n\n${data.document?.aiSummary || 'I\'ve stored your medical information for reference in our conversations.'}`,
+          timestamp: new Date()
+        }]);
+        
+        // Clear input
+        setManualText('');
+        setShowManualInput(false);
+        setShowUpload(false);
+        
+        // Auto-scroll to bottom
+        setTimeout(() => {
+          const container = document.getElementById('chat-messages-container');
+          if (container) {
+            container.scrollTop = container.scrollHeight;
+          }
+        }, 100);
+      } else {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        console.error('Text processing error response:', errorData);
+        alert(`Processing failed: ${errorData.message || errorData.error || 'Unknown error'}`);
+      }
+    } catch (error: any) {
+      console.error('Error processing text:', error);
+      alert(`Failed to process text: ${error.message || 'Please check if the backend is running.'}`);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const cancelFileSelection = () => {
+    setSelectedFile(null);
+    setManualText('');
+    setShowManualInput(false);
   };
 
   const markAsTaken = async (scheduleId: string, time: string) => {
@@ -720,7 +861,17 @@ const PatientPortal: React.FC = () => {
       {/* Beautiful Modern Chat Drawer */}
       <div className={`chat-drawer ${isChatOpen ? 'open' : ''}`}>
         <div className="chat-drawer-overlay" onClick={() => setIsChatOpen(false)}></div>
-        <div className="chat-drawer-content">
+        <div 
+          className="chat-drawer-content" 
+          style={{ height: `${chatHeight}px`, maxHeight: `${chatHeight}px` }}
+        >
+          <div 
+            className="chat-resize-handle-vertical"
+            onMouseDown={(e) => {
+              setIsResizingHeight(true);
+              e.preventDefault();
+            }}
+          />
           {/* Modern Chat Header */}
           <div className="chat-header">
             <div className="chat-header-left">
@@ -735,11 +886,12 @@ const PatientPortal: React.FC = () => {
             </div>
             <div className="chat-header-actions">
               <button 
-                className={`icon-btn ${showUpload ? 'active' : ''}`}
+                className={`icon-btn experimental-btn ${showUpload ? 'active' : ''}`}
                 onClick={() => setShowUpload(!showUpload)} 
-                title="Upload document"
+                title="Upload document (Experimental)"
               >
                 <i className="fas fa-paperclip"></i>
+                <span className="experimental-badge">BETA</span>
               </button>
               <button className="icon-btn" onClick={() => setIsChatOpen(false)} title="Close">
                 <i className="fas fa-chevron-down"></i>
@@ -747,25 +899,130 @@ const PatientPortal: React.FC = () => {
             </div>
           </div>
 
-          {/* Upload Section */}
+          {/* Enhanced Upload Section */}
           {showUpload && (
             <div className="upload-section">
-              <input
-                type="file"
-                id="file-upload"
-                accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
-                onChange={handleFileUpload}
-                style={{ display: 'none' }}
-              />
-              <label htmlFor="file-upload" className="upload-label">
-                <div className="upload-icon">
-                  <i className="fas fa-cloud-upload-alt"></i>
+              {!selectedFile && !showManualInput && (
+                <div className="upload-options">
+                  <input
+                    type="file"
+                    id="file-upload"
+                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                    onChange={handleFileSelect}
+                    style={{ display: 'none' }}
+                  />
+                  <label htmlFor="file-upload" className="upload-option-card">
+                    <div className="upload-option-icon">
+                      <i className="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div className="upload-option-text">
+                      <span className="upload-option-title">Upload Document</span>
+                      <small className="upload-option-subtitle">PDF, DOC, DOCX, TXT, Images</small>
+                    </div>
+                  </label>
+                  
+                  <button 
+                    className="upload-option-card" 
+                    onClick={() => setShowManualInput(true)}
+                  >
+                    <div className="upload-option-icon">
+                      <i className="fas fa-keyboard"></i>
+                    </div>
+                    <div className="upload-option-text">
+                      <span className="upload-option-title">Type/Paste Text</span>
+                      <small className="upload-option-subtitle">Enter medical history manually</small>
+                    </div>
+                  </button>
                 </div>
-                <div className="upload-text">
-                  <span className="upload-title">Upload Medical Document</span>
-                  <small className="upload-subtitle">PDF, DOC, DOCX, Images (Max 10MB)</small>
+              )}
+
+              {selectedFile && (
+                <div className="file-preview">
+                  <div className="file-preview-header">
+                    <div className="file-icon">
+                      {selectedFile.type.includes('pdf') && <i className="fas fa-file-pdf"></i>}
+                      {selectedFile.type.includes('word') && <i className="fas fa-file-word"></i>}
+                      {selectedFile.type.includes('text') && <i className="fas fa-file-alt"></i>}
+                      {selectedFile.type.includes('image') && <i className="fas fa-file-image"></i>}
+                    </div>
+                    <div className="file-info">
+                      <div className="file-name">{selectedFile.name}</div>
+                      <div className="file-size">{(selectedFile.size / 1024).toFixed(2)} KB</div>
+                    </div>
+                    <button className="file-remove" onClick={cancelFileSelection}>
+                      <i className="fas fa-times"></i>
+                    </button>
+                  </div>
+                  <div className="file-preview-actions">
+                    <button 
+                      className="btn-cancel" 
+                      onClick={cancelFileSelection}
+                      disabled={isUploading}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      className="btn-upload" 
+                      onClick={handleFileUpload}
+                      disabled={isUploading}
+                    >
+                      {isUploading ? (
+                        <>
+                          <i className="fas fa-spinner fa-spin"></i> Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <i className="fas fa-upload"></i> Upload & Process
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
-              </label>
+              )}
+
+              {showManualInput && (
+                <div className="manual-input-section">
+                  <div className="manual-input-header">
+                    <h4>
+                      <i className="fas fa-keyboard"></i> Enter Medical History
+                    </h4>
+                    <button className="close-manual-input" onClick={cancelFileSelection}>
+                      <i className="fas fa-times"></i>
+                    </button>
+                  </div>
+                  <textarea
+                    className="manual-text-input"
+                    placeholder="Paste or type your medical history here...&#10;&#10;Example:&#10;- Diagnosed with Type 2 Diabetes in 2020&#10;- Allergic to Penicillin&#10;- Currently taking Metformin 500mg twice daily&#10;- Blood pressure: 120/80"
+                    value={manualText}
+                    onChange={(e) => setManualText(e.target.value)}
+                    rows={8}
+                  />
+                  <div className="manual-input-actions">
+                    <button 
+                      className="btn-cancel" 
+                      onClick={cancelFileSelection}
+                      disabled={isUploading}
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      className="btn-upload" 
+                      onClick={handleManualTextSubmit}
+                      disabled={isUploading || !manualText.trim()}
+                    >
+                      {isUploading ? (
+                        <>
+                          <i className="fas fa-spinner fa-spin"></i> Processing...
+                        </>
+                      ) : (
+                        <>
+                          <i className="fas fa-paper-plane"></i> Submit & Process
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -907,22 +1164,18 @@ const PatientPortal: React.FC = () => {
         </div>
       </div>
 
-      {/* Beautiful Floating Chat Button */}
-      <button className="chat-fab" onClick={() => setIsChatOpen(!isChatOpen)}>
-        <div className="fab-icon">
-          {isChatOpen ? (
-            <i className="fas fa-times"></i>
-          ) : (
-            <>
-              <i className="fas fa-robot"></i>
-              {chatMessages.length > 0 && (
-                <span className="chat-badge">{chatMessages.length}</span>
-              )}
-            </>
-          )}
-        </div>
-        <div className="fab-pulse"></div>
-      </button>
+      {/* Beautiful Floating Chat Button - Hidden when chat is open */}
+      {!isChatOpen && (
+        <button className="chat-fab" onClick={() => setIsChatOpen(true)}>
+          <div className="fab-icon">
+            <i className="fas fa-robot"></i>
+            {chatMessages.length > 0 && (
+              <span className="chat-badge">{chatMessages.length}</span>
+            )}
+          </div>
+          <div className="fab-pulse"></div>
+        </button>
+      )}
 
       {/* Modals */}
       {showProfile && <PatientProfileView onClose={() => setShowProfile(false)} />}

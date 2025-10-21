@@ -39,7 +39,7 @@ interface HealthcareMetric {
 
 const DrugNexusAIDoctorPortal: React.FC = () => {
   const navigate = useNavigate();
-  
+
   // All state declarations MUST come before any conditional returns
   const [doctorProfile, setDoctorProfile] = useState<DoctorProfile | null>(null);
   const [editForm, setEditForm] = useState<DoctorProfile>({
@@ -61,6 +61,33 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isNavigating, setIsNavigating] = useState(false);
+  
+  // Gender dropdown state
+  const [showGenderDropdown, setShowGenderDropdown] = useState(false);
+  const genderDropdownRef = React.useRef<HTMLDivElement>(null);
+  
+  const genderOptions = [
+    { value: 'male', label: 'Male' },
+    { value: 'female', label: 'Female' },
+    { value: 'other', label: 'Other' }
+  ];
+
+  // Close gender dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (genderDropdownRef.current && !genderDropdownRef.current.contains(event.target as Node)) {
+        setShowGenderDropdown(false);
+      }
+    };
+
+    if (showGenderDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showGenderDropdown]);
 
   // Welcome modal state
   const [showDoctorWelcome, setShowDoctorWelcome] = useState(false);
@@ -71,15 +98,19 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
     const width = window.innerWidth;
     const userAgent = navigator.userAgent.toLowerCase();
     const mobileKeywords = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
-    
+
     setIsMobileDevice(width < 1024 || mobileKeywords.test(userAgent));
-    
-    // Always show welcome modal on entry
-    setShowDoctorWelcome(true);
+
+    // Show welcome modal only on first visit
+    const hasSeenDoctorWelcome = localStorage.getItem('hasSeenDoctorWelcome');
+    if (!hasSeenDoctorWelcome) {
+      setShowDoctorWelcome(true);
+    }
   }, []);
 
   const handleCloseDoctorWelcome = () => {
     setShowDoctorWelcome(false);
+    localStorage.setItem('hasSeenDoctorWelcome', 'true');
   };
 
   // Calculate healthcare-relevant metrics
@@ -91,40 +122,28 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
     // Active Patients This Month - patients with recent activity (last visit this month or recent)
     const activePatientsThisMonth = patients.filter(patient => {
       if (patient.lastVisit === "Today") return true;
-      
+
       // Parse various date formats that might be in lastVisit
       const lastVisitDate = new Date(patient.lastVisit);
       if (!isNaN(lastVisitDate.getTime())) {
         return lastVisitDate.getMonth() === currentMonth && lastVisitDate.getFullYear() === currentYear;
       }
-      
+
       // If lastVisit is a relative term like "2 days ago", "1 week ago", etc.
       const daysAgoMatch = patient.lastVisit.match(/(\d+)\s+days?\s+ago/i);
       if (daysAgoMatch) {
         const daysAgo = parseInt(daysAgoMatch[1]);
         return daysAgo <= 30; // Consider active if visited within 30 days
       }
-      
+
       const weeksAgoMatch = patient.lastVisit.match(/(\d+)\s+weeks?\s+ago/i);
       if (weeksAgoMatch) {
         const weeksAgo = parseInt(weeksAgoMatch[1]);
         return weeksAgo <= 4; // Consider active if visited within 4 weeks
       }
-      
+
       return false;
     }).length;
-
-    // Drug Interactions Detected - simulate based on patient count and risk factors
-    // In a real system, this would come from actual interaction checking
-    const drugInteractionsDetected = Math.floor(patients.length * 0.15); // Assume 15% of patients have potential interactions
-
-    // Prescriptions Reviewed - simulate based on active patients
-    // In a real system, this would come from actual prescription data
-    const prescriptionsReviewed = Math.floor(activePatientsThisMonth * 1.8); // Assume 1.8 prescriptions per active patient on average
-
-    // High-Risk Interactions - simulate critical cases requiring immediate attention
-    // In a real system, this would come from severity analysis of interactions
-    const highRiskInteractions = Math.floor(drugInteractionsDetected * 0.25); // Assume 25% of interactions are high-risk
 
     return [
       {
@@ -136,23 +155,23 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
       },
       {
         label: 'Drug Interactions Detected',
-        value: drugInteractionsDetected,
+        value: 'Coming Soon',
         icon: 'fas fa-exclamation-triangle',
-        description: 'Potential interactions identified',
+        description: 'Feature in development',
         color: 'var(--accent)'
       },
       {
         label: 'Prescriptions Reviewed',
-        value: prescriptionsReviewed,
+        value: 'Coming Soon',
         icon: 'fas fa-prescription-bottle-alt',
-        description: 'Total prescriptions analyzed',
+        description: 'Feature in development',
         color: 'var(--secondary)'
       },
       {
         label: 'High-Risk Interactions',
-        value: highRiskInteractions,
+        value: 'Coming Soon',
         icon: 'fas fa-shield-alt',
-        description: 'Critical interactions requiring attention',
+        description: 'Feature in development',
         color: '#dc3545'
       }
     ];
@@ -238,11 +257,11 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
     // Calculate age from DOB
     const calculatedAge = calculateAge(newPatient.dob);
     const entry = { ...newPatient, age: calculatedAge, lastVisit: "Today" };
-    
+
     if (!entry.name || !entry.gender || !entry.dob || !entry.phone) {
       alert("All fields are required"); return;
     }
-    
+
     const res = await fetch(`${BASE_URL_1}/api/patients/add`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -269,7 +288,7 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
     };
 
     const token = localStorage.getItem("token");
-    
+
     try {
       // Try to update on server first
       const res = await fetch(`${BASE_URL_1}/api/patients/${editingPatient.id}`, {
@@ -281,20 +300,20 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
       if (res.ok) {
         const data = await res.json();
         console.log('Patient updated successfully on server:', data);
-        
+
         // Update local state with server response
         setPatients(prev => prev.map(p => p.id === editingPatient.id ? updatedPatient : p));
         setShowEditPatientModal(false);
         setEditingPatient(null);
-        
+
         alert("Patient updated successfully!");
       } else {
         const errorData = await res.json().catch(() => ({ message: 'Unknown error' }));
         console.error('Server update failed:', res.status, errorData);
-        
+
         // Show error to user
         alert(`Failed to update patient in database: ${errorData.message || res.statusText}\n\nPlease check the backend server logs for details.`);
-        
+
         // Still update UI locally so user can see changes in current session
         setPatients(prev => prev.map(p => p.id === editingPatient.id ? updatedPatient : p));
         setShowEditPatientModal(false);
@@ -303,7 +322,7 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
     } catch (error) {
       console.error('Update error:', error);
       alert(`Error connecting to server: ${error instanceof Error ? error.message : 'Unknown error'}\n\nChanges will be visible in current session only.`);
-      
+
       // Update UI locally
       setPatients(prev => prev.map(p => p.id === editingPatient.id ? updatedPatient : p));
       setShowEditPatientModal(false);
@@ -371,7 +390,10 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
 
         <div className="metrics-grid">
           {calculateHealthcareMetrics().map((m, i) => (
-            <div key={i} className="metric-card">
+            <div
+              key={i}
+              className={`metric-card ${m.value === 'Coming Soon' ? 'coming-soon' : ''}`}
+            >
               <div className="metric-icon">
                 <i className={m.icon}></i>
               </div>
@@ -403,7 +425,7 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
                   try {
                     setIsNavigating(true);
                     const encodedId = encodePatientId(p.id);
-                    
+
                     // Beautiful 2-second loading animation
                     setTimeout(() => {
                       navigate(`/patient-details/${encodedId}`);
@@ -583,30 +605,30 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
                   <i className="fas fa-user" style={{ marginRight: '0.5rem', color: 'var(--primary)' }}></i>
                   Full Name
                 </label>
-                <input 
-                  id="name" 
-                  className="modal-input" 
-                  value={newPatient.name} 
-                  onChange={e => setNewPatient({ ...newPatient, name: e.target.value })} 
+                <input
+                  id="name"
+                  className="modal-input"
+                  value={newPatient.name}
+                  onChange={e => setNewPatient({ ...newPatient, name: e.target.value })}
                   placeholder="Enter patient's full name"
                 />
               </div>
-              
+
               <div className="form-group">
                 <label htmlFor="phone">
                   <i className="fas fa-phone" style={{ marginRight: '0.5rem', color: 'var(--primary)' }}></i>
                   Phone Number
                 </label>
-                <input 
-                  id="phone" 
-                  type="tel" 
-                  className="modal-input" 
-                  value={newPatient.phone} 
-                  onChange={e => setNewPatient({ ...newPatient, phone: e.target.value })} 
+                <input
+                  id="phone"
+                  type="tel"
+                  className="modal-input"
+                  value={newPatient.phone}
+                  onChange={e => setNewPatient({ ...newPatient, phone: e.target.value })}
                   placeholder="Enter phone number"
                 />
               </div>
-              
+
               <div className="form-group">
                 <CustomDatePicker
                   id="dob"
@@ -628,23 +650,42 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
                   </p>
                 )}
               </div>
-              
+
               <div className="form-group">
                 <label htmlFor="gender">
                   <i className="fas fa-venus-mars" style={{ marginRight: '0.5rem', color: 'var(--primary)' }}></i>
                   Gender
                 </label>
-                <select 
-                  id="gender" 
-                  className="modal-input" 
-                  value={newPatient.gender} 
-                  onChange={e => setNewPatient({ ...newPatient, gender: e.target.value })}
-                >
-                  <option value="">Select Gender</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                  <option value="other">Other</option>
-                </select>
+                <div className="dropdown-container" ref={genderDropdownRef}>
+                  <div
+                    className="gender-dropdown-trigger modal-input"
+                    onClick={() => setShowGenderDropdown(!showGenderDropdown)}
+                    style={{
+                      cursor: 'pointer',
+                      color: newPatient.gender ? undefined : 'rgba(43, 45, 66, 0.5)'
+                    }}
+                  >
+                    {newPatient.gender 
+                      ? genderOptions.find(opt => opt.value === newPatient.gender)?.label 
+                      : 'Select Gender'}
+                  </div>
+                  {showGenderDropdown && (
+                    <ul className="dropdown-list">
+                      {genderOptions.map((option) => (
+                        <li
+                          key={option.value}
+                          className="dropdown-item"
+                          onClick={() => {
+                            setNewPatient({ ...newPatient, gender: option.value });
+                            setShowGenderDropdown(false);
+                          }}
+                        >
+                          {option.label}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
             </div>
             <div className="modal-actions">
@@ -696,7 +737,7 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
                   placeholder="Enter patient's full name"
                 />
               </div>
-              
+
               <div className="form-group">
                 <label htmlFor="edit-phone">
                   <i className="fas fa-phone" style={{ marginRight: '0.5rem', color: 'var(--primary)' }}></i>
@@ -712,7 +753,7 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
                   placeholder="Enter phone number"
                 />
               </div>
-              
+
               <div className="form-group">
                 <CustomDatePicker
                   id="edit-dob"
@@ -734,7 +775,7 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
                   </p>
                 )}
               </div>
-              
+
               <div className="form-group">
                 <label htmlFor="edit-gender">
                   <i className="fas fa-venus-mars" style={{ marginRight: '0.5rem', color: 'var(--primary)' }}></i>
@@ -809,7 +850,7 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
                   <div className="warning-icon">⚠️</div>
                   <h3>Desktop Recommended</h3>
                   <p>
-                    For the best experience with patient management, prescription creation, 
+                    For the best experience with patient management, prescription creation,
                     and data analysis, we strongly recommend using a desktop or laptop computer.
                   </p>
                 </div>

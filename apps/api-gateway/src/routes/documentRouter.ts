@@ -8,6 +8,77 @@ import { OPENROUTER_API_KEY, OPENROUTER_URL, LLM_MODEL } from '../config';
 
 const router = express.Router();
 
+// List of free models to try in order
+const FREE_MODELS = [
+  'deepseek/deepseek-chat-v3.1:free',
+  'mistralai/mistral-small-3.1-24b-instruct:free',
+  'meta-llama/llama-4-scout:free',
+  'google/gemini-2.0-flash-exp:free',
+  'openai/gpt-oss-20b:free',
+  'mistralai/mistral-7b-instruct:free',
+  'meta-llama/llama-3.3-8b-instruct:free',
+  'meta-llama/llama-3.2-3b-instruct:free',
+  'google/gemma-3n-e2b-it:free'
+];
+
+// Helper function to call OpenRouter API with fallback models
+async function callOpenRouterAPI(prompt: string): Promise<string> {
+  // Try each model in order
+  for (let i = 0; i < FREE_MODELS.length; i++) {
+    const model = FREE_MODELS[i];
+
+    try {
+      console.log(`[${i + 1}/${FREE_MODELS.length}] Trying model: ${model}`);
+
+      const response = await axios.post(
+        OPENROUTER_URL,
+        {
+          model: model,
+          messages: [
+            {
+              role: 'user',
+              content: prompt
+            }
+          ]
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'http://localhost:5173',
+            'X-Title': 'DrugNexusAI Patient Portal'
+          },
+          timeout: 30000
+        }
+      );
+
+      const aiResponse = response.data.choices?.[0]?.message?.content?.trim();
+
+      if (!aiResponse) {
+        throw new Error('No response from AI');
+      }
+
+      console.log(`✅ SUCCESS with model: ${model}`);
+      return aiResponse;
+
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.error?.message || error.message;
+      console.log(`❌ Model ${model} failed: ${errorMsg}`);
+
+      // If this is the last model, throw the error
+      if (i === FREE_MODELS.length - 1) {
+        console.error('🚨 ALL MODELS FAILED! No AI models are available.');
+        throw new Error(`All ${FREE_MODELS.length} models failed. Last error: ${errorMsg}`);
+      }
+
+      // Otherwise, continue to next model
+      console.log(`⏭️  Trying next model...`);
+    }
+  }
+
+  throw new Error('Failed to get AI response from any model');
+}
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -27,14 +98,27 @@ const upload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|pdf|doc|docx|txt/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-    
-    if (extname && mimetype) {
+    // Check file extension
+    const allowedExtensions = /\.(jpeg|jpg|png|pdf|doc|docx|txt)$/i;
+    const hasValidExtension = allowedExtensions.test(file.originalname.toLowerCase());
+
+    // Check mimetype - be more permissive
+    const allowedMimetypes = [
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
+      'application/pdf',
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain'
+    ];
+    const hasValidMimetype = allowedMimetypes.includes(file.mimetype);
+
+    if (hasValidExtension || hasValidMimetype) {
       return cb(null, true);
     }
-    cb(new Error('Invalid file type. Only images, PDFs, and documents are allowed.'));
+
+    cb(new Error('Invalid file type. Only images (JPG, PNG), PDFs, Word documents, and text files are allowed.'));
   }
 });
 
@@ -52,7 +136,7 @@ router.post('/upload', upload.single('document'), async (req: Request, res: Resp
     // For now, we'll simulate text extraction
     // In production, you'd use libraries like pdf-parse, tesseract.js, mammoth, etc.
     let extractedText = '';
-    
+
     if (req.file.mimetype === 'text/plain') {
       extractedText = fs.readFileSync(req.file.path, 'utf-8');
     } else {
@@ -61,52 +145,19 @@ router.post('/upload', upload.single('document'), async (req: Request, res: Resp
       This would contain extracted text from PDF/image/doc using appropriate libraries.`;
     }
 
-    // Process with AI
-    const aiPrompt = `Analyze this medical document and extract key information:
+    // Process with AI - summarize medical info without PII
+    const aiPrompt = `Summarize the medical information from this text in a single paragraph. Remove all personal identifiable information like names, addresses, phone numbers, ages, and locations. Focus only on medical conditions, medications, allergies, and relevant clinical history.
 
-${extractedText}
+Text: ${extractedText}
 
-Extract and structure:
-1. Document type (prescription/lab_report/medical_history/imaging/other)
-2. Medications mentioned (name, dosage, frequency)
-3. Diagnoses or conditions
-4. Doctor name if mentioned
-5. Date if mentioned
-6. Brief summary (2-3 sentences)
+Write a brief, natural paragraph summary (2-3 sentences) of the medical information only.`;
 
-Return as JSON:
-{
-  "documentType": "",
-  "medications": [""],
-  "diagnoses": [""],
-  "doctorName": "",
-  "date": "YYYY-MM-DD",
-  "summary": ""
-}`;
-
-    const aiResponse = await axios.post(
-      OPENROUTER_URL,
-      {
-        model: LLM_MODEL,
-        messages: [{ role: 'user', content: aiPrompt }],
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    let aiData: any = {};
+    let medicalSummary = '';
     try {
-      const aiText = aiResponse.data.choices?.[0]?.message?.content?.trim() || '{}';
-      const jsonMatch = aiText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        aiData = JSON.parse(jsonMatch[0]);
-      }
+      medicalSummary = await callOpenRouterAPI(aiPrompt);
     } catch (e) {
-      console.error('Error parsing AI response:', e);
+      console.error('Error processing with AI:', e);
+      medicalSummary = 'Medical information stored.';
     }
 
     // Save document
@@ -116,14 +167,14 @@ Return as JSON:
       fileType: req.file.mimetype,
       fileUrl,
       extractedText,
-      documentType: aiData.documentType || documentType || 'other',
+      documentType: documentType || 'other',
       processedByAI: true,
-      aiSummary: aiData.summary,
+      aiSummary: medicalSummary,
       metadata: {
-        medications: aiData.medications || [],
-        diagnoses: aiData.diagnoses || [],
-        doctorName: aiData.doctorName,
-        date: aiData.date ? new Date(aiData.date) : undefined
+        medications: [],
+        diagnoses: [],
+        doctorName: '',
+        date: undefined
       }
     });
 
@@ -136,6 +187,66 @@ Return as JSON:
   } catch (error) {
     console.error('Upload error:', error);
     res.status(500).json({ message: 'Error uploading document', error });
+  }
+});
+
+// Upload text (manual entry)
+router.post('/upload-text', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { patientId, text, documentType } = req.body;
+
+    if (!text || !text.trim()) {
+      res.status(400).json({ message: 'No text provided' });
+      return;
+    }
+
+    if (!patientId) {
+      res.status(400).json({ message: 'Patient ID is required' });
+      return;
+    }
+
+    // Process with AI - summarize medical info without PII
+    const aiPrompt = `Summarize the medical information from this text in a single paragraph. Remove all personal identifiable information like names, addresses, phone numbers, ages, and locations. Focus only on medical conditions, medications, allergies, and relevant clinical history.
+
+Text: ${text}
+
+Write a brief, natural paragraph summary (2-3 sentences) of the medical information only.`;
+
+    let medicalSummary = '';
+    try {
+      medicalSummary = await callOpenRouterAPI(aiPrompt);
+    } catch (e) {
+      console.error('Error processing with AI:', e);
+      medicalSummary = 'Medical information stored.';
+    }
+
+    // Save document
+    const document = new MedicalDocument({
+      patientId,
+      fileName: `Manual Entry - ${new Date().toISOString().split('T')[0]}`,
+      fileType: 'text/plain',
+      fileUrl: '',
+      extractedText: text,
+      documentType: documentType || 'medical_history',
+      processedByAI: true,
+      aiSummary: medicalSummary,
+      metadata: {
+        medications: [],
+        diagnoses: [],
+        doctorName: '',
+        date: undefined
+      }
+    });
+
+    await document.save();
+
+    res.json({
+      message: 'Text processed and saved successfully',
+      document
+    });
+  } catch (error) {
+    console.error('Text upload error:', error);
+    res.status(500).json({ message: 'Error processing text', error });
   }
 });
 

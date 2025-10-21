@@ -1,7 +1,8 @@
 import path from 'path';
 import dotenv from 'dotenv';
 
-dotenv.config();
+// Load .env from project root (2 levels up from src/)
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 export const MONGO_URI = process.env.MONGO_URI as string;
 export const DB_NAME = process.env.DB_NAME as string;

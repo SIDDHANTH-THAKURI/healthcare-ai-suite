@@ -276,3 +276,54 @@ rebranding-validation-report.md
 check-services.ps1
 start-services.bat
 start-services.ps1
+# ===
+=========================================
+# PROJECT-SPECIFIC IGNORES (Added)
+# ============================================
+
+# Root-level temporary CSS file
+MEDICATION_STATUS_STYLES.css
+
+# Development fix/enhancement documentation
+SELECT_DROPDOWN_FIX.md
+DATABASE_FIX.md
+ROLE_BASED_ACCESS_CONTROL.md
+FILE_UPLOAD_FILTER_FIX.md
+DOCUMENT_UPLOAD_BACKEND_SETUP.md
+MEDICAL_DOCUMENT_UPLOAD_ENHANCEMENT.md
+PATIENT_PROFILE_DATE_PICKER_UPGRADE.md
+AUTH_SIGNUP_LOGIN_FIX.md
+PATIENT_PORTAL_CHAT_FIX.md
+MODAL_SCROLLBAR_ENHANCEMENT.md
+DATE_PICKER_Z_INDEX_FIX.md
+PRESCRIPTION_FIXES.md
+Z_INDEX_FIX.md
+FREQUENCY_TYPE_OPTIONAL.md
+FREQUENCY_DROPDOWN_REMAKE.md
+DROPDOWN_CLICK_FIX.md
+PATIENT_PORTAL_ENHANCEMENTS_COMPLETE.md
+CHAT_VERTICAL_RESIZE_UPDATE.md
+
+# Pattern-based ignores for development docs
+*_FIX.md
+*_FIXES.md
+*_ENHANCEMENT.md
+*_ENHANCEMENTS.md
+*_COMPLETE.md
+*_UPDATE.md
+*_GUIDE.md
+*_CONTROL.md
+
+# Kiro IDE specs folder
+.kiro/specs/
+
+# User uploads - CRITICAL: Contains sensitive medical data
+apps/api-gateway/uploads/
+apps/api-gateway/uploads/medical-documents/
+uploads/
+
+# Service-specific Python cache
+apps/ddi-service/__pycache__/
+apps/ddi-service/**/__pycache__/
+apps/ml-service/__pycache__/
+apps/ml-service/**/__pycache__/

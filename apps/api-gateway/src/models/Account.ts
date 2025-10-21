@@ -66,7 +66,10 @@ const AccountSchema = new Schema<IAccount>(
         doctorProfile: { type: DoctorProfileSchema },
         patientProfile: { type: PatientProfileSchema },
     },
-    { timestamps: true }
+    { 
+        timestamps: true,
+        collection: 'accounts' // Explicitly set collection name
+    }
 );
 
 

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ApiError, registerUser, loginUser, checkEmail } from "../api/authApi";
 import { toast } from "react-toastify";
-import CustomModal from "./CustomModal"; 
+import CustomModal from "./CustomModal";
 import "./Authentication.css";
 
 type UserType = "patient" | "doctor" | "";
@@ -102,113 +102,115 @@ const Authentication: React.FC = () => {
   };
 
   // Inside your handleSignUp function:
-const handleSignUp = async (confirmRoleAddition = false) => {
-  
-  // Check email existence using our helper function
-  const emailResult = await checkEmail(formData.email);
-  setIsExistingEmail(emailResult.exists);
-  
-  // If the email is new, enforce password validations
-  if (!emailResult.exists) {
+  const handleSignUp = async (confirmRoleAddition = false) => {
 
-    if (!userType) {
-      openModal(
-        "Role Required",
-        "Please select either 'Patient' or 'Healthcare Pro' before proceeding."
+    // Check email existence using our helper function
+    const emailResult = await checkEmail(formData.email);
+    setIsExistingEmail(emailResult.exists);
+
+    // If the email is new, enforce password validations
+    if (!emailResult.exists) {
+
+      if (!userType) {
+        openModal(
+          "Role Required",
+          "Please select either 'Patient' or 'Healthcare Pro' before proceeding."
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      if (formData.password !== formData.confirmPassword) {
+        openModal("Password Mismatch", "Passwords do not match.");
+        setIsLoading(false);
+        return;
+      }
+      if (passwordStrength < MIN_PASSWORD_STRENGTH) {
+        openModal("Weak Password", "Please use a stronger password. It needs at least 8 characters, including one uppercase letter, one number, and one special character.");
+        setIsLoading(false);
+        return;
+      }
+    }
+
+    // Proceed with registration as before...
+    setIsLoading(true);
+    setErrorMessage("");
+    try {
+      const data = await registerUser(
+        formData.email,
+        formData.password,
+        userType,
+        confirmRoleAddition
       );
-      setIsLoading(false);
-      return;
-    }
-  
-    if (formData.password !== formData.confirmPassword) {
-      openModal("Password Mismatch", "Passwords do not match.");
-      setIsLoading(false);
-      return;
-    }
-    if (passwordStrength < MIN_PASSWORD_STRENGTH) {
-      openModal("Weak Password", "Please use a stronger password. It needs at least 8 characters, including one uppercase letter, one number, and one special character.");
-      setIsLoading(false);
-      return;
-    }
-  }
-  
-  // Proceed with registration as before...
-  setIsLoading(true);
-  setErrorMessage("");
-  try {
-    const data = await registerUser(
-      formData.email,
-      formData.password,
-      userType,
-      confirmRoleAddition
-    );
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("user", JSON.stringify(data.user));
-    toast.success("Signup successful!");
-    
-    // Redirect based on user type
-    if (userType === "patient") {
-      navigate("/patient-profile-setup");
-    } else {
-      navigate("/ProfileSetup", {
-        state: { role: userType }
-      });
-    }
-  } catch (err: any) {
-    if (err instanceof ApiError && err.status === 409 && err.body.addNewRole) {
-      // server told us to ask for role addition
-      openModal(
-        "Account Exists",
-        err.body.message,
-        async () => {
-          closeModal();
-          // confirm role addition
-          try {
-            const data2 = await registerUser(
-              formData.email,
-              formData.password,
-              userType,
-              true
-            );
-            localStorage.setItem("token", data2.token);
-            localStorage.setItem("user", JSON.stringify(data2.user));
-            toast.success("Role added successfully!");
-            
-            // Redirect based on user type
-            if (userType === "patient") {
-              navigate("/patient-profile-setup");
-            } else {
-              navigate("/DrugNexusAIDoctorPortal");
+      localStorage.setItem("token", data.token);
+      // Store user data with the current role being used
+      localStorage.setItem("user", JSON.stringify({ ...data.user, role: userType }));
+      toast.success("Signup successful!");
+
+      // Redirect based on user type
+      if (userType === "patient") {
+        navigate("/patient-profile-setup");
+      } else {
+        navigate("/ProfileSetup", {
+          state: { role: userType }
+        });
+      }
+    } catch (err: any) {
+      if (err instanceof ApiError && err.status === 409 && err.body.addNewRole) {
+        // server told us to ask for role addition
+        openModal(
+          "Account Exists",
+          err.body.message,
+          async () => {
+            closeModal();
+            // confirm role addition
+            try {
+              const data2 = await registerUser(
+                formData.email,
+                formData.password,
+                userType,
+                true
+              );
+              localStorage.setItem("token", data2.token);
+              // Store user data with the current role being used
+              localStorage.setItem("user", JSON.stringify({ ...data2.user, role: userType }));
+              toast.success("Role added successfully!");
+
+              // Redirect based on user type
+              if (userType === "patient") {
+                navigate("/patient-profile-setup");
+              } else {
+                navigate("/DrugNexusAIDoctorPortal");
+              }
+            } catch (err2: any) {
+              const msg =
+                err2 instanceof ApiError
+                  ? err2.body.error || err2.message
+                  : err2.message;
+              toast.error(msg);
             }
-          } catch (err2: any) {
-            const msg =
-              err2 instanceof ApiError
-                ? err2.body.error || err2.message
-                : err2.message;
-            toast.error(msg);
+          },
+          () => {
+            closeModal();
+            toast.info("Role linking cancelled.");
           }
-        },
-        () => {
-          closeModal();
-          toast.info("Role linking cancelled.");
-        }
-      );
-    } else {
-      // any other error: display its message
-      const msg = err instanceof ApiError ? err.body.error || err.message : err.message;
-      toast.error(msg || "An unknown error occurred.");
+        );
+      } else {
+        // any other error: display its message
+        const msg = err instanceof ApiError ? err.body.error || err.message : err.message;
+        toast.error(msg || "An unknown error occurred.");
+      }
+    } finally {
+      setIsLoading(false);
     }
-  } finally {
-    setIsLoading(false);
-  }
-};
-  
-  
+  };
+
+
   // --- Login process
   const handleLogin = async () => {
     try {
       const data = await loginUser(formData.email, formData.password, userType);
-  
+
       // Check if this account has the selected role.
       if (!data.user.roles.includes(userType)) {
         openModal(
@@ -224,10 +226,10 @@ const handleSignUp = async (confirmRoleAddition = false) => {
                 true
               );
               localStorage.setItem("token", data.token);
-              localStorage.setItem("user", JSON.stringify(data.user)); 
+              localStorage.setItem("user", JSON.stringify({ ...data.user, role: userType }));
 
               toast.success("Role linked successfully!");
-              
+
               // Redirect based on user type
               if (userType === "patient") {
                 navigate("/patient-profile-setup");
@@ -248,8 +250,9 @@ const handleSignUp = async (confirmRoleAddition = false) => {
       } else {
         // Already has this role.
         localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        
+        // Store user data with the current role being used
+        localStorage.setItem("user", JSON.stringify({ ...data.user, role: userType }));
+
         // Redirect based on user type
         if (userType === "patient") {
           navigate("/patient-portal");
@@ -262,7 +265,7 @@ const handleSignUp = async (confirmRoleAddition = false) => {
       toast.error(error.response?.data?.error || error.message || "An unknown error occurred.");
     }
   };
-  
+
 
   // Form submission
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -302,18 +305,16 @@ const handleSignUp = async (confirmRoleAddition = false) => {
           {/* User Role Selection */}
           <div className="user-type-selector">
             <div
-              className={`user-type-card ${
-                userType === "patient" ? "selected" : ""
-              }`}
+              className={`user-type-card ${userType === "patient" ? "selected" : ""
+                }`}
               onClick={() => handleUserTypeSelect("patient")}
             >
               <h3>Patient</h3>
               <p>Access personalized insights</p>
             </div>
             <div
-              className={`user-type-card ${
-                userType === "doctor" ? "selected" : ""
-              }`}
+              className={`user-type-card ${userType === "doctor" ? "selected" : ""
+                }`}
               onClick={() => handleUserTypeSelect("doctor")}
             >
               <h3>Healthcare Pro</h3>

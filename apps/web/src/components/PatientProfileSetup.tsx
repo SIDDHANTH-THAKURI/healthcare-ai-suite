@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './PatientProfileSetup.css';
+import CustomDatePicker from './CustomDatePicker';
 
 interface ProfileData {
   personalInfo: {
@@ -75,17 +76,17 @@ const PatientProfileSetup: React.FC = () => {
 
   const validateStep = () => {
     if (step === 1) {
-      if (!profileData.personalInfo.firstName || !profileData.personalInfo.lastName || 
-          !profileData.personalInfo.dateOfBirth || !profileData.personalInfo.gender) {
+      if (!profileData.personalInfo.firstName || !profileData.personalInfo.lastName ||
+        !profileData.personalInfo.dateOfBirth || !profileData.personalInfo.gender) {
         alert('Please fill in all required fields (marked with *)');
         return false;
       }
     }
     if (step === 2) {
       if (!profileData.contactInfo.phone || !profileData.contactInfo.email ||
-          !profileData.contactInfo.emergencyContact.name || 
-          !profileData.contactInfo.emergencyContact.relationship ||
-          !profileData.contactInfo.emergencyContact.phone) {
+        !profileData.contactInfo.emergencyContact.name ||
+        !profileData.contactInfo.emergencyContact.relationship ||
+        !profileData.contactInfo.emergencyContact.phone) {
         alert('Please fill in all required fields (marked with *)');
         return false;
       }
@@ -105,15 +106,15 @@ const PatientProfileSetup: React.FC = () => {
 
   const handleSubmit = async () => {
     if (isSubmitting) return;
-    
+
     setIsSubmitting(true);
     try {
       // Get user ID from localStorage or use demo
       const user = localStorage.getItem('user');
       const userId = user ? JSON.parse(user).email : 'demo-patient-001';
-      
+
       console.log('Submitting profile data:', { userId, ...profileData });
-      
+
       const response = await fetch('http://localhost:5000/api/patient-profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -123,13 +124,12 @@ const PatientProfileSetup: React.FC = () => {
           onboardingCompleted: true
         })
       });
-      
+
       console.log('Response status:', response.status);
-      
+
       if (response.ok) {
         const data = await response.json();
         console.log('Profile saved successfully:', data);
-        alert('Profile saved successfully! Redirecting to portal...');
         window.location.href = '/patient-portal';
       } else {
         const errorData = await response.json();
@@ -197,7 +197,7 @@ const PatientProfileSetup: React.FC = () => {
         <div className="progress-bar">
           <div className="progress-fill" style={{ width: `${(step / totalSteps) * 100}%` }}></div>
         </div>
-        
+
         <div className="setup-header">
           <h1>Welcome! Let's set up your profile</h1>
           <p>Step {step} of {totalSteps}</p>
@@ -233,13 +233,16 @@ const PatientProfileSetup: React.FC = () => {
             </div>
             <div className="form-group">
               <label>Date of Birth *</label>
-              <input
-                type="date"
+              <CustomDatePicker
+                id="dateOfBirth"
+                label="Date of Birth *"
                 value={profileData.personalInfo.dateOfBirth}
-                onChange={(e) => setProfileData({
+                onChange={(date) => setProfileData({
                   ...profileData,
-                  personalInfo: { ...profileData.personalInfo, dateOfBirth: e.target.value }
+                  personalInfo: { ...profileData.personalInfo, dateOfBirth: date }
                 })}
+                maxDate={new Date().toISOString().split('T')[0]}
+                placeholder="Select your date of birth"
               />
             </div>
             <div className="form-group">

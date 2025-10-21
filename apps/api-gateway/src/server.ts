@@ -47,9 +47,11 @@ app.use('/api/adherence', adherenceRouter);
 
 
 mongoose
-    .connect(MONGO_URI)
+    .connect(MONGO_URI, {
+        dbName: process.env.DB_NAME || 'MedPortalDB'
+    })
     .then(() => {
-        console.log('Connected to MongoDB');
+        console.log(`Connected to MongoDB - Database: ${process.env.DB_NAME || 'MedPortalDB'}`);
         const PORT = process.env.PORT || 5000;
         app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
     })

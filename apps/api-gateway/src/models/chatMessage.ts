@@ -46,7 +46,10 @@ const ChatMessageSchema: Schema = new Schema(
     },
     processed: { type: Boolean, default: false }
   },
-  { timestamps: true }
+  { 
+    timestamps: true,
+    collection: 'chatbot_histories'
+  }
 );
 
 ChatMessageSchema.index({ patientId: 1, timestamp: -1 });

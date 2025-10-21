@@ -47,7 +47,10 @@ const PrescriptionSchema = new Schema<IPrescription>(
             required: true,
         },
     },
-    { timestamps: true }
+    { 
+        timestamps: true,
+        collection: 'prescriptions'
+    }
 );
 
 export default model<IPrescription>('Prescription', PrescriptionSchema);

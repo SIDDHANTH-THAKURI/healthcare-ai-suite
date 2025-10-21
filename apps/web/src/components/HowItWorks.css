@@ -142,7 +142,7 @@
 
 /* Platform Overview Section */
 .platform-overview {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(5, 53, 47, 0.395);
     padding: 4rem 2rem;
     margin: 3rem 0;
     border-radius: 20px;
@@ -677,7 +677,7 @@ anced Step Card Styles */
 .user-journeys {
     margin: 4rem 0;
     padding: 4rem 2rem;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(5, 53, 47, 0.395);
     border-radius: 20px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     position: relative;
@@ -832,7 +832,7 @@ anced Step Card Styles */
 .ai-technology {
     margin: 4rem 0;
     padding: 4rem 2rem;
-    background: linear-gradient(135deg, rgba(42, 157, 143, 0.1), rgba(231, 111, 81, 0.1));
+    background: rgba(5, 53, 47, 0.395);
     border-radius: 20px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     position: relative;
