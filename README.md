@@ -82,46 +82,102 @@ full architecture diagram yet to upload
 
 ## 🛠️ Setup & Run Locally
 
+### Prerequisites
+- Node.js (v18 or higher)
+- Python (v3.11 or higher)
+- MongoDB Atlas account (or local MongoDB)
+- OpenRouter API key (get free at https://openrouter.ai)
+
+### Installation Steps
+
 ```bash
-# Clone the repo
+# 1. Clone the repository
 git clone https://github.com/Team-DDI-CSIT998/Personalised_DDI_Checker.git
 cd Personalised_DDI_Checker
 
-# Install all dependencies
+# 2. Install Node.js dependencies
 npm run install:all
 
-# Install Python dependencies
-cd apps/ml-service && pip install -r requirements.txt
-cd ../ddi-service && pip install -r requirements.txt
+# 3. Install Python dependencies for ML services
+cd apps/ml-service
+pip install -r requirements.txt
 
-# Start all services (Option 1: All at once)
-npm run dev
+cd ../ddi-service
+pip install -r requirements.txt
+cd ../..
 
-# Or start services individually (Option 2)
-npm run dev:web      # Frontend (React) - http://localhost:5173
-npm run dev:api      # API Gateway (Node.js) - http://localhost:3000  
-npm run dev:ml       # ML Service (Python) - http://localhost:8000
-npm run dev:ddi      # DDI Service (Python) - http://localhost:9000
+# 4. Configure environment variables
+# Create .env file in root directory with:
+# MONGO_URI=your_mongodb_connection_string
+# JWT_SECRET=your_jwt_secret_key
+# OPENROUTER_API_KEY=your_openrouter_api_key
+# DB_NAME=MedPortalDB
+# COLLECTION_NAME=drugs
 
-# Windows users can also use:
-./scripts/dev.ps1
+# Also create .env in apps/api-gateway/ with same variables
 ```
 
-🔑 Be sure to configure your .env file with MONGO_URI, OPENROUTER_API_KEY, etc.
+### Running the Application
+
+**Option 1: Start all services at once (Recommended)**
+```bash
+npm run dev:all
+```
+
+**Option 2: Start services individually**
+```bash
+# Terminal 1 - Frontend (React)
+npm run dev:web      # http://localhost:5173
+
+# Terminal 2 - API Gateway (Node.js)
+npm run dev:api      # http://localhost:5000
+
+# Terminal 3 - ML Service (Python)
+npm run dev:ml       # http://localhost:8000
+# Or manually: cd apps/ml-service && python -m uvicorn server:app --reload --port 8000
+
+# Terminal 4 - DDI Service (Python)
+npm run dev:ddi      # http://localhost:9000
+# Or manually: cd apps/ddi-service && python -m uvicorn server2:app --reload --port 9000
+```
+
+**Note for Windows users**: If `npm run dev:ml` or `npm run dev:ddi` fails, use the manual `python -m uvicorn` commands instead. This ensures the correct Python environment is used.
+
+**Option 3: Windows PowerShell script**
+```powershell
+# Note: scripts/start-dev.ps1 has been removed
+# Use npm run dev:all instead
+```
+
+### Service Ports
+- **Frontend (React)**: http://localhost:5173
+- **API Gateway (Node.js)**: http://localhost:5000
+- **ML Service (Python)**: http://localhost:8000
+- **DDI Service (Python)**: http://localhost:9000
 
 ## 📁 Project Structure
 
 ```
 Personalised_DDI_Checker/
 ├── apps/
-│   ├── web/                    # React frontend
-│   ├── api-gateway/            # Node.js API gateway
-│   ├── ml-service/             # Python ML/AI service
-│   └── ddi-service/            # DDI-specific service
-├── packages/                   # Shared libraries
-├── docs/                       # Documentation & ML models
-├── scripts/                    # Build and deployment scripts
-└── config/                     # Configuration files
+│   ├── web/                    # React + TypeScript frontend (Port 5173)
+│   ├── api-gateway/            # Node.js + Express API gateway (Port 5000)
+│   ├── ml-service/             # Python FastAPI ML service (Port 8000)
+│   └── ddi-service/            # Python FastAPI DDI service (Port 9000)
+├── packages/
+│   ├── types/                  # Shared TypeScript types
+│   └── utils/                  # Shared utility functions
+├── docs/
+│   └── ml-models/              # ML model documentation & notebooks
+├── scripts/
+│   ├── analyze-logs.js         # Log analysis utility
+│   ├── build.sh                # Build script for deployment
+│   └── render.yaml             # Render.com deployment config
+├── config/
+│   └── tsconfig.json           # TypeScript configuration
+├── .env                        # Environment variables (not in git)
+├── package.json                # Root package configuration
+└── README.md                   # This file
 ```
 
 📚 References
@@ -161,61 +217,96 @@ Your support means a lot to us 💖
 
 ## 🆕 Latest Updates & Enhancements
 
-### Patient Portal v2.0 Features
-- ✨ **Beautiful Welcome Modal** – Preview mode notification with feature showcase
+### 🎨 Models Playground (NEW!)
+- **Deidentifier Model** – Remove sensitive information from medical text using Stanford AI
+- **DDI Binary Classifier** – Predict drug interactions with SMILES-based analysis
+- **DL-Based DDI Classifier** – Deep learning classification with ChemBERTa
+- **Coming Soon Features** – Condition contradiction checker and DeepSeek integration
+- **Beautiful UI** – Modern interface with smooth animations and loading states
+- **Smart Dropdowns** – Autocomplete drug search with proper z-index handling
+
+### �‍⚕️ Doctor Portal Features
+- **Patient Management** – Add, edit, and manage patient profiles
+- **Prescription Creation** – Create prescriptions with DDI checking
+- **Medical Document Upload** – Upload and manage patient documents
+- **Consultation History** – Track all patient interactions
+- **Profile Management** – Update doctor profile and credentials
+
+### 🧑‍⚕️ Patient Portal v2.0
+- ✨ **Welcome Modal** – Feature showcase on first visit
 - 🎨 **Redesigned Dashboard** – Gradient hero banner with personalized greetings
-- 📊 **Real Adherence Tracking** – 7-day streak system with visual calendar
-- 🤖 **Pure AI Chatbot** – 100% AI-powered responses with 9-model fallback system
-- 💊 **Smart Medication Cards** – Clickable dashboard cards with hover effects
-- 🏠 **Logo Navigation** – Click DrugNexusAI logo to return to home page
-- 📱 **Fully Responsive** – Optimized for desktop, tablet, and mobile devices
+- 📊 **Adherence Tracking** – 7-day streak system with visual calendar
+- 🤖 **AI Chatbot** – Multi-model fallback system with 9+ AI models
+- 💊 **Medication Management** – View active/inactive medications
+- 📱 **Fully Responsive** – Optimized for all devices
 
-### AI Chatbot Improvements
-- **Multi-Model Fallback**: Automatically tries 9 different AI models until one works
-- **Models Supported**: DeepSeek, GPT-OSS, Llama 3.3, Gemini 2.0, Mistral, and more
-- **Zero Templates**: Every response is uniquely generated by AI
-- **Intent Detection**: AI analyzes messages to understand medication/appointment requests
-- **Context Awareness**: Remembers conversation flow and provides relevant responses
-- **Error Handling**: Graceful degradation with helpful error messages
+### 🤖 AI Chatbot Improvements
+- **Multi-Model Fallback**: DeepSeek, GPT-4, Llama 3.3, Gemini 2.0, Mistral, and more
+- **Zero Templates**: 100% AI-generated responses
+- **Intent Detection**: Understands medication and appointment requests
+- **Context Awareness**: Maintains conversation flow
+- **Error Handling**: Graceful degradation with helpful messages
 
-### Design Enhancements
-- **Gradient Themes**: Multiple beautiful gradient options for welcome banner
+### 🎨 Design Enhancements
+- **Modern UI**: Gradient themes and glassmorphism effects
 - **Smooth Animations**: Fade-in, slide-up, bounce, and pulse effects
-- **Glassmorphism**: Frosted glass effects on cards and modals
-- **Hover States**: Interactive feedback on all clickable elements
-- **Loading States**: Beautiful spinners and typing indicators
-- **Auto-scroll**: Chat automatically scrolls to latest message
+- **Loading States**: Beautiful spinners with triple-ring animation
+- **Hover Effects**: Interactive feedback on all elements
+- **Coming Soon Overlays**: Elegant placeholders for upcoming features
 
-### Technical Improvements
-- **Environment Configuration**: Proper `.env` setup in `apps/api-gateway/`
+### 🔧 Technical Improvements
+- **TypeScript**: Full type safety across frontend
+- **Environment Variables**: Proper `.env` configuration
 - **API Integration**: OpenRouter API with automatic model selection
-- **Database Optimization**: Efficient queries for streak and adherence data
-- **Error Logging**: Comprehensive logging for debugging
-- **Type Safety**: Full TypeScript implementation
-- **Code Quality**: Clean, maintainable, and well-documented code
+- **Database Optimization**: Efficient MongoDB queries
+- **Error Logging**: Comprehensive logging system
+- **Code Quality**: Clean, maintainable, documented code
 
 ---
 
-## 📖 Additional Documentation
+## 📖 Key Features Explained
 
-For detailed information about specific features:
+### 🔬 Models Playground
+Access advanced AI models for drug interaction analysis:
+- **Deidentifier**: Remove PII from medical records using Stanford AI
+- **Binary DDI**: Quick yes/no interaction prediction
+- **DL DDI**: Detailed interaction classification with confidence scores
+- **Drug Search**: Autocomplete search with SMILES molecular structure lookup
 
-- **[Pure AI Chatbot Guide](PURE_AI_CHATBOT.md)** – How the AI chatbot works
-- **[Beautiful Chat System](BEAUTIFUL_CHAT_SYSTEM.md)** – Chat UI/UX details
-- **[Intro Functionality](INTRO_FUNCTIONALITY_COMPLETE.md)** – Dashboard features
-- **[Chatbot Troubleshooting](CHATBOT_TROUBLESHOOTING.md)** – Common issues and fixes
+### 👨‍⚕️ Doctor Portal
+Comprehensive patient management system:
+- Create and manage patient profiles
+- Prescribe medications with real-time DDI checking
+- Upload and organize medical documents
+- Track consultation history
+- View interaction alerts and recommendations
+
+### 🧑‍⚕️ Patient Portal
+Empowering patients with information:
+- View current and past medications
+- Track medication adherence with streak system
+- Chat with AI about medications and health
+- Understand drug interactions in plain language
+- Access prescription history
 
 ---
 
 ## 🎯 Quick Start Guide
 
-1. **Install dependencies**: `npm install`
-2. **Configure environment**: Copy `.env.example` to `apps/api-gateway/.env` and fill in values
-3. **Start backend**: `cd apps/api-gateway && npm run dev`
-4. **Start frontend**: `cd apps/web && npm run dev`
+1. **Install dependencies**: `npm run install:all`
+2. **Install Python packages**: 
+   ```bash
+   cd apps/ml-service && pip install -r requirements.txt
+   cd ../ddi-service && pip install -r requirements.txt
+   ```
+3. **Configure environment**: Create `.env` files with MongoDB URI, JWT secret, and OpenRouter API key
+4. **Start all services**: `npm run dev:all`
 5. **Access app**: Open http://localhost:5173
-6. **Login**: Use patient or doctor credentials
-7. **Explore**: Check out the patient portal and AI chatbot!
+6. **Create account**: Sign up as doctor or patient
+7. **Explore features**: 
+   - Doctor Portal: Manage patients and prescriptions
+   - Patient Portal: View medications and chat with AI
+   - Models Playground: Test AI models for DDI detection
 
 ---
 
