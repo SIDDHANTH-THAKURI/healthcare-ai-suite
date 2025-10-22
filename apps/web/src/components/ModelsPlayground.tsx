@@ -257,8 +257,13 @@ const ModelsPlayground: React.FC = () => {
         {isLoading && (
             <div className="fullscreen-loader">
                 <div className="loader-content">
-                <i className="fas fa-spinner fa-spin fa-2x"></i>
-                <p>Loading... Please wait.</p>
+                  <div className="loader-spinner">
+                    <div className="spinner-ring"></div>
+                    <div className="spinner-ring"></div>
+                    <div className="spinner-ring"></div>
+                  </div>
+                  <h3>Processing</h3>
+                  <p>Analyzing your request...</p>
                 </div>
             </div>
             )}
@@ -574,14 +579,21 @@ const ModelsPlayground: React.FC = () => {
 
         {/* Condition Contradiction Section */}
         <div id="condition-contradiction" className={`model-section ${activeSection === 'condition-contradiction' ? 'active' : ''}`}>
+          <div className="coming-soon-overlay">
+            <div className="coming-soon-content">
+              <i className="fas fa-flask"></i>
+              <h3>Coming Soon</h3>
+              <p>This feature is currently under development and will be available soon.</p>
+            </div>
+          </div>
           <h2><i className="fas fa-exclamation-triangle"></i> Patient Condition Contradiction</h2>
           <p className="description">Identify conditions that pose a risk with the given drug.</p>
           <div className="form-group">
             <label htmlFor="condition-drug">Drug Name</label>
-            <input type="text" id="condition-drug" placeholder="Enter drug name (e.g., Aspirin)..." />
+            <input type="text" id="condition-drug" placeholder="Enter drug name (e.g., Aspirin)..." disabled />
           </div>
           <div className="form-group">
-            <button onClick={handleConditionContradiction}>
+            <button onClick={handleConditionContradiction} disabled>
               <i className="fas fa-exclamation-triangle" /> Check Conditions
             </button>
           </div>
@@ -590,14 +602,21 @@ const ModelsPlayground: React.FC = () => {
 
         {/* Deepseeks Section */}
         <div id="deepseeks" className={`model-section ${activeSection === 'deepseeks' ? 'active' : ''}`}>
+          <div className="coming-soon-overlay">
+            <div className="coming-soon-content">
+              <i className="fas fa-rocket"></i>
+              <h3>Coming Soon</h3>
+              <p>This AI-powered feature is currently under development and will be available soon.</p>
+            </div>
+          </div>
           <h2><i className="fas fa-book"></i> Deepseek Finetuned</h2>
           <p className="description">Generate a short description from the input text.</p>
           <div className="form-group">
             <label htmlFor="deepseeks-input">Input Text</label>
-            <input type="text" id="deepseeks-input" placeholder="Enter text (e.g., 'What is diabetes?')..." />
+            <input type="text" id="deepseeks-input" placeholder="Enter text (e.g., 'What is diabetes?')..." disabled />
           </div>
           <div className="form-group">
-            <button onClick={handleDeepseeks}>
+            <button onClick={handleDeepseeks} disabled>
               <i className="fas fa-book" /> Get Description
             </button>
           </div>
