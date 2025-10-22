@@ -3,10 +3,10 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 try:
     from models.deidentifier import deidentify_text
-    print("✅ Loaded advanced deidentifier with ML model")
+    print("Loaded advanced deidentifier with ML model")
 except Exception as e:
-    print(f"⚠️  Could not load ML deidentifier: {e}")
-    print("🔄 Falling back to regex-based deidentifier")
+    print(f"Could not load ML deidentifier: {e}")
+    print("Falling back to regex-based deidentifier")
     from models.deidentifier_fallback import deidentify_text 
 from models.DLTypeClassificationInference import predict_ddi, label_map
 from models.hybrid_binary_ddi_inference import predict_hybrid_binary_ddi
