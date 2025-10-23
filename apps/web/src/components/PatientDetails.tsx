@@ -1281,11 +1281,8 @@ const PatientDetails: React.FC = () => {
       )}
 
       {/* Chatbot Button - Same as Doctor Portal */}
-      <div className="chatbot-container">
-        <div className="chatbot-button" onClick={() => navigate('/chatbot')}>
-          <i className="fas fa-robot"></i>
-        </div>
-      </div>
+      <div className="chatbot-container"><div className="chatbot-button" onClick={() => navigate('/chatbot')}><i className="fas fa-robot"></i></div></div>
+
     </div>
   );
 };

@@ -19,7 +19,7 @@ export const AboutUsPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
         <button className="about-close-btn" onClick={onClose} aria-label="Close">
           <i className="fas fa-times"></i>
         </button>
-        
+
         {/* Hero Section */}
         <div className="about-hero">
           <div className="about-bg-animation"></div>
@@ -41,8 +41,8 @@ export const AboutUsPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
           </div>
           <h2>Our Mission</h2>
           <p className="mission-text">
-            To revolutionize medication safety by detecting dangerous drug interactions before they harm patients. 
-            We combine cutting-edge machine learning with real-world clinical workflows to create an intelligent 
+            To revolutionize medication safety by detecting dangerous drug interactions before they harm patients.
+            We combine cutting-edge machine learning with real-world clinical workflows to create an intelligent
             safety net for healthcare professionals and patients worldwide.
           </p>
         </div>
@@ -69,8 +69,8 @@ export const AboutUsPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
               </div>
             </div>
             <p>
-              Prescription errors and adverse drug interactions cause thousands of preventable hospitalizations 
-              and deaths each year. Healthcare professionals juggle complex medication regimens, making it nearly 
+              Prescription errors and adverse drug interactions cause thousands of preventable hospitalizations
+              and deaths each year. Healthcare professionals juggle complex medication regimens, making it nearly
               impossible to catch every potential interaction manually.
             </p>
           </div>
@@ -249,8 +249,8 @@ export const AboutUsPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
         {/* Call to Action */}
         <div className="about-cta">
           <div className="cta-content">
-            <h3>Ready to Transform Healthcare?</h3>
-            <p>Join us in making medication safety intelligent, accessible, and reliable for everyone.</p>
+            <h3 className="about-cta-title">Ready to Transform Healthcare?</h3>
+            <p className="about-cta-text">Join us in making medication safety intelligent, accessible, and reliable for everyone.</p>
             <div className="cta-buttons">
               <button className="cta-btn primary" onClick={onClose}>
                 <i className="fas fa-rocket"></i>
@@ -279,7 +279,7 @@ export const TeamPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
         <button className="developer-close-btn" onClick={onClose} aria-label="Close">
           <i className="fas fa-times"></i>
         </button>
-        
+
         {/* Hero Section */}
         <div className="developer-hero">
           <div className="developer-bg-pattern"></div>
@@ -453,8 +453,8 @@ export const TeamPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
               Vision & Mission
             </h2>
             <p className="vision-text">
-              My mission is to bridge the gap between cutting-edge AI research and practical healthcare applications. 
-              DrugNexusAI represents the future of medication safety — where technology serves humanity, 
+              My mission is to bridge the gap between cutting-edge AI research and practical healthcare applications.
+              DrugNexusAI represents the future of medication safety — where technology serves humanity,
               making healthcare safer, more accessible, and more intelligent.
             </p>
             <div className="vision-goals">
@@ -507,7 +507,7 @@ export const FuturePlanPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
         <button className="future-close-btn" onClick={onClose} aria-label="Close">
           <i className="fas fa-times"></i>
         </button>
-        
+
         {/* Hero Section */}
         <div className="future-hero">
           <div className="future-bg-stars"></div>
@@ -527,8 +527,8 @@ export const FuturePlanPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
           </div>
           <h2>Our Vision</h2>
           <p className="vision-text">
-            To create a world where medication errors are eliminated through intelligent AI, 
-            where healthcare is personalized and accessible to all, and where technology 
+            To create a world where medication errors are eliminated through intelligent AI,
+            where healthcare is personalized and accessible to all, and where technology
             serves humanity's greatest health challenges.
           </p>
           <div className="vision-principles">
@@ -553,7 +553,7 @@ export const FuturePlanPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
             <i className="fas fa-map-marked-alt"></i>
             Development Roadmap
           </h2>
-          
+
           {/* Short Term */}
           <div className="roadmap-phase short-term">
             <div className="phase-header">
@@ -574,7 +574,7 @@ export const FuturePlanPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
                 <p>Native iOS and Android applications for on-the-go access</p>
                 <div className="feature-progress">
                   <div className="progress-bar">
-                    <div className="progress-fill" style={{width: '25%'}}></div>
+                    <div className="progress-fill" style={{ width: '25%' }}></div>
                   </div>
                   <span>Planning Phase</span>
                 </div>
@@ -587,7 +587,7 @@ export const FuturePlanPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
                 <p>Push alerts for medication reminders and interaction warnings</p>
                 <div className="feature-progress">
                   <div className="progress-bar">
-                    <div className="progress-fill" style={{width: '40%'}}></div>
+                    <div className="progress-fill" style={{ width: '40%' }}></div>
                   </div>
                   <span>In Development</span>
                 </div>
@@ -600,7 +600,7 @@ export const FuturePlanPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
                 <p>Detailed reports on medication adherence and health trends</p>
                 <div className="feature-progress">
                   <div className="progress-bar">
-                    <div className="progress-fill" style={{width: '60%'}}></div>
+                    <div className="progress-fill" style={{ width: '60%' }}></div>
                   </div>
                   <span>Beta Testing</span>
                 </div>
@@ -613,7 +613,7 @@ export const FuturePlanPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
                 <p>Expand accessibility to non-English speaking users</p>
                 <div className="feature-progress">
                   <div className="progress-bar">
-                    <div className="progress-fill" style={{width: '15%'}}></div>
+                    <div className="progress-fill" style={{ width: '15%' }}></div>
                   </div>
                   <span>Research Phase</span>
                 </div>
@@ -742,8 +742,8 @@ export const FuturePlanPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
         {/* Call to Action */}
         <div className="future-cta">
           <div className="cta-content">
-            <h3>Be Part of the Future</h3>
-            <p>Join us in revolutionizing healthcare through intelligent AI solutions</p>
+            <h3 className="future-cta-title">Be Part of the Future</h3>
+            <p className="future-cta-text">Join us in revolutionizing healthcare through intelligent AI solutions</p>
             <div className="cta-buttons">
               <button className="cta-btn primary" onClick={onClose}>
                 <i className="fas fa-rocket"></i>
@@ -772,7 +772,7 @@ export const BlogPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
         <button className="blog-close-btn" onClick={onClose} aria-label="Close">
           <i className="fas fa-times"></i>
         </button>
-        
+
         {/* Hero Section */}
         <div className="blog-hero">
           <div className="blog-bg-pattern"></div>
@@ -798,7 +798,7 @@ export const BlogPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
           </div>
           <h2>Coming Soon!</h2>
           <p className="coming-soon-description">
-            We're crafting something special for you. Our blog will be your go-to source for 
+            We're crafting something special for you. Our blog will be your go-to source for
             cutting-edge insights in AI healthcare technology.
           </p>
         </div>
@@ -822,7 +822,7 @@ export const BlogPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
                 <span className="topic-tag">Architecture</span>
               </div>
             </div>
-            
+
             <div className="category-card healthcare">
               <div className="category-icon">
                 <i className="fas fa-heartbeat"></i>
@@ -835,7 +835,7 @@ export const BlogPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
                 <span className="topic-tag">Clinical Research</span>
               </div>
             </div>
-            
+
             <div className="category-card product">
               <div className="category-icon">
                 <i className="fas fa-rocket"></i>
@@ -848,7 +848,7 @@ export const BlogPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
                 <span className="topic-tag">Updates</span>
               </div>
             </div>
-            
+
             <div className="category-card education">
               <div className="category-icon">
                 <i className="fas fa-graduation-cap"></i>
@@ -884,7 +884,7 @@ export const BlogPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
                 </div>
               </div>
             </div>
-            
+
             <div className="article-card">
               <div className="article-image">
                 <i className="fas fa-shield-alt"></i>
@@ -898,7 +898,7 @@ export const BlogPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
                 </div>
               </div>
             </div>
-            
+
             <div className="article-card">
               <div className="article-image">
                 <i className="fas fa-mobile-alt"></i>
@@ -942,8 +942,8 @@ export const BlogPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
         {/* Call to Action */}
         <div className="blog-cta">
           <div className="cta-content">
-            <h3>Ready to Dive Deep?</h3>
-            <p>Explore our platform while we prepare amazing content for you</p>
+            <h3 className="blog-cta-title">Ready to Dive Deep?</h3>
+            <p className="blog-cta-text">Explore our platform while we prepare amazing content for you</p>
             <div className="cta-buttons">
               <button className="cta-btn primary" onClick={onClose}>
                 <i className="fas fa-rocket"></i>
@@ -972,7 +972,7 @@ export const HelpCenterPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
         <button className="help-close-btn" onClick={onClose} aria-label="Close">
           <i className="fas fa-times"></i>
         </button>
-        
+
         {/* Hero Section */}
         <div className="help-hero">
           <div className="help-bg-gradient"></div>
@@ -1156,7 +1156,7 @@ export const HelpCenterPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
             </div>
             <h2>Privacy & Security</h2>
             <p className="security-description">
-              Your health data is our top priority. We implement industry-leading security measures 
+              Your health data is our top priority. We implement industry-leading security measures
               to protect your personal and medical information.
             </p>
             <div className="security-features">
@@ -1232,7 +1232,7 @@ export const FAQPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
         <button className="faq-close-btn" onClick={onClose} aria-label="Close">
           <i className="fas fa-times"></i>
         </button>
-        
+
         {/* Hero Section */}
         <div className="faq-hero">
           <div className="faq-bg-bubbles"></div>
@@ -1292,9 +1292,9 @@ export const FAQPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
               </div>
               <div className="faq-answer">
                 <p>
-                  <strong>No, absolutely not.</strong> DrugNexusAI is a clinical decision support tool designed to 
-                  <em>assist</em> healthcare professionals and <em>inform</em> patients. It should never replace 
-                  professional medical advice, diagnosis, or treatment. Always consult with qualified healthcare 
+                  <strong>No, absolutely not.</strong> DrugNexusAI is a clinical decision support tool designed to
+                  <em>assist</em> healthcare professionals and <em>inform</em> patients. It should never replace
+                  professional medical advice, diagnosis, or treatment. Always consult with qualified healthcare
                   providers for medical decisions.
                 </p>
                 <div className="answer-highlight">
@@ -1316,7 +1316,7 @@ export const FAQPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
               </div>
               <div className="faq-answer">
                 <p>
-                  <strong>Yes, your data is highly secure.</strong> We use industry-standard encryption, 
+                  <strong>Yes, your data is highly secure.</strong> We use industry-standard encryption,
                   de-identification protocols, and secure storage. Patient data is never shared with third parties.
                 </p>
                 <div className="security-badges">
@@ -1348,7 +1348,7 @@ export const FAQPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
               </div>
               <div className="faq-answer">
                 <p>
-                  Our AI models are trained on extensive pharmaceutical databases including DrugBank and FDA drug labels. 
+                  Our AI models are trained on extensive pharmaceutical databases including DrugBank and FDA drug labels.
                   While we strive for high accuracy, no automated system is perfect.
                 </p>
                 <div className="accuracy-stats">
@@ -1380,7 +1380,7 @@ export const FAQPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
               </div>
               <div className="faq-answer">
                 <p>
-                  The platform is accessible on mobile browsers, though some features are optimized for desktop use. 
+                  The platform is accessible on mobile browsers, though some features are optimized for desktop use.
                   We're working on dedicated mobile apps for iOS and Android.
                 </p>
                 <div className="mobile-roadmap">
@@ -1412,7 +1412,7 @@ export const FAQPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
               </div>
               <div className="faq-answer">
                 <p>
-                  Our chatbot uses advanced language models with a multi-model fallback system. It tries up to 
+                  Our chatbot uses advanced language models with a multi-model fallback system. It tries up to
                   9 different AI models to ensure reliable responses about medications, interactions, and health information.
                 </p>
                 <div className="ai-features">
@@ -1444,7 +1444,7 @@ export const FAQPopup: React.FC<PopupProps> = ({ visible, onClose }) => {
               </div>
               <div className="faq-answer">
                 <p>
-                  Currently, DrugNexusAI is available as an academic prototype. Pricing and subscription models 
+                  Currently, DrugNexusAI is available as an academic prototype. Pricing and subscription models
                   for commercial use are being developed.
                 </p>
                 <div className="pricing-info">
@@ -1500,7 +1500,7 @@ export const TermsOfServicePopup: React.FC<PopupProps> = ({ visible, onClose }) 
         <button className="terms-close-btn" onClick={onClose} aria-label="Close">
           <i className="fas fa-times"></i>
         </button>
-        
+
         {/* Hero Section */}
         <div className="terms-hero">
           <div className="terms-bg-pattern"></div>
@@ -1572,7 +1572,7 @@ export const TermsOfServicePopup: React.FC<PopupProps> = ({ visible, onClose }) 
             </div>
             <div className="section-content">
               <p>
-                By accessing or using DrugNexusAI, you agree to be bound by these Terms of Service. 
+                By accessing or using DrugNexusAI, you agree to be bound by these Terms of Service.
                 If you do not agree to these terms, please do not use the platform.
               </p>
               <div className="important-note">
@@ -1659,7 +1659,7 @@ export const PrivacyPolicyPopup: React.FC<PopupProps> = ({ visible, onClose }) =
         <button className="privacy-close-btn" onClick={onClose} aria-label="Close">
           <i className="fas fa-times"></i>
         </button>
-        
+
         {/* Hero Section */}
         <div className="privacy-hero">
           <div className="privacy-bg-shield"></div>

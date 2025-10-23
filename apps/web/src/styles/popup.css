@@ -365,10 +365,13 @@ a {
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.3;
     transform: scale(1);
   }
+
   50% {
     opacity: 0.6;
     transform: scale(1.05);
@@ -518,9 +521,12 @@ a {
 }
 
 @keyframes bounce {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-10px);
   }
@@ -569,6 +575,7 @@ a {
 .popup-section ol li {
   color: #4a5568;
 }
+
 /* ==
 ======================================
    REDESIGNED DEVELOPER MODAL
@@ -638,7 +645,7 @@ a {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: 
+  background-image:
     radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
     radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
     radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
@@ -983,22 +990,85 @@ a {
 }
 
 /* Tech badge colors */
-.tech-badge.react { background: #61dafb; color: #1e293b; }
-.tech-badge.typescript { background: #3178c6; color: #ffffff; }
-.tech-badge.css { background: #1572b6; color: #ffffff; }
-.tech-badge.responsive { background: #22c55e; color: #ffffff; }
-.tech-badge.node { background: #339933; color: #ffffff; }
-.tech-badge.express { background: #000000; color: #ffffff; }
-.tech-badge.python { background: #3776ab; color: #ffffff; }
-.tech-badge.fastapi { background: #009688; color: #ffffff; }
-.tech-badge.tensorflow { background: #ff6f00; color: #ffffff; }
-.tech-badge.chemberta { background: #8b5cf6; color: #ffffff; }
-.tech-badge.openai { background: #412991; color: #ffffff; }
-.tech-badge.nlp { background: #e11d48; color: #ffffff; }
-.tech-badge.mongodb { background: #47a248; color: #ffffff; }
-.tech-badge.atlas { background: #00684a; color: #ffffff; }
-.tech-badge.encryption { background: #dc2626; color: #ffffff; }
-.tech-badge.cloud { background: #0ea5e9; color: #ffffff; }
+.tech-badge.react {
+  background: #61dafb;
+  color: #1e293b;
+}
+
+.tech-badge.typescript {
+  background: #3178c6;
+  color: #ffffff;
+}
+
+.tech-badge.css {
+  background: #1572b6;
+  color: #ffffff;
+}
+
+.tech-badge.responsive {
+  background: #22c55e;
+  color: #ffffff;
+}
+
+.tech-badge.node {
+  background: #339933;
+  color: #ffffff;
+}
+
+.tech-badge.express {
+  background: #000000;
+  color: #ffffff;
+}
+
+.tech-badge.python {
+  background: #3776ab;
+  color: #ffffff;
+}
+
+.tech-badge.fastapi {
+  background: #009688;
+  color: #ffffff;
+}
+
+.tech-badge.tensorflow {
+  background: #ff6f00;
+  color: #ffffff;
+}
+
+.tech-badge.chemberta {
+  background: #8b5cf6;
+  color: #ffffff;
+}
+
+.tech-badge.openai {
+  background: #412991;
+  color: #ffffff;
+}
+
+.tech-badge.nlp {
+  background: #e11d48;
+  color: #ffffff;
+}
+
+.tech-badge.mongodb {
+  background: #47a248;
+  color: #ffffff;
+}
+
+.tech-badge.atlas {
+  background: #00684a;
+  color: #ffffff;
+}
+
+.tech-badge.encryption {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.tech-badge.cloud {
+  background: #0ea5e9;
+  color: #ffffff;
+}
 
 /* Achievements */
 .developer-achievements {
@@ -1072,7 +1142,7 @@ a {
   margin: 0;
 }
 
-/* Vision Section */
+/* Vision Section - Developer Modal */
 .developer-vision {
   padding: 3rem 2rem;
   background: linear-gradient(135deg, #2a9d8f 0%, #264653 100%);
@@ -1080,26 +1150,28 @@ a {
   text-align: center;
 }
 
-.vision-content {
+.developer-vision .vision-content {
   max-width: 700px;
   margin: 0 auto;
 }
 
-.vision-text {
+.developer-vision .vision-text {
   font-size: 1.1rem;
   line-height: 1.8;
   margin: 0 0 2rem;
-  color: rgba(255, 255, 255, 0.95);
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  font-weight: 500;
 }
 
-.vision-goals {
+.developer-vision .vision-goals {
   display: flex;
   justify-content: center;
   gap: 2rem;
   flex-wrap: wrap;
 }
 
-.goal-item {
+.developer-vision .goal-item {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -1111,19 +1183,93 @@ a {
   transition: all 0.3s ease;
 }
 
-.goal-item:hover {
+.developer-vision .goal-item:hover {
   background: rgba(255, 255, 255, 0.2);
   transform: translateY(-3px);
 }
 
-.goal-item i {
+.developer-vision .goal-item i {
   color: #E76F51;
   font-size: 1.2rem;
 }
 
-.goal-item span {
+.developer-vision .goal-item span {
   font-weight: 600;
   font-size: 0.9rem;
+  color: #ffffff !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Future Plans Modal - Specific Styling */
+.future-vision {
+  padding: 3rem 2rem;
+  background: #ffffff;
+  text-align: center;
+}
+
+.future-vision .vision-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 1.5rem;
+  background: linear-gradient(135deg, #E76F51 0%, #d45a3d 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: #ffffff;
+  box-shadow: 0 8px 30px rgba(231, 111, 81, 0.3);
+}
+
+.popup-overlay .future-vision h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e293b !important;
+  margin: 0 0 1.5rem;
+}
+
+.popup-overlay .future-vision .vision-text {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #64748b !important;
+  max-width: 800px;
+  margin: 0 auto 2rem;
+  font-weight: 500;
+}
+
+.future-vision .vision-principles {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.future-vision .principle-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 1rem 1.5rem;
+  border-radius: 50px;
+  border: 2px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.future-vision .principle-item:hover {
+  border-color: #2a9d8f;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(42, 157, 143, 0.15);
+}
+
+.future-vision .principle-item i {
+  color: #2a9d8f;
+  font-size: 1.2rem;
+}
+
+.popup-overlay .future-vision .principle-item span {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #1e293b !important;
 }
 
 /* Call to Action */
@@ -1142,12 +1288,12 @@ a {
 .cta-content h3 {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #1e293b;
+  color: #1e293b !important;
   margin: 0 0 1rem;
 }
 
 .cta-content p {
-  color: #64748b;
+  color: #64748b !important;
   margin: 0 0 2rem;
   font-size: 1.05rem;
 }
@@ -1171,30 +1317,37 @@ a {
   cursor: pointer;
   transition: all 0.3s ease;
   text-decoration: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .cta-btn.primary {
-  background: linear-gradient(135deg, #2a9d8f 0%, #264653 100%);
-  color: #ffffff;
-  box-shadow: 0 4px 15px rgba(42, 157, 143, 0.3);
+  background: linear-gradient(135deg, #2a9d8f 0%, #264653 100%) !important;
+  color: #ffffff !important;
+  border: 2px solid transparent;
 }
 
 .cta-btn.primary:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 25px rgba(42, 157, 143, 0.4);
+  background: linear-gradient(135deg, #238a7a 0%, #1e3a3f 100%) !important;
 }
 
 .cta-btn.secondary {
-  background: transparent;
-  color: #64748b;
-  border: 2px solid #e2e8f0;
+  background: #ffffff !important;
+  color: #2a9d8f !important;
+  border: 2px solid #2a9d8f !important;
 }
 
 .cta-btn.secondary:hover {
-  background: #f8fafc;
-  border-color: #2a9d8f;
-  color: #2a9d8f;
+  background: #2a9d8f !important;
+  border-color: #2a9d8f !important;
+  color: #ffffff !important;
   transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(42, 157, 143, 0.3);
+}
+
+.cta-btn i {
+  color: inherit !important;
 }
 
 /* Animations */
@@ -1203,6 +1356,7 @@ a {
     opacity: 0;
     backdrop-filter: blur(0px);
   }
+
   to {
     opacity: 1;
     backdrop-filter: blur(10px);
@@ -1214,6 +1368,7 @@ a {
     opacity: 0;
     transform: translateY(50px) scale(0.9);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -1221,9 +1376,12 @@ a {
 }
 
 @keyframes patternFloat {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0) rotate(0deg);
   }
+
   50% {
     transform: translateY(-20px) rotate(180deg);
   }
@@ -1233,16 +1391,20 @@ a {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
 }
 
 @keyframes pulse-dot {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
+
   50% {
     opacity: 0.7;
     transform: scale(1.2);
@@ -1254,6 +1416,7 @@ a {
     transform: scale(1);
     opacity: 0.3;
   }
+
   100% {
     transform: scale(1.5);
     opacity: 0;
@@ -1356,7 +1519,9 @@ a {
   .developer-cta {
     padding: 2rem 1rem;
   }
-}/* 
+}
+
+/* 
 ========================================
    REDESIGNED ABOUT MODAL
 ======================================== */
@@ -1425,7 +1590,7 @@ a {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: 
+  background-image:
     radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
     radial-gradient(circle at 75% 75%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
   animation: floatPattern 15s ease-in-out infinite;
@@ -1514,7 +1679,8 @@ a {
   background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
 }
 
-.problem-section, .solution-section {
+.problem-section,
+.solution-section {
   margin-bottom: 3rem;
 }
 
@@ -1755,12 +1921,29 @@ a {
   color: #ffffff;
 }
 
-.diff-icon.ai { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
-.diff-icon.realtime { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); }
-.diff-icon.design { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
-.diff-icon.privacy { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
-.diff-icon.data { background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); }
-.diff-icon.assistant { background: linear-gradient(135deg, #E76F51 0%, #d45a3d 100%); }
+.diff-icon.ai {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.diff-icon.realtime {
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+}
+
+.diff-icon.design {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.diff-icon.privacy {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.diff-icon.data {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+}
+
+.diff-icon.assistant {
+  background: linear-gradient(135deg, #E76F51 0%, #d45a3d 100%);
+}
 
 .diff-card h4 {
   font-size: 1.25rem;
@@ -1933,11 +2116,11 @@ a {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: 
+  background-image:
     radial-gradient(2px 2px at 20px 30px, #ffffff, transparent),
-    radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, 0.8), transparent),
     radial-gradient(1px 1px at 90px 40px, #ffffff, transparent),
-    radial-gradient(1px 1px at 130px 80px, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1px 1px at 130px 80px, rgba(255, 255, 255, 0.6), transparent),
     radial-gradient(2px 2px at 160px 30px, #ffffff, transparent);
   background-repeat: repeat;
   background-size: 200px 100px;
@@ -2329,11 +2512,11 @@ a {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: 
-    linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
-    linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.1) 75%),
-    linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.1) 75%);
+  background-image:
+    linear-gradient(45deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(255, 255, 255, 0.1) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(255, 255, 255, 0.1) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(255, 255, 255, 0.1) 75%);
   background-size: 30px 30px;
   background-position: 0 0, 0 15px, 15px -15px, -15px 0px;
   animation: patternMove 20s linear infinite;
@@ -2408,8 +2591,13 @@ a {
   animation: typingDot 1.4s ease-in-out infinite both;
 }
 
-.typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
-.typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+.typing-indicator span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.typing-indicator span:nth-child(2) {
+  animation-delay: -0.16s;
+}
 
 .blog-coming-soon h2 {
   font-size: 2rem;
@@ -2776,43 +2964,96 @@ a {
 
 /* Animations */
 @keyframes floatPattern {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-20px) rotate(180deg); }
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-20px) rotate(180deg);
+  }
 }
 
 @keyframes logoFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 @keyframes starTwinkle {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(200px); }
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(200px);
+  }
 }
 
 @keyframes rocketFloat {
-  0%, 100% { transform: translateY(0) rotate(-5deg); }
-  50% { transform: translateY(-15px) rotate(5deg); }
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(-5deg);
+  }
+
+  50% {
+    transform: translateY(-15px) rotate(5deg);
+  }
 }
 
 @keyframes patternMove {
-  0% { background-position: 0 0, 0 15px, 15px -15px, -15px 0px; }
-  100% { background-position: 30px 30px, 30px 45px, 45px 15px, 15px 30px; }
+  0% {
+    background-position: 0 0, 0 15px, 15px -15px, -15px 0px;
+  }
+
+  100% {
+    background-position: 30px 30px, 30px 45px, 45px 15px, 15px 30px;
+  }
 }
 
 @keyframes iconPulse {
-  0%, 100% { transform: scale(1); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2); }
-  50% { transform: scale(1.05); box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3); }
+
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  }
+
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+  }
 }
 
 @keyframes typingDot {
-  0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
-  40% { transform: scale(1); opacity: 1; }
+
+  0%,
+  80%,
+  100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* Responsive Design for All Modals */
 @media (max-width: 768px) {
-  .about-modal, .future-modal, .blog-modal {
+
+  .about-modal,
+  .future-modal,
+  .blog-modal {
     width: 100%;
     max-width: 100%;
     border-radius: 0;
@@ -2886,11 +3127,16 @@ a {
 }
 
 @media (max-width: 480px) {
-  .about-hero, .future-hero, .blog-hero {
+
+  .about-hero,
+  .future-hero,
+  .blog-hero {
     padding: 2rem 1rem;
   }
 
-  .about-title, .future-title, .blog-title {
+  .about-title,
+  .future-title,
+  .blog-title {
     font-size: 2rem;
   }
 
@@ -2902,5 +3148,431 @@ a {
   .principle-item {
     width: 100%;
     justify-content: center;
+  }
+}
+
+/* ========================================
+   FUTURE PLANS MODAL SPECIFIC STYLING
+======================================== */
+
+.future-hero {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 3rem 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  color: #ffffff;
+}
+
+.future-bg-stars {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, #ffffff, transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, 0.8), transparent),
+    radial-gradient(1px 1px at 90px 40px, #ffffff, transparent),
+    radial-gradient(1px 1px at 130px 80px, rgba(255, 255, 255, 0.6), transparent);
+  background-repeat: repeat;
+  background-size: 200px 100px;
+  animation: twinkle 4s ease-in-out infinite;
+}
+
+.future-rocket {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+  animation: rocketFloat 3s ease-in-out infinite;
+  position: relative;
+  z-index: 2;
+}
+
+.popup-overlay .future-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin: 0 0 1rem;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 2;
+  color: #ffffff !important;
+}
+
+.popup-overlay .future-subtitle {
+  font-size: 1.1rem;
+  margin: 0;
+  opacity: 0.9;
+  position: relative;
+  z-index: 2;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Roadmap Phases */
+.future-roadmap {
+  padding: 3rem 2rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+}
+
+.roadmap-phase {
+  margin-bottom: 3rem;
+  background: #ffffff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 2px solid #f1f5f9;
+  transition: all 0.3s ease;
+}
+
+.roadmap-phase:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.phase-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.phase-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.short-term .phase-icon {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+}
+
+.mid-term .phase-icon {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.long-term .phase-icon {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.popup-overlay .phase-info h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b !important;
+  margin: 0 0 0.5rem;
+}
+
+.phase-timeline {
+  display: inline-block;
+  background: #2a9d8f;
+  color: #ffffff !important;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.phase-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+.feature-card {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 2rem;
+  border-radius: 16px;
+  border: 2px solid #e2e8f0;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.feature-card:hover {
+  border-color: #2a9d8f;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(42, 157, 143, 0.15);
+}
+
+.feature-card .feature-icon {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 1.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  color: #ffffff;
+  background: linear-gradient(135deg, #2a9d8f 0%, #264653 100%);
+}
+
+.popup-overlay .feature-card h4 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b !important;
+  margin: 0 0 1rem;
+}
+
+.popup-overlay .feature-card p {
+  color: #64748b !important;
+  line-height: 1.6;
+  margin: 0 0 1.5rem;
+}
+
+.feature-progress {
+  text-align: center;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.popup-overlay .feature-progress span {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Animations */
+@keyframes twinkle {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes rocketFloat {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(-5deg);
+  }
+
+  50% {
+    transform: translateY(-10px) rotate(5deg);
+  }
+}
+
+/* Responsive Design for Future Modal */
+@media (max-width: 768px) {
+  .future-vision .vision-principles {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .phase-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .phase-features {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}/* 
+========================================
+   MODAL CTA TEXT VISIBILITY FIXES
+======================================== */
+
+/* About Modal CTA Text */
+.about-cta-title {
+  color: #ffffff !important;
+  font-size: 1.75rem !important;
+  font-weight: 700 !important;
+  margin: 0 0 1rem !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8) !important;
+}
+
+.about-cta-text {
+  color: #ffffff !important;
+  font-size: 1.05rem !important;
+  margin: 0 0 2rem !important;
+  line-height: 1.6 !important;
+  font-weight: 500 !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Future Plans Modal CTA Text */
+.future-cta-title {
+  color: #ffffff !important;
+  font-size: 1.75rem !important;
+  font-weight: 700 !important;
+  margin: 0 0 1rem !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8) !important;
+}
+
+.future-cta-text {
+  color: #ffffff !important;
+  font-size: 1.05rem !important;
+  margin: 0 0 2rem !important;
+  line-height: 1.6 !important;
+  font-weight: 500 !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Blog Modal CTA Text */
+.blog-cta-title {
+  color: #ffffff !important;
+  font-size: 1.75rem !important;
+  font-weight: 700 !important;
+  margin: 0 0 1rem !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8) !important;
+}
+
+.blog-cta-text {
+  color: #ffffff !important;
+  font-size: 1.05rem !important;
+  margin: 0 0 2rem !important;
+  line-height: 1.6 !important;
+  font-weight: 500 !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Override any conflicting styles */
+.popup-overlay .about-cta-title,
+.popup-overlay .future-cta-title,
+.popup-overlay .blog-cta-title {
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8) !important;
+}
+
+.popup-overlay .about-cta-text,
+.popup-overlay .future-cta-text,
+.popup-overlay .blog-cta-text {
+  color: #ffffff !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7) !important;
+}/* ====
+====================================
+   FUTURE PLANS PHASE ICON FIXES
+======================================== */
+
+/* Phase Header Layout Fix */
+.popup-overlay .phase-header {
+  display: flex !important;
+  align-items: center !important;
+  gap: 1.5rem !important;
+  padding: 2rem !important;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+  border-bottom: 2px solid #e2e8f0 !important;
+}
+
+/* Phase Icon Styling */
+.popup-overlay .phase-icon {
+  width: 60px !important;
+  height: 60px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 1.5rem !important;
+  color: #ffffff !important;
+  flex-shrink: 0 !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* Phase Icon Colors by Type */
+.popup-overlay .short-term .phase-icon {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3) !important;
+}
+
+.popup-overlay .mid-term .phase-icon {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3) !important;
+}
+
+.popup-overlay .long-term .phase-icon {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+  box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3) !important;
+}
+
+/* Phase Icon Hover Effect */
+.popup-overlay .phase-icon:hover {
+  transform: scale(1.1) !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Phase Info Styling */
+.popup-overlay .phase-info {
+  flex: 1 !important;
+}
+
+.popup-overlay .phase-info h3 {
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
+  margin: 0 0 0.5rem !important;
+}
+
+.popup-overlay .phase-timeline {
+  display: inline-block !important;
+  background: #2a9d8f !important;
+  color: #ffffff !important;
+  padding: 0.25rem 0.75rem !important;
+  border-radius: 50px !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* Roadmap Phase Container */
+.popup-overlay .roadmap-phase {
+  margin-bottom: 3rem !important;
+  background: #ffffff !important;
+  border-radius: 20px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+  border: 2px solid #f1f5f9 !important;
+  transition: all 0.3s ease !important;
+}
+
+.popup-overlay .roadmap-phase:hover {
+  transform: translateY(-5px) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Responsive Fix for Phase Icons */
+@media (max-width: 768px) {
+  .popup-overlay .phase-header {
+    flex-direction: column !important;
+    text-align: center !important;
+    gap: 1rem !important;
+  }
+  
+  .popup-overlay .phase-icon {
+    width: 50px !important;
+    height: 50px !important;
+    font-size: 1.2rem !important;
   }
 }

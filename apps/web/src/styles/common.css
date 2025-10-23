@@ -879,7 +879,7 @@ textarea.success {
   pointer-events: none;
 }
 
-.input-with-icon input:focus + .input-icon {
+.input-with-icon input:focus+.input-icon {
   color: var(--primary);
 }
 
@@ -900,7 +900,8 @@ textarea.success {
   text-decoration: none;
   position: relative;
   overflow: hidden;
-  min-height: 44px; /* Accessibility: minimum touch target */
+  min-height: 44px;
+  /* Accessibility: minimum touch target */
 }
 
 .btn::before {
@@ -1137,28 +1138,31 @@ input[type="range"]::-moz-range-thumb {
   .form-group {
     margin-bottom: 1.25rem;
   }
-  
+
   input,
   select,
   textarea,
   .btn {
-    font-size: 16px; /* Prevents zoom on iOS */
+    font-size: 16px;
+    /* Prevents zoom on iOS */
   }
-  
+
   .btn {
     padding: 0.875rem 1.25rem;
-    min-height: 48px; /* Better touch targets on mobile */
+    min-height: 48px;
+    /* Better touch targets on mobile */
   }
 }
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
+
   input,
   select,
   textarea {
     border: 2px solid var(--text-dark);
   }
-  
+
   .dark input,
   .dark select,
   .dark textarea {
@@ -1168,17 +1172,18 @@ input[type="range"]::-moz-range-thumb {
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
+
   input,
   select,
   textarea,
   .btn {
     transition: none;
   }
-  
+
   .btn::before {
     display: none;
   }
-  
+
   @keyframes spin {
     to {
       transform: none;

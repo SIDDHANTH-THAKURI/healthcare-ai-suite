@@ -53,12 +53,16 @@
 }
 
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translate(0, 0) scale(1);
   }
+
   33% {
     transform: translate(50px, -50px) scale(1.1);
   }
+
   66% {
     transform: translate(-50px, 50px) scale(0.9);
   }
@@ -67,7 +71,7 @@
 .grid-overlay {
   position: absolute;
   inset: 0;
-  background-image: 
+  background-image:
     linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
   background-size: 50px 50px;
@@ -78,6 +82,7 @@
   0% {
     transform: translate(0, 0);
   }
+
   100% {
     transform: translate(50px, 50px);
   }
@@ -135,6 +140,7 @@
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -167,18 +173,24 @@
 
 .phase-icon {
   position: absolute;
-  inset: 0;
+  top: 19%;
+  left: 17%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 4rem;
+  width: 100px;
+  height: 100px;
   animation: bounce 2s ease-in-out infinite;
 }
 
 @keyframes bounce {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-10px);
   }
@@ -198,16 +210,28 @@
   animation: fadeIn 0.8s ease-out backwards;
 }
 
-.title-word:nth-child(1) { animation-delay: 0.1s; }
-.title-word:nth-child(2) { animation-delay: 0.2s; }
-.title-word:nth-child(3) { animation-delay: 0.3s; }
-.title-word:nth-child(4) { animation-delay: 0.4s; }
+.title-word:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.title-word:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.title-word:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.title-word:nth-child(4) {
+  animation-delay: 0.4s;
+}
 
 @keyframes fadeIn {
   from {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -224,9 +248,12 @@
 }
 
 @keyframes gradientShift {
-  0%, 100% {
+
+  0%,
+  100% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
@@ -303,6 +330,10 @@
 .card-icon {
   font-size: 3rem;
   margin-bottom: 1rem;
+}
+
+.text-h3 h3 {
+  color: black;
 }
 
 .feature-card h3 {
@@ -415,12 +446,15 @@
     transform: translateY(100vh) translateX(0);
     opacity: 0;
   }
+
   10% {
     opacity: 1;
   }
+
   90% {
     opacity: 1;
   }
+
   100% {
     transform: translateY(-100px) translateX(50px);
     opacity: 0;
@@ -507,9 +541,11 @@
     transform: translateX(-50%) scale(0.8);
     opacity: 0;
   }
+
   50% {
     transform: translateX(-50%) scale(1.1);
   }
+
   100% {
     transform: translateX(-50%) scale(1);
     opacity: 1;
@@ -531,7 +567,7 @@
   font-size: 4rem;
   font-weight: 900;
   color: #fff;
-  text-shadow: 
+  text-shadow:
     0 0 10px #ff006e,
     0 0 20px #ff006e,
     0 0 30px #ff006e,
@@ -549,14 +585,17 @@
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.5);
   }
+
   20% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1.2);
   }
+
   80% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
   }
+
   100% {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.8);
@@ -564,9 +603,12 @@
 }
 
 @keyframes epicTextPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.05);
   }
@@ -576,6 +618,7 @@
   0% {
     filter: hue-rotate(0deg);
   }
+
   100% {
     filter: hue-rotate(360deg);
   }
@@ -587,9 +630,12 @@
 }
 
 @keyframes epicPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     filter: hue-rotate(0deg) brightness(1);
   }
+
   50% {
     filter: hue-rotate(30deg) brightness(1.2);
   }
@@ -600,9 +646,12 @@
 }
 
 @keyframes epicFloat {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translate(0, 0) scale(1.2);
   }
+
   50% {
     transform: translate(30px, -30px) scale(1.5);
   }
@@ -613,9 +662,12 @@
 }
 
 @keyframes epicBounce {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0) scale(1);
   }
+
   50% {
     transform: translateY(-20px) scale(1.3);
   }
@@ -625,6 +677,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -646,12 +699,16 @@
 }
 
 @keyframes epicShake {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateX(0);
   }
+
   25% {
     transform: translateX(-10px) rotate(-2deg);
   }
+
   75% {
     transform: translateX(10px) rotate(2deg);
   }
@@ -674,9 +731,12 @@
 }
 
 @keyframes epicCardFloat {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-15px);
   }
@@ -697,7 +757,7 @@
   height: 6px;
   background: var(--firework-color, #ff006e);
   border-radius: 50%;
-  box-shadow: 
+  box-shadow:
     0 0 10px var(--firework-color, #ff006e),
     0 0 20px var(--firework-color, #ff006e),
     0 0 30px var(--firework-color, #ff006e);
@@ -711,9 +771,11 @@
     transform: rotate(var(--angle)) translateX(0) scale(1);
     opacity: 1;
   }
+
   50% {
     opacity: 1;
   }
+
   100% {
     transform: rotate(var(--angle)) translateX(150px) scale(0);
     opacity: 0;
@@ -723,7 +785,7 @@
 .epic-mode .firework-particle {
   width: 8px;
   height: 8px;
-  box-shadow: 
+  box-shadow:
     0 0 15px var(--firework-color, #ff006e),
     0 0 30px var(--firework-color, #ff006e),
     0 0 45px var(--firework-color, #ff006e),

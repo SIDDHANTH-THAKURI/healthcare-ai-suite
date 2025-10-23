@@ -16,7 +16,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: 
+    background:
         radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
         radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.02) 0%, transparent 50%),
         radial-gradient(circle at 40% 60%, rgba(42, 157, 143, 0.05) 0%, transparent 50%);
@@ -25,8 +25,15 @@
 }
 
 @keyframes backgroundFloat {
-    0%, 100% { transform: translateY(0px) rotate(0deg); }
-    50% { transform: translateY(-20px) rotate(1deg); }
+
+    0%,
+    100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-20px) rotate(1deg);
+    }
 }
 
 .how-header {
@@ -50,8 +57,13 @@
 }
 
 @keyframes titleGlow {
-    0% { filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3)); }
-    100% { filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.5)); }
+    0% {
+        filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+    }
+
+    100% {
+        filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.5));
+    }
 }
 
 .hero-subtitle {
@@ -68,6 +80,7 @@
         opacity: 0;
         transform: translateY(30px);
     }
+
     to {
         opacity: 0.9;
         transform: translateY(0);
@@ -170,6 +183,7 @@
         opacity: 0;
         transform: translateY(50px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -177,8 +191,15 @@
 }
 
 @keyframes gradientShift {
-    0%, 100% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
+
+    0%,
+    100% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
 }
 
 .overview-content {
@@ -284,6 +305,7 @@
     margin: 0;
     line-height: 1.5;
     transition: all 0.3s ease;
+    color: whitesmoke;
 }
 
 .stat-item:hover .stat-content p {
@@ -406,12 +428,29 @@
 }
 
 /* Step card animation delays */
-.step-card:nth-child(1) { animation-delay: 0.1s; }
-.step-card:nth-child(2) { animation-delay: 0.2s; }
-.step-card:nth-child(3) { animation-delay: 0.3s; }
-.step-card:nth-child(4) { animation-delay: 0.4s; }
-.step-card:nth-child(5) { animation-delay: 0.5s; }
-.step-card:nth-child(6) { animation-delay: 0.6s; }
+.step-card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.step-card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.step-card:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.step-card:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+.step-card:nth-child(5) {
+    animation-delay: 0.5s;
+}
+
+.step-card:nth-child(6) {
+    animation-delay: 0.6s;
+}
 
 @keyframes cardSlideIn {
     to {
@@ -642,6 +681,7 @@
 .modal-close:hover {
     background: var(--accent);
 }
+
 /* Enh
 anced Step Card Styles */
 .step-category-badge {
@@ -1018,12 +1058,12 @@ anced Step Card Styles */
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
         gap: 1.5rem;
     }
-    
+
     .journey-cards {
         grid-template-columns: 1fr;
         gap: 2rem;
     }
-    
+
     .platform-stats {
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     }
@@ -1033,94 +1073,94 @@ anced Step Card Styles */
     .how-it-works {
         padding: 3rem 1.5rem;
     }
-    
+
     .hero-content h1 {
         font-size: 2.8rem;
         animation: titleGlow 2s ease-in-out infinite alternate;
     }
-    
+
     .hero-subtitle {
         font-size: 1.1rem;
         padding: 0 1rem;
     }
-    
+
     .hero-features {
         flex-direction: column;
         align-items: center;
         gap: 1rem;
     }
-    
+
     .hero-feature {
         width: 100%;
         max-width: 280px;
         justify-content: center;
     }
-    
+
     .filter-buttons {
         flex-direction: column;
         align-items: center;
         gap: 0.75rem;
     }
-    
+
     .filter-btn {
         width: 100%;
         max-width: 200px;
         justify-content: center;
     }
-    
+
     .journey-cards {
         grid-template-columns: 1fr;
         gap: 2rem;
     }
-    
+
     .journey-card {
         padding: 2rem;
     }
-    
+
     .steps {
         grid-template-columns: 1fr;
         gap: 1.5rem;
     }
-    
+
     .step-card {
         padding: 2rem;
         margin: 0 0.5rem;
     }
-    
+
     .platform-stats {
         grid-template-columns: 1fr;
         gap: 1.5rem;
     }
-    
+
     .stat-item {
         padding: 1.5rem;
         flex-direction: column;
         text-align: center;
         gap: 1rem;
     }
-    
+
     .ai-features {
         grid-template-columns: 1fr;
         gap: 1.5rem;
     }
-    
+
     .ai-feature {
         padding: 1.5rem;
     }
-    
+
     .platform-overview,
     .user-journeys,
     .ai-technology {
         padding: 3rem 1.5rem;
         margin: 2rem 0;
     }
-    
+
     .overview-content h2,
     .user-journeys h2,
     .ai-content h2 {
         font-size: 2rem;
     }
-    
+
     .category-filters h2 {
         font-size: 1.8rem;
     }
@@ -1130,80 +1170,80 @@ anced Step Card Styles */
     .how-it-works {
         padding: 2rem 1rem;
     }
-    
+
     .hero-content h1 {
         font-size: 2.2rem;
         line-height: 1.2;
     }
-    
+
     .hero-subtitle {
         font-size: 1rem;
         line-height: 1.5;
     }
-    
+
     .hero-feature {
         padding: 0.6rem 1.2rem;
         font-size: 0.85rem;
     }
-    
+
     .step-card {
         padding: 1.5rem;
         margin: 0;
     }
-    
+
     .step-card h2 {
         font-size: 1.5rem;
     }
-    
+
     .journey-card {
         padding: 1.5rem;
     }
-    
+
     .journey-header h3 {
         font-size: 1.5rem;
     }
-    
+
     .journey-step {
         padding: 0.75rem;
         flex-direction: column;
         align-items: flex-start;
         gap: 0.75rem;
     }
-    
+
     .step-number {
         align-self: flex-start;
         margin-top: 0;
     }
-    
+
     .modal-content {
         padding: 1.5rem;
         margin: 1rem;
         max-width: calc(100vw - 2rem);
     }
-    
+
     .modal-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.75rem;
     }
-    
+
     .platform-overview,
     .user-journeys,
     .ai-technology {
         padding: 2rem 1rem;
         margin: 1.5rem 0;
     }
-    
+
     .overview-content h2,
     .user-journeys h2,
     .ai-content h2 {
         font-size: 1.8rem;
     }
-    
+
     .category-filters h2 {
         font-size: 1.6rem;
     }
-    
+
     .overview-content p,
     .ai-content p {
         font-size: 1rem;
@@ -1213,13 +1253,14 @@ anced Step Card Styles */
 
 /* High contrast and accessibility improvements */
 @media (prefers-contrast: high) {
+
     .step-card,
     .journey-card,
     .ai-feature,
     .stat-item {
         border-width: 2px;
     }
-    
+
     .hero-feature,
     .filter-btn {
         border-width: 2px;
@@ -1228,6 +1269,7 @@ anced Step Card Styles */
 
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
+
     .how-it-works::before,
     .platform-overview::before,
     .user-journeys::before,
@@ -1235,12 +1277,12 @@ anced Step Card Styles */
     .step-card::before {
         animation: none;
     }
-    
+
     .hero-content h1 {
         animation: none;
         filter: none;
     }
-    
+
     .hero-subtitle,
     .category-filters,
     .platform-overview,
@@ -1248,19 +1290,19 @@ anced Step Card Styles */
     .ai-technology {
         animation: none;
     }
-    
+
     .step-card {
         animation: none;
         opacity: 1;
         transform: none;
     }
-    
+
     .hero-feature::before,
     .filter-btn::before,
     .view-details::before {
         display: none;
     }
-    
+
     * {
         transition: none !important;
     }

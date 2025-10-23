@@ -175,17 +175,17 @@ const UnderConstruction: React.FC = () => {
         <div className="feature-cards">
           <div className="feature-card">
             <div className="card-icon">💊</div>
-            <h3>Smart Analysis</h3>
+            <div className="text-h3"> <h3>Smart Analysis</h3> </div>
             <p>AI-powered drug interaction detection</p>
           </div>
           <div className="feature-card">
             <div className="card-icon">🔒</div>
-            <h3>Secure & Private</h3>
+            <div className="text-h3"> <h3>Secure & Private</h3></div>
             <p>Your health data stays protected</p>
           </div>
           <div className="feature-card">
             <div className="card-icon">⚡</div>
-            <h3>Lightning Fast</h3>
+            <div className="text-h3"> <h3>Lightning Fast</h3></div>
             <p>Instant results when you need them</p>
           </div>
         </div>
