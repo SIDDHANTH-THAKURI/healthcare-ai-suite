@@ -54,10 +54,10 @@ const MedicineForm: React.FC<MedicineFormProps> = ({
     frequency: '',
     duration: ''
   });
-  
+
   const [showFrequencyDropdown, setShowFrequencyDropdown] = useState(false);
   const frequencyDropdownRef = React.useRef<HTMLDivElement>(null);
-  
+
   const frequencyOptions = [
     { value: 'daily', label: 'Daily' },
     { value: 'weekly', label: 'Weekly' },
@@ -175,8 +175,8 @@ const MedicineForm: React.FC<MedicineFormProps> = ({
               color: medicine.frequencyType ? undefined : 'rgba(43, 45, 66, 0.5)'
             }}
           >
-            {medicine.frequencyType 
-              ? frequencyOptions.find(opt => opt.value === medicine.frequencyType)?.label 
+            {medicine.frequencyType
+              ? frequencyOptions.find(opt => opt.value === medicine.frequencyType)?.label
               : 'Select frequency type'}
           </div>
           {showFrequencyDropdown && (
@@ -284,7 +284,7 @@ const CreatePrescription: React.FC = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         setAvailableMedicines(
-          response.data.map((drug: { name: string }) => drug.name)
+          (response.data as { name: string }[]).map((drug: { name: string }) => drug.name)
         );
       } catch (error) {
         console.error("Error fetching medicines:", error);
@@ -478,7 +478,7 @@ const CreatePrescription: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      const existingMedicines = existingRes.data?.prescription?.medicines || [];
+      const existingMedicines = (existingRes.data as any)?.prescription?.medicines || [];
 
       // Merge: Keep all existing medicines and add new ones from addedMedicines
       // Create a map of existing medicines by a unique key (name + dosage)

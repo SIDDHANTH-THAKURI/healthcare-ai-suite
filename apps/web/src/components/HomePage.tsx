@@ -33,7 +33,7 @@ const HomePage: React.FC = () => {
     { pair: string; shortDescription: string }[]
   >([]);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Welcome modal state
   const [showWelcome, setShowWelcome] = useState(false);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
@@ -48,9 +48,9 @@ const HomePage: React.FC = () => {
     const width = window.innerWidth;
     const userAgent = navigator.userAgent.toLowerCase();
     const mobileKeywords = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
-    
+
     setIsMobileDevice(width < 1024 || mobileKeywords.test(userAgent));
-    
+
     // Show welcome modal on first visit
     const hasSeenWelcome = sessionStorage.getItem('hasSeenWelcome');
     if (!hasSeenWelcome) {
@@ -75,7 +75,7 @@ const HomePage: React.FC = () => {
       try {
         const response = await axios.get(`${BASE_URL_1}/api/medicines`);
         setAvailableMedicines(
-          response.data.map((drug: { name: string }) => drug.name)
+          (response.data as { name: string }[]).map((drug: { name: string }) => drug.name)
         );
       } catch (error) {
         console.error("Error fetching medicines:", error);
@@ -94,7 +94,7 @@ const HomePage: React.FC = () => {
     } else {
       setSuggestions([]);
     }
-    setActiveSuggestion(-1); 
+    setActiveSuggestion(-1);
   }, [input, availableMedicines]);
 
   // Add a medicine to selected list
@@ -164,7 +164,7 @@ const HomePage: React.FC = () => {
       const response = await axios.post(`${BASE_URL_1}/api/interactions`, {
         medicines: selectedMedicines,
       });
-      const interactions = response.data;
+      const interactions = response.data as any[];
 
       if (interactions.length === 0) {
         setInteractionResults([]);
@@ -180,10 +180,10 @@ const HomePage: React.FC = () => {
         `${BASE_URL_1}/api/simplify_interactions`,
         { interactions }
       );
-      setInteractionResults(simplified.data);
+      setInteractionResults(simplified.data as { pair: string; shortDescription: string }[]);
       setError(null);
       setShowPopup(true);
-      
+
       // Increment usage count
       const newCount = checksUsed + 1;
       setChecksUsed(newCount);
@@ -193,7 +193,7 @@ const HomePage: React.FC = () => {
       setError("An error occurred while analyzing interactions. Please try again later.");
       setInteractionResults([]);
       setShowPopup(true);
-    } finally{
+    } finally {
       setIsLoading(false);
     }
   };
@@ -245,31 +245,31 @@ const HomePage: React.FC = () => {
       description: "Patient data is de-identified, encrypted, and processed securely with no third-party sharing."
     }
   ];
-  
+
   return (
     <div className="home-page">
       {isLoading && (
-            <div className="fullscreen-loader">
-                <div className="loader-content">
-                <i className="fas fa-spinner fa-spin fa-2x"></i>
-                <p>Loading... Please wait.</p>
-                </div>
-            </div>
-            )}
+        <div className="fullscreen-loader">
+          <div className="loader-content">
+            <i className="fas fa-spinner fa-spin fa-2x"></i>
+            <p>Loading... Please wait.</p>
+          </div>
+        </div>
+      )}
       <section className="hero">
         <div className="container">
           <h2>Real-Time Interaction Alerts for Safer Prescriptions</h2>
           <p>
             Our advanced AI swiftly identifies risky drug combinations, ensuring patient safety and empowering informed clinical decisions.
           </p>
-          
+
           <div className="checker-box">
             <div className="checker-header">
               <h3>Drug Interaction Checker</h3>
               <div className="usage-indicator">
                 <div className="usage-bar-container">
-                  <div 
-                    className="usage-bar-fill" 
+                  <div
+                    className="usage-bar-fill"
                     style={{ width: `${(checksUsed / MAX_CHECKS) * 100}%` }}
                   />
                 </div>
@@ -278,12 +278,12 @@ const HomePage: React.FC = () => {
                 </span>
               </div>
             </div>
-            
+
             <div id="selected-medicines">
               {selectedMedicines.map((med) => (
                 <span className="medicine-pill" key={med}>
                   {med}
-                  <button 
+                  <button
                     className="remove-pill"
                     onClick={() => removeMedicine(med)}
                   >
@@ -317,8 +317,8 @@ const HomePage: React.FC = () => {
               )}
             </div>
 
-            <button 
-              onClick={analyzeInteractions} 
+            <button
+              onClick={analyzeInteractions}
               className="btn-red"
               disabled={checksUsed >= MAX_CHECKS}
             >
@@ -371,7 +371,7 @@ const HomePage: React.FC = () => {
             <div className="limit-icon">🔒</div>
             <h3>Daily Limit Reached</h3>
             <p className="limit-message">
-              You've used all {MAX_CHECKS} free drug interaction checks for today. 
+              You've used all {MAX_CHECKS} free drug interaction checks for today.
               Our AI-powered analysis uses advanced language models to provide accurate results.
             </p>
             <div className="limit-benefits">
@@ -418,7 +418,7 @@ const HomePage: React.FC = () => {
                     <div className="notice-icon">⚠️</div>
                     <h3>Desktop Experience Recommended</h3>
                     <p>
-                      DrugNexusAI is optimized for desktop browsers. While you can browse on mobile, 
+                      DrugNexusAI is optimized for desktop browsers. While you can browse on mobile,
                       some features may have limited functionality or display issues.
                     </p>
                     <p className="notice-recommendation">
