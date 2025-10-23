@@ -1,0 +1,39 @@
+version: 1.0
+runtime: nodejs18
+build:
+  commands:
+    build:
+      - echo "Installing dependencies..."
+      - npm ci
+      - echo "Build completed"
+run:
+  runtime-version: 18
+  command: npm start
+  network:
+    port: 5000
+    env: PORT
+  env:
+    - name: NODE_ENV
+      value: production
+    - name: PORT
+      value: 5000
+    - name: MONGO_URI
+      value: mongodb+srv://drugNexus:Lkjhgfdsa123%40@drugnexuscluster.9nd8gjp.mongodb.net/?retryWrites=true&w=majority&appName=DrugNexusCluster
+    - name: JWT_SECRET
+      value: c7b2d7d9596d29aa9bebd8df14493b47ff162832c4592f3a5e825f53500d8f1f
+    - name: OPENROUTER_API_KEY
+      value: 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
+    - name: OPENROUTER_URL
+      value: https://openrouter.ai/api/v1/chat/completions
+    - name: DB_NAME
+      value: MedPortalDB
+    - name: COLLECTION_NAME
+      value: drugs
+    - name: LLM_MODEL
+      value: mistralai/mistral-small-3.2-24b-instruct:free
+    - name: CHAT_DB
+      value: chatbot_histories
+    - name: MEDS_DB
+      value: prescriptions
+    - name: USER_DB
+      value: accounts

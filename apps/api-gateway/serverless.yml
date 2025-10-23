@@ -1,0 +1,35 @@
+service: drugnexusai-api
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  stage: prod
+  environment:
+    NODE_ENV: production
+    MONGO_URI: ${env:MONGO_URI}
+    JWT_SECRET: ${env:JWT_SECRET}
+    OPENROUTER_API_KEY: ${env:OPENROUTER_API_KEY}
+    OPENROUTER_URL: ${env:OPENROUTER_URL}
+    DB_NAME: ${env:DB_NAME}
+    COLLECTION_NAME: ${env:COLLECTION_NAME}
+    LLM_MODEL: ${env:LLM_MODEL}
+    CHAT_DB: ${env:CHAT_DB}
+    MEDS_DB: ${env:MEDS_DB}
+    USER_DB: ${env:USER_DB}
+
+functions:
+  api:
+    handler: lambda.handler
+    events:
+      - http:
+          path: /{proxy+}
+          method: ANY
+          cors: true
+      - http:
+          path: /
+          method: ANY
+          cors: true
+
+plugins:
+  - serverless-offline

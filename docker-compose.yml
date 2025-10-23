@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    build: ./apps/api-gateway
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - MONGO_URI=${MONGO_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    depends_on:
+      - ddi-service
+      - ml-service
+
+  ddi-service:
+    build: ./apps/ddi-service
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ENV=production
+      - PORT=8000
+
+  ml-service:
+    build: ./apps/ml-service
+    ports:
+      - "9000:9000"
+    environment:
+      - NODE_ENV=production
+      - PORT=9000
+
+networks:
+  default:
+    name: drugnexusai-network
