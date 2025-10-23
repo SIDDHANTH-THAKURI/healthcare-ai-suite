@@ -16,6 +16,7 @@ import chatRouter from './routes/chatRouter';
 import documentRouter from './routes/documentRouter';
 import appointmentRouter from './routes/appointmentRouter';
 import adherenceRouter from './routes/adherenceRouter';
+import apiKeyRouter from './routes/apiKeyRouter';
 import { MONGO_URI, COLLECTION_NAME, LLM_MODEL, OPENROUTER_API_KEY, OPENROUTER_URL } from './config';
 
 const app = express();
@@ -44,6 +45,7 @@ app.use('/api/chat', chatRouter);
 app.use('/api/documents', documentRouter);
 app.use('/api/appointments', appointmentRouter);
 app.use('/api/adherence', adherenceRouter);
+app.use('/api/api-key', apiKeyRouter);
 
 
 mongoose

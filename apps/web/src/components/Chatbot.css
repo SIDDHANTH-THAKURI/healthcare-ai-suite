@@ -1033,3 +1033,96 @@ body {
         transform: translateY(0);
     }
 }
+
+/* BY
+OK Integration Styles */
+.settings-modal {
+    max-width: 900px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: white;
+    border-radius: 16px;
+    padding: 0;
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: #f0f0f0;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 10;
+}
+
+.modal-close-btn:hover {
+    background: #e0e0e0;
+    transform: rotate(90deg);
+}
+
+
+
+
+/* Beautiful Back Button */
+.chatbot-back-button {
+    position: fixed;
+    top: 7.5rem;
+    left: 4.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #00ff7bad 0%, #50a8ff 100%);
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #2b2d42;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    z-index: 1000;
+}
+
+.chatbot-back-button:hover {
+    background: linear-gradient(135deg, #119a6ad4 0%, #134d8bd4 100%);
+    color: white;
+    border-color: #2A9D8F;
+    transform: translateX(-4px);
+    box-shadow: 0 6px 16px rgba(42, 157, 143, 0.3);
+}
+
+.chatbot-back-button svg {
+    transition: transform 0.3s ease;
+}
+
+.chatbot-back-button:hover svg {
+    transform: translateX(-2px);
+}
+
+.chatbot-back-button:active {
+    transform: translateX(-2px) scale(0.98);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .chatbot-back-button {
+        top: 1rem;
+        left: 1rem;
+        padding: 0.625rem 1rem;
+        font-size: 0.875rem;
+    }
+
+    .chatbot-back-button svg {
+        width: 18px;
+        height: 18px;
+    }
+}

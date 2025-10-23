@@ -1,0 +1,246 @@
+/* Exhausted Modal */
+.exhausted-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease;
+}
+
+.exhausted-modal {
+  background: white;
+  border-radius: 24px;
+  padding: 2.5rem;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  animation: slideUp 0.3s ease;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.exhausted-close {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  background: #f0f0f0;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: #666;
+}
+
+.exhausted-close:hover {
+  background: #e0e0e0;
+  transform: rotate(90deg);
+}
+
+.exhausted-icon {
+  font-size: 4rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  animation: bounce 0.6s ease;
+}
+
+.exhausted-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #2b2d42;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.exhausted-message {
+  font-size: 1rem;
+  color: #666;
+  text-align: center;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.exhausted-options {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.exhausted-option {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 16px;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.exhausted-option:hover {
+  background: #f0f2f5;
+  transform: translateY(-2px);
+}
+
+.exhausted-option.highlighted {
+  background: linear-gradient(135deg, #e8f5f3 0%, #d4ebe7 100%);
+  border-color: #2A9D8F;
+}
+
+.option-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.option-content {
+  flex: 1;
+}
+
+.option-content h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #2b2d42;
+  margin-bottom: 0.5rem;
+}
+
+.option-content p {
+  font-size: 0.875rem;
+  color: #666;
+  margin-bottom: 0.75rem;
+}
+
+.option-button {
+  background: white;
+  border: 2px solid #2A9D8F;
+  color: #2A9D8F;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.option-button:hover {
+  background: #2A9D8F;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(42, 157, 143, 0.3);
+}
+
+.option-button.primary {
+  background: #2A9D8F;
+  color: white;
+}
+
+.option-button.primary:hover {
+  background: #21867a;
+}
+
+.option-link {
+  color: #2A9D8F;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.option-link:hover {
+  color: #21867a;
+  gap: 0.75rem;
+}
+
+.exhausted-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #e3f2fd;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  color: #1976d2;
+  line-height: 1.5;
+}
+
+.exhausted-info i {
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .exhausted-modal {
+    padding: 2rem 1.5rem;
+    border-radius: 20px;
+  }
+
+  .exhausted-icon {
+    font-size: 3rem;
+  }
+
+  .exhausted-title {
+    font-size: 1.5rem;
+  }
+
+  .exhausted-message {
+    font-size: 0.9375rem;
+  }
+
+  .exhausted-option {
+    padding: 1.25rem;
+  }
+
+  .option-icon {
+    font-size: 1.5rem;
+  }
+
+  .option-content h4 {
+    font-size: 1rem;
+  }
+}

@@ -12,6 +12,9 @@ export interface IAccount extends Document {
     roles: Role[];
     doctorProfile?: any;
     patientProfile?: any;
+    openrouterApiKey?: string | null;
+    dailyMessageCount?: number;
+    lastMessageDate?: string | null;
 }
 
 const PatientSchema = new Schema(
@@ -65,6 +68,10 @@ const AccountSchema = new Schema<IAccount>(
         // Make sure there is no separate required "role" field here
         doctorProfile: { type: DoctorProfileSchema },
         patientProfile: { type: PatientProfileSchema },
+        // BYOK (Bring Your Own Key) fields
+        openrouterApiKey: { type: String, default: null }, // User's own API key
+        dailyMessageCount: { type: Number, default: 0 }, // Track daily usage
+        lastMessageDate: { type: String, default: null }, // Reset counter daily
     },
     { 
         timestamps: true,

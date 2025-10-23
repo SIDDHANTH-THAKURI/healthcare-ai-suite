@@ -3,10 +3,14 @@ import ChatMessage from '../models/chatMessage';
 import MedicationSchedule from '../models/medicationSchedule';
 import Appointment from '../models/appointment';
 import MedicalDocument from '../models/medicalDocument';
+import Account from '../models/Account';
 import axios from 'axios';
-import { OPENROUTER_API_KEY, OPENROUTER_URL, LLM_MODEL } from '../config';
+import { OPENROUTER_API_KEY, OPENROUTER_URL } from '../config';
 
 const router = express.Router();
+
+// Free tier limit
+const FREE_DAILY_LIMIT = 20;
 
 // List of free models to try in order
 const FREE_MODELS = [
@@ -22,7 +26,7 @@ const FREE_MODELS = [
 ];
 
 // Helper function to call OpenRouter API with fallback models
-async function callOpenRouterAPI(prompt: string): Promise<string> {
+async function callOpenRouterAPI(prompt: string, apiKey: string): Promise<string> {
   const systemPrompt = 'You are a helpful, friendly health assistant for a patient portal. Keep responses concise (2-3 sentences), warm, and supportive. Help with medications, appointments, and health questions.';
   
   // Try each model in order
@@ -49,7 +53,7 @@ async function callOpenRouterAPI(prompt: string): Promise<string> {
         },
         {
           headers: {
-            'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+            'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
             'HTTP-Referer': 'http://localhost:5173',
             'X-Title': 'DrugNexusAI Patient Portal'
@@ -86,6 +90,49 @@ async function callOpenRouterAPI(prompt: string): Promise<string> {
   throw new Error('Failed to get AI response from any model');
 }
 
+// Helper function to check and update daily message count
+async function checkMessageLimit(userId: string): Promise<{ allowed: boolean; remaining: number; needsApiKey: boolean }> {
+  const user = await Account.findById(userId);
+  
+  if (!user) {
+    throw new Error('User not found');
+  }
+  
+  // If user has their own API key, unlimited messages
+  if (user.openrouterApiKey) {
+    return { allowed: true, remaining: -1, needsApiKey: false }; // -1 means unlimited
+  }
+  
+  // Check if we need to reset daily counter
+  const today = new Date().toDateString();
+  if (user.lastMessageDate !== today) {
+    user.dailyMessageCount = 0;
+    user.lastMessageDate = today;
+    await user.save();
+  }
+  
+  // Check if user has exceeded free limit
+  const remaining = FREE_DAILY_LIMIT - (user.dailyMessageCount || 0);
+  
+  if (remaining <= 0) {
+    return { allowed: false, remaining: 0, needsApiKey: true };
+  }
+  
+  return { allowed: true, remaining, needsApiKey: false };
+}
+
+// Helper function to increment message count
+async function incrementMessageCount(userId: string): Promise<void> {
+  const user = await Account.findById(userId);
+  
+  if (!user || user.openrouterApiKey) {
+    return; // Don't track if user has own key
+  }
+  
+  user.dailyMessageCount = (user.dailyMessageCount || 0) + 1;
+  await user.save();
+}
+
 // Get chat history
 router.get('/:patientId', async (req: Request, res: Response): Promise<void> => {
   try {
@@ -101,17 +148,40 @@ router.get('/:patientId', async (req: Request, res: Response): Promise<void> => 
 // Send message and get AI response
 router.post('/message', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { patientId, content } = req.body;
+    const { patientId, content, userId } = req.body;
 
     console.log('=== CHAT REQUEST START ===');
-    console.log('Received chat message:', { patientId, content });
+    console.log('Received chat message:', { patientId, content, userId });
     
     // Validate input
-    if (!patientId || !content) {
-      console.error('❌ Missing required fields:', { patientId: !!patientId, content: !!content });
-      res.status(400).json({ message: 'Missing patientId or content' });
+    if (!patientId || !content || !userId) {
+      console.error('❌ Missing required fields:', { patientId: !!patientId, content: !!content, userId: !!userId });
+      res.status(400).json({ message: 'Missing patientId, content, or userId' });
       return;
     }
+
+    // Check message limit and get API key
+    const limitCheck = await checkMessageLimit(userId);
+    
+    if (!limitCheck.allowed) {
+      console.log('❌ User exceeded free daily limit');
+      res.status(429).json({
+        message: 'Daily message limit reached',
+        error: 'FREE_LIMIT_EXCEEDED',
+        remaining: 0,
+        limit: FREE_DAILY_LIMIT,
+        needsApiKey: true,
+        upgradeMessage: 'You have used all 20 free messages today. Add your own OpenRouter API key in Settings for unlimited messages!'
+      });
+      return;
+    }
+
+    // Get user's API key or use default
+    const user = await Account.findById(userId);
+    const apiKey = user?.openrouterApiKey || OPENROUTER_API_KEY;
+    
+    console.log(`Using ${user?.openrouterApiKey ? 'user' : 'default'} API key. Remaining free messages: ${limitCheck.remaining}`);
+    
 
     // Save user message
     console.log('💾 Saving user message to database...');
@@ -147,7 +217,7 @@ Rules:
     let extractedData: any = {};
     
     try {
-      const analysisResponse = await callOpenRouterAPI(analysisPrompt);
+      const analysisResponse = await callOpenRouterAPI(analysisPrompt, apiKey);
       console.log('AI analysis response:', analysisResponse);
       
       // Extract JSON from response
@@ -235,9 +305,12 @@ Rules:
     }
     
     // Call AI
-    aiContent = await callOpenRouterAPI(aiPrompt);
+    aiContent = await callOpenRouterAPI(aiPrompt, apiKey);
     
     console.log('AI response generated:', aiContent);
+
+    // Increment message count (only if using free tier)
+    await incrementMessageCount(userId);
 
     // Save AI response
     const assistantMessage = new ChatMessage({
@@ -251,11 +324,17 @@ Rules:
     });
     await assistantMessage.save();
 
+    // Get updated remaining count
+    const updatedLimit = await checkMessageLimit(userId);
+
     res.json({
       userMessage,
       assistantMessage,
       intent,
-      extractedData
+      extractedData,
+      remaining: updatedLimit.remaining,
+      limit: FREE_DAILY_LIMIT,
+      hasOwnKey: !!user?.openrouterApiKey
     });
   } catch (error: any) {
     console.error('=== CHAT ERROR ===');

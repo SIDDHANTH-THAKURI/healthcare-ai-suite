@@ -276,7 +276,6 @@ const CreatePrescription: React.FC = () => {
 
   // Removed consultation note requirement - prescriptions can be saved independently
 
-
   useEffect(() => {
     const fetchMedicines = async () => {
       try {

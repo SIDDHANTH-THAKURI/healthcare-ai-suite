@@ -3,6 +3,8 @@ import './PatientPortal.css';
 import PatientProfileView from './PatientProfileView';
 import MedicationsPage from './MedicationsPage';
 import AppointmentsPage from './AppointmentsPage';
+import APIKeySettings from './APIKeySettings';
+import UpgradeModal from './UpgradeModal';
 
 interface Medication {
   _id: string;
@@ -58,11 +60,29 @@ const PatientPortal: React.FC = () => {
   const [comingSoonFeature, setComingSoonFeature] = useState('');
   const [chatHeight, setChatHeight] = useState(600);
   const [isResizingHeight, setIsResizingHeight] = useState(false);
+  
+  // BYOK states
+  const [showSettings, setShowSettings] = useState(false);
+  const [messageLimit, setMessageLimit] = useState({ remaining: 20, limit: 20, hasOwnKey: false });
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (showComingSoon) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showComingSoon]);
 
   useEffect(() => {
     fetchPatientData();
     fetchChatHistory();
     fetchStreakData();
+    fetchMessageLimitStatus();
     
     // Check if user has seen the welcome modal before
     const hasSeenWelcome = localStorage.getItem('hasSeenPatientPortalWelcome');
@@ -70,6 +90,28 @@ const PatientPortal: React.FC = () => {
       setShowWelcomeModal(false);
     }
   }, []);
+
+  const fetchMessageLimitStatus = async () => {
+    try {
+      const user = localStorage.getItem('user');
+      if (!user) return;
+      
+      const userData = JSON.parse(user);
+      const userId = userData._id || userData.id;
+      
+      const response = await fetch(`http://localhost:5000/api/api-key/status/${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setMessageLimit({
+          remaining: data.remaining,
+          limit: data.dailyLimit,
+          hasOwnKey: data.hasApiKey
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching message limit:', error);
+    }
+  };
 
   // Handle chat height resize
   useEffect(() => {
@@ -110,7 +152,17 @@ const PatientPortal: React.FC = () => {
     try {
       // Get user ID from localStorage
       const user = localStorage.getItem('user');
-      const userId = user ? JSON.parse(user).email : 'demo-patient-001';
+      if (!user) {
+        console.error('No user found in localStorage');
+        return;
+      }
+      const userData = JSON.parse(user);
+      const userId = userData.email;
+      
+      if (!userId) {
+        console.error('No email found for user');
+        return;
+      }
 
       // Fetch profile
       const profileResponse = await fetch(`http://localhost:5000/api/patient-profile/${userId}`);
@@ -135,7 +187,11 @@ const PatientPortal: React.FC = () => {
   const fetchChatHistory = async () => {
     try {
       const user = localStorage.getItem('user');
-      const userId = user ? JSON.parse(user).email : 'demo-patient-001';
+      if (!user) return;
+      const userData = JSON.parse(user);
+      const userId = userData.email;
+      if (!userId) return;
+      
       const response = await fetch(`http://localhost:5000/api/chat/${userId}`);
       if (response.ok) {
         const data = await response.json();
@@ -149,7 +205,10 @@ const PatientPortal: React.FC = () => {
   const fetchStreakData = async () => {
     try {
       const user = localStorage.getItem('user');
-      const userId = user ? JSON.parse(user).email : 'demo-patient-001';
+      if (!user) return;
+      const userData = JSON.parse(user);
+      const userId = userData.email;
+      if (!userId) return;
       const response = await fetch(`http://localhost:5000/api/adherence/streak/${userId}`);
       if (response.ok) {
         const data = await response.json();
@@ -188,7 +247,15 @@ const PatientPortal: React.FC = () => {
 
     try {
       const user = localStorage.getItem('user');
-      const userId = user ? JSON.parse(user).email : 'demo-patient-001';
+      const userData = user ? JSON.parse(user) : null;
+      
+      // Ensure we have valid user data - don't use shared demo IDs
+      if (!userData || !userData.email) {
+        throw new Error('User not authenticated. Please log in again.');
+      }
+      
+      const userId = userData._id || userData.id;
+      const patientId = userData.email;
 
       console.log('Sending message to chat API:', messageToSend);
 
@@ -196,12 +263,25 @@ const PatientPortal: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          patientId: userId,
-          content: messageToSend
+          patientId: patientId,
+          content: messageToSend,
+          userId: userId  // Add userId for BYOK
         })
       });
 
       console.log('Chat API response status:', response.status);
+
+      // Handle limit exceeded
+      if (response.status === 429) {
+        const errorData = await response.json();
+        setShowUpgradeModal(true);
+        setMessageLimit({
+          remaining: 0,
+          limit: errorData.limit || 20,
+          hasOwnKey: false
+        });
+        return;
+      }
 
       if (response.ok) {
         const data = await response.json();
@@ -212,6 +292,15 @@ const PatientPortal: React.FC = () => {
           content: data.assistantMessage.content,
           timestamp: new Date(data.assistantMessage.timestamp)
         }]);
+
+        // Update message limit
+        if (data.remaining !== undefined) {
+          setMessageLimit({
+            remaining: data.remaining,
+            limit: data.limit || 20,
+            hasOwnKey: data.hasOwnKey || false
+          });
+        }
 
         // Auto-scroll to bottom
         setTimeout(() => {
@@ -885,6 +974,21 @@ const PatientPortal: React.FC = () => {
               </div>
             </div>
             <div className="chat-header-actions">
+              {!messageLimit.hasOwnKey && (
+                <div className={`message-counter ${messageLimit.remaining <= 5 ? 'warning' : ''}`}>
+                  <i className="fas fa-comment-dots"></i>
+                  <span>{messageLimit.remaining}/{messageLimit.limit} free messages</span>
+                </div>
+              )}
+              {messageLimit.hasOwnKey && (
+                <div className="unlimited-badge">
+                  <i className="fas fa-infinity"></i>
+                  <span>Unlimited</span>
+                </div>
+              )}
+              <button className="settings-btn" onClick={() => setShowSettings(true)} title="Settings">
+                <i className="fas fa-cog"></i>
+              </button>
               <button 
                 className={`icon-btn experimental-btn ${showUpload ? 'active' : ''}`}
                 onClick={() => setShowUpload(!showUpload)} 
@@ -1205,6 +1309,34 @@ const PatientPortal: React.FC = () => {
         </div>
       )}
 
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="modal-overlay" onClick={() => setShowSettings(false)}>
+          <div className="modal-container settings-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close-btn" onClick={() => setShowSettings(false)}>
+              <i className="fas fa-times"></i>
+            </button>
+            <APIKeySettings userId={(() => {
+              const user = localStorage.getItem('user');
+              const userData = user ? JSON.parse(user) : null;
+              return userData?._id || userData?.id || 'demo-patient-001';
+            })()} />
+          </div>
+        </div>
+      )}
+      
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <UpgradeModal
+          onClose={() => setShowUpgradeModal(false)}
+          onUpgrade={() => {
+            setShowUpgradeModal(false);
+            setShowSettings(true);
+          }}
+          remaining={messageLimit.remaining}
+        />
+      )}
+
       {/* Welcome Modal */}
       {showWelcomeModal && (
         <div className="welcome-modal-overlay">
@@ -1274,6 +1406,34 @@ const PatientPortal: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="modal-overlay" onClick={() => setShowSettings(false)}>
+          <div className="modal-container settings-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close-btn" onClick={() => setShowSettings(false)}>
+              <i className="fas fa-times"></i>
+            </button>
+            <APIKeySettings userId={(() => {
+              const user = localStorage.getItem('user');
+              const userData = user ? JSON.parse(user) : null;
+              return userData?._id || userData?.id || 'demo-patient-001';
+            })()} />
+          </div>
+        </div>
+      )}
+      
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <UpgradeModal
+          onClose={() => setShowUpgradeModal(false)}
+          onUpgrade={() => {
+            setShowUpgradeModal(false);
+            setShowSettings(true);
+          }}
+          remaining={messageLimit.remaining}
+        />
       )}
     </div>
   );

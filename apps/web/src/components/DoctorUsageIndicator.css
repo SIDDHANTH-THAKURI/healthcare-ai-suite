@@ -1,0 +1,172 @@
+/* Doctor Usage Indicator - Compact Floating Widget */
+.doctor-usage-indicator {
+  position: fixed;
+  bottom: 3.5rem;
+  left: 1.5rem;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 0.75rem 1rem;
+  min-width: 200px;
+  max-width: 220px;
+  z-index: 1000;
+  transition: all 0.3s ease;
+  border: 1px solid #e0e0e0;
+}
+
+.doctor-usage-indicator:hover {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+  border-color: #2A9D8F;
+}
+
+.doctor-usage-indicator.low {
+  border-color: #ffc107;
+  background: linear-gradient(135deg, #fffbf0 0%, #fff8e1 100%);
+  animation: pulse-warning 2s ease-in-out infinite;
+}
+
+.usage-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.usage-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.usage-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.usage-label {
+  font-size: 0.625rem;
+  color: #888;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+.usage-value {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #2A9D8F;
+  margin-top: 0.25rem;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.settings-icon-btn {
+  background: #f0f0f0;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: #666;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+}
+
+.settings-icon-btn:hover {
+  background: #2A9D8F;
+  color: white;
+  transform: rotate(90deg) scale(1.1);
+}
+
+.usage-bar {
+  margin-top: 0.5rem;
+  height: 4px;
+  background: #e8e8e8;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.usage-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #2A9D8F 0%, #21867a 100%);
+  transition: width 0.3s ease;
+  border-radius: 2px;
+}
+
+.doctor-usage-indicator.low .usage-fill {
+  background: linear-gradient(90deg, #ffc107 0%, #ff9800 100%);
+}
+
+.usage-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.5rem;
+  padding: 0.375rem 0.5rem;
+  background: #fff3cd;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  color: #856404;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.usage-warning i {
+  color: #ffc107;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+@keyframes pulse-warning {
+
+  0%,
+  100% {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  50% {
+    box-shadow: 0 4px 20px rgba(255, 193, 7, 0.4);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .doctor-usage-indicator {
+    bottom: 1rem;
+    left: 1rem;
+    min-width: 180px;
+    max-width: 200px;
+    padding: 0.625rem 0.875rem;
+  }
+
+  .usage-icon {
+    font-size: 1.125rem;
+  }
+
+  .usage-label {
+    font-size: 0.5625rem;
+  }
+
+  .usage-value {
+    font-size: 0.8125rem;
+  }
+
+  .settings-icon-btn {
+    width: 26px;
+    height: 26px;
+    font-size: 0.6875rem;
+  }
+
+  .usage-warning {
+    font-size: 0.6875rem;
+    padding: 0.3125rem 0.4375rem;
+  }
+}

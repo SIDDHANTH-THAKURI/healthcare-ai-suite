@@ -7,6 +7,9 @@ import { BASE_URL_1, BASE_URL_2 } from '../base';
 import { decodePatientId, isValidPatientIdFormat } from '../utils/patientSecurity';
 import { logger } from '../utils/logger';
 import DDIAlertSystem from './DDIAlertSystem';
+import APIKeySettings from './APIKeySettings';
+import ExhaustedModal from './ExhaustedModal';
+import DoctorUsageIndicator from './DoctorUsageIndicator';
 
 interface DoctorProfile {
   fullName: string;
@@ -113,6 +116,17 @@ const PatientDetails: React.FC = () => {
   const [showAlertsModal, setShowAlertsModal] = useState(false);
   const [activeAlertsCount, setActiveAlertsCount] = useState(0);
 
+  // BYOK states
+  const [showSettings, setShowSettings] = useState(false);
+  const [showExhaustedModal, setShowExhaustedModal] = useState(false);
+  const [isFreeTierExhausted, setIsFreeTierExhausted] = useState(false);
+  const [apiUsage, setApiUsage] = useState({
+    hasOwnKey: false,
+    remaining: 50,
+    limit: 50,
+    usage: 0
+  });
+
   // Format date to DD-MM-YYYY
   const formatDateToDDMMYYYY = (dateString: string): string => {
     if (!dateString) return '';
@@ -151,6 +165,34 @@ const PatientDetails: React.FC = () => {
       }
     }
   }, [patientId]);
+
+  // Fetch API usage status
+  const fetchApiUsageStatus = async () => {
+    try {
+      const user = localStorage.getItem('user');
+      if (!user) return;
+      
+      const userData = JSON.parse(user);
+      const userId = userData._id || userData.id;
+      
+      const response = await fetch(`http://localhost:5000/api/api-key/status/${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setApiUsage({
+          hasOwnKey: data.hasApiKey,
+          remaining: data.remaining,
+          limit: data.dailyLimit,
+          usage: data.usage || 0
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching API usage:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchApiUsageStatus();
+  }, []);
 
   // Check if medication is still active based on end date AND manual status
   const isMedicationActive = (medication: Medicine): boolean => {
@@ -1200,6 +1242,50 @@ const PatientDetails: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Usage Indicator */}
+      <DoctorUsageIndicator
+        hasOwnKey={apiUsage.hasOwnKey}
+        remaining={apiUsage.remaining}
+        limit={apiUsage.limit}
+        usage={apiUsage.usage}
+        onSettingsClick={() => setShowSettings(true)}
+      />
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="modal-overlay" onClick={() => setShowSettings(false)}>
+          <div className="modal-container settings-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close-btn" onClick={() => setShowSettings(false)}>
+              <i className="fas fa-times"></i>
+            </button>
+            <APIKeySettings userId={(() => {
+              const user = localStorage.getItem('user');
+              const userData = user ? JSON.parse(user) : null;
+              return userData?._id || userData?.id || '';
+            })()} />
+          </div>
+        </div>
+      )}
+
+      {/* Exhausted Modal */}
+      {showExhaustedModal && (
+        <ExhaustedModal
+          onClose={() => setShowExhaustedModal(false)}
+          onAddKey={() => {
+            setShowExhaustedModal(false);
+            setShowSettings(true);
+          }}
+          isFreeTier={isFreeTierExhausted}
+        />
+      )}
+
+      {/* Chatbot Button - Same as Doctor Portal */}
+      <div className="chatbot-container">
+        <div className="chatbot-button" onClick={() => navigate('/chatbot')}>
+          <i className="fas fa-robot"></i>
+        </div>
+      </div>
     </div>
   );
 };

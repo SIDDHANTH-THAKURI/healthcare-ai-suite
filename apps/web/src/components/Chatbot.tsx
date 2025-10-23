@@ -1,8 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { LoadingOverlay } from './LoadingOverlay';
 import { parse, isToday, isYesterday, format } from 'date-fns';
 import './Chatbot.css';
 import { BASE_URL_2 } from '../base';
+import APIKeySettings from './APIKeySettings';
+import ExhaustedModal from './ExhaustedModal';
+import DoctorUsageIndicator from './DoctorUsageIndicator';
 
 interface Message {
   text: string;
@@ -38,6 +42,7 @@ const IconInfo = () => ( // Info icon for the hint
 );
 
 export default function Chatbot() {
+  const navigate = useNavigate();
   const [showUploadHintElement, setShowUploadHintElement] = useState(false);
   const [uploadHintVisibleClass, setUploadHintVisibleClass] = useState(false); 
 
@@ -48,6 +53,17 @@ export default function Chatbot() {
   ]);
   const [input, setInput] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+
+  // BYOK states
+  const [showSettings, setShowSettings] = useState(false);
+  const [showExhaustedModal, setShowExhaustedModal] = useState(false);
+  const [isFreeTierExhausted, setIsFreeTierExhausted] = useState(false);
+  const [apiUsage, setApiUsage] = useState({
+    hasOwnKey: false,
+    remaining: 50,
+    limit: 50,
+    usage: 0
+  });
   const endRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -85,6 +101,34 @@ export default function Chatbot() {
         fetchHistory();
     }
   }, [userId]);
+
+  // Fetch API usage status
+  const fetchApiUsageStatus = async () => {
+    try {
+      const user = localStorage.getItem('user');
+      if (!user) return;
+      
+      const userData = JSON.parse(user);
+      const userId = userData._id || userData.id;
+      
+      const response = await fetch(`http://localhost:5000/api/api-key/status/${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setApiUsage({
+          hasOwnKey: data.hasApiKey,
+          remaining: data.remaining,
+          limit: data.dailyLimit,
+          usage: data.usage || 0
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching API usage:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchApiUsageStatus();
+  }, []);
 
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [filesToUpload, setFilesToUpload] = useState<File[]>([]);
@@ -278,6 +322,19 @@ export default function Chatbot() {
 
   return (
     <div className="chat-app-shell">
+      {/* Back Button */}
+      <button 
+        className="chatbot-back-button" 
+        onClick={() => navigate(-1)}
+        title="Go back"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        <span>Back</span>
+      </button>
+      
       <div className="chat-app-container">
         <LoadingOverlay visible={isUploading} />
         
@@ -459,6 +516,43 @@ export default function Chatbot() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Usage Indicator */}
+      <DoctorUsageIndicator
+        hasOwnKey={apiUsage.hasOwnKey}
+        remaining={apiUsage.remaining}
+        limit={apiUsage.limit}
+        usage={apiUsage.usage}
+        onSettingsClick={() => setShowSettings(true)}
+      />
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="modal-overlay" onClick={() => setShowSettings(false)}>
+          <div className="modal-container settings-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close-btn" onClick={() => setShowSettings(false)}>
+              <i className="fas fa-times"></i>
+            </button>
+            <APIKeySettings userId={(() => {
+              const user = localStorage.getItem('user');
+              const userData = user ? JSON.parse(user) : null;
+              return userData?._id || userData?.id || '';
+            })()} />
+          </div>
+        </div>
+      )}
+
+      {/* Exhausted Modal */}
+      {showExhaustedModal && (
+        <ExhaustedModal
+          onClose={() => setShowExhaustedModal(false)}
+          onAddKey={() => {
+            setShowExhaustedModal(false);
+            setShowSettings(true);
+          }}
+          isFreeTier={isFreeTierExhausted}
+        />
       )}
     </div> 
   );

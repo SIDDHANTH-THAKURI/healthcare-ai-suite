@@ -38,6 +38,11 @@ const HomePage: React.FC = () => {
   const [showWelcome, setShowWelcome] = useState(false);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
 
+  // Usage limit state
+  const MAX_CHECKS = 10;
+  const [checksUsed, setChecksUsed] = useState<number>(0);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+
   // Check for mobile device and show welcome on first visit
   useEffect(() => {
     const width = window.innerWidth;
@@ -50,6 +55,12 @@ const HomePage: React.FC = () => {
     const hasSeenWelcome = sessionStorage.getItem('hasSeenWelcome');
     if (!hasSeenWelcome) {
       setShowWelcome(true);
+    }
+
+    // Load usage count from localStorage
+    const storedChecks = localStorage.getItem('ddi_checks_used');
+    if (storedChecks) {
+      setChecksUsed(parseInt(storedChecks, 10));
     }
   }, []);
 
@@ -141,6 +152,13 @@ const HomePage: React.FC = () => {
       setShowPopup(true);
       return;
     }
+
+    // Check usage limit
+    if (checksUsed >= MAX_CHECKS) {
+      setShowLimitModal(true);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const response = await axios.post(`${BASE_URL_1}/api/interactions`, {
@@ -152,6 +170,10 @@ const HomePage: React.FC = () => {
         setInteractionResults([]);
         setError(null);
         setShowPopup(true);
+        // Increment usage count
+        const newCount = checksUsed + 1;
+        setChecksUsed(newCount);
+        localStorage.setItem('ddi_checks_used', newCount.toString());
         return;
       }
       const simplified = await axios.post(
@@ -161,6 +183,11 @@ const HomePage: React.FC = () => {
       setInteractionResults(simplified.data);
       setError(null);
       setShowPopup(true);
+      
+      // Increment usage count
+      const newCount = checksUsed + 1;
+      setChecksUsed(newCount);
+      localStorage.setItem('ddi_checks_used', newCount.toString());
     } catch (error) {
       console.error("Error analyzing interactions:", error);
       setError("An error occurred while analyzing interactions. Please try again later.");
@@ -237,7 +264,20 @@ const HomePage: React.FC = () => {
           </p>
           
           <div className="checker-box">
-            <h3>Drug Interaction Checker</h3>
+            <div className="checker-header">
+              <h3>Drug Interaction Checker</h3>
+              <div className="usage-indicator">
+                <div className="usage-bar-container">
+                  <div 
+                    className="usage-bar-fill" 
+                    style={{ width: `${(checksUsed / MAX_CHECKS) * 100}%` }}
+                  />
+                </div>
+                <span className="usage-text">
+                  {MAX_CHECKS - checksUsed} checks remaining
+                </span>
+              </div>
+            </div>
             
             <div id="selected-medicines">
               {selectedMedicines.map((med) => (
@@ -280,8 +320,9 @@ const HomePage: React.FC = () => {
             <button 
               onClick={analyzeInteractions} 
               className="btn-red"
+              disabled={checksUsed >= MAX_CHECKS}
             >
-              Check Interactions →
+              {checksUsed >= MAX_CHECKS ? 'Limit Reached' : 'Check Interactions →'}
             </button>
           </div>
         </div>
@@ -319,6 +360,41 @@ const HomePage: React.FC = () => {
               <p>No interactions found between the selected medications.</p>
             )}
             <button onClick={() => setShowPopup(false)}>Close</button>
+          </div>
+        </div>
+      )}
+
+      {/* Limit Reached Modal */}
+      {showLimitModal && (
+        <div className="modal-overlay" onClick={() => setShowLimitModal(false)}>
+          <div className="limit-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="limit-icon">🔒</div>
+            <h3>Daily Limit Reached</h3>
+            <p className="limit-message">
+              You've used all {MAX_CHECKS} free drug interaction checks for today. 
+              Our AI-powered analysis uses advanced language models to provide accurate results.
+            </p>
+            <div className="limit-benefits">
+              <h4>Want unlimited access?</h4>
+              <ul>
+                <li>✓ Unlimited drug interaction checks</li>
+                <li>✓ Advanced AI medical chatbot</li>
+                <li>✓ Patient & doctor portals</li>
+                <li>✓ Prescription management</li>
+                <li>✓ Priority support</li>
+              </ul>
+            </div>
+            <div className="limit-actions">
+              <Link to="/authentication" className="btn-primary">
+                Sign Up for Free
+              </Link>
+              <button onClick={() => setShowLimitModal(false)} className="btn-secondary">
+                Close
+              </button>
+            </div>
+            <p className="limit-note">
+              Your limit will reset in 24 hours, or create a free account for more features!
+            </p>
           </div>
         </div>
       )}
