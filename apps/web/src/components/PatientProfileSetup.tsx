@@ -113,16 +113,31 @@ const PatientProfileSetup: React.FC = () => {
       const user = localStorage.getItem('user');
       const userId = user ? JSON.parse(user).email : 'demo-patient-001';
 
-      console.log('Submitting profile data:', { userId, ...profileData });
+      // Convert string values to numbers for backend
+      const submissionData = {
+        userId,
+        personalInfo: {
+          ...profileData.personalInfo,
+          dateOfBirth: new Date(profileData.personalInfo.dateOfBirth).toISOString()
+        },
+        contactInfo: profileData.contactInfo,
+        medicalInfo: profileData.medicalInfo,
+        lifestyle: {
+          ...profileData.lifestyle,
+          height: profileData.lifestyle.height ? parseFloat(profileData.lifestyle.height) : undefined,
+          weight: profileData.lifestyle.weight ? parseFloat(profileData.lifestyle.weight) : undefined,
+          sleepHours: profileData.lifestyle.sleepHours ? parseFloat(profileData.lifestyle.sleepHours) : undefined
+        },
+        onboardingCompleted: true
+      };
 
-      const response = await fetch('http://localhost:5000/api/patient-profile', {
+      console.log('Submitting profile data:', submissionData);
+
+      const API_URL = import.meta.env.VITE_API_URL_NODE || 'http://localhost:5000';
+      const response = await fetch(`${API_URL}/api/patient-profile`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId,
-          ...profileData,
-          onboardingCompleted: true
-        })
+        body: JSON.stringify(submissionData)
       });
 
       console.log('Response status:', response.status);
