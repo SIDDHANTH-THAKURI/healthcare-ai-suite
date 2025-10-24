@@ -1,19 +1,20 @@
-# Core web framework
 fastapi
 uvicorn[standard]
 python-multipart
-
-# Database
-pymongo
-
-# Document processing (for file uploads)
 PyMuPDF
 python-docx
 python-pptx
 pandas
 pillow
-
-# Utilities
-aiofiles
-python-dotenv
+pytesseract
 requests
+pymongo
+aiofiles
+numpy
+python-dotenv
+transformers
+accelerate
+datasets
+bitsandbytes
+peft
+lxml
