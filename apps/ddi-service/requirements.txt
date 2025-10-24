@@ -17,6 +17,6 @@ datasets
 bitsandbytes
 peft
 lxml
-rdkit-pypi
+rdkit
 scikit-learn
 tensorflow-cpu
