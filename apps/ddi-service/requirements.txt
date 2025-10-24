@@ -6,7 +6,6 @@ python-docx
 python-pptx
 pandas
 pillow
-pytesseract
 requests
 pymongo
 aiofiles
@@ -18,3 +17,6 @@ datasets
 bitsandbytes
 peft
 lxml
+rdkit-pypi
+scikit-learn
+tensorflow-cpu
