@@ -385,23 +385,124 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(255, 255, 255, 0.85);
+  background: linear-gradient(135deg, rgba(42, 157, 143, 0.95) 0%, rgba(38, 70, 83, 0.95) 100%);
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(10px);
 }
 
-.loader-content {
-  text-align: center;
-  font-size: 1.2rem;
-  color: #333;
+.loader-spinner {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  margin-bottom: 2rem;
 }
 
-.loader-content i {
-  margin-bottom: 1rem;
-  color: #007bff;
+.spinner-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 4px solid transparent;
+  border-top-color: #E76F51;
+  border-radius: 50%;
+  animation: spin 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+}
+
+.spinner-ring:nth-child(2) {
+  width: 80%;
+  height: 80%;
+  top: 10%;
+  left: 10%;
+  border-top-color: #ffffff;
+  animation-delay: -0.5s;
+  animation-duration: 2s;
+}
+
+.spinner-ring:nth-child(3) {
+  width: 60%;
+  height: 60%;
+  top: 20%;
+  left: 20%;
+  border-top-color: #E76F51;
+  animation-delay: -1s;
+  animation-duration: 2.5s;
+}
+
+.loader-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 3rem;
+  color: #ffffff;
+  animation: pulse-icon 2s ease-in-out infinite;
+}
+
+.loader-text {
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+.loader-progress {
+  width: 300px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #E76F51 0%, #ffffff 50%, #E76F51 100%);
+  background-size: 200% 100%;
+  border-radius: 10px;
+  animation: progress-slide 1.5s ease-in-out infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse-icon {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes progress-slide {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 
@@ -1959,5 +2060,524 @@
 
   .limit-benefits li {
     font-size: 0.85rem;
+  }
+}
+/*
+ ========================================
+   PORTAL INFO MODAL
+======================================== */
+.portal-info-modal {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 24px;
+  max-width: 700px;
+  width: 95%;
+  max-height: 90vh;
+  overflow: hidden;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.4);
+  animation: slideUp 0.4s ease-out;
+}
+
+.portal-info-content {
+  overflow-y: auto;
+  max-height: 90vh;
+}
+
+.portal-info-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.portal-info-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.portal-info-content::-webkit-scrollbar-thumb {
+  background: rgba(42, 157, 143, 0.4);
+  border-radius: 10px;
+}
+
+.portal-info-header {
+  background: linear-gradient(135deg, #E76F51 0%, #d45a3d 100%);
+  color: white;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.portal-info-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+  animation: pulse 3s ease-in-out infinite;
+}
+
+.portal-info-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  animation: bounce 2s ease-in-out infinite;
+  position: relative;
+  z-index: 1;
+}
+
+.portal-info-header h2 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0.5rem 0;
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.portal-info-subtitle {
+  font-size: 1rem;
+  opacity: 0.95;
+  margin-top: 0.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.portal-cards-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+.portal-card {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px solid #dee2e6;
+  border-radius: 16px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.portal-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, transparent 0%, rgba(42, 157, 143, 0.1) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.portal-card:hover::before {
+  opacity: 1;
+}
+
+.portal-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+.portal-card.patient-card {
+  border-color: #2a9d8f;
+}
+
+.portal-card.patient-card:hover {
+  border-color: #21827A;
+  box-shadow: 0 12px 30px rgba(42, 157, 143, 0.3);
+}
+
+.portal-card.doctor-card {
+  border-color: #E76F51;
+}
+
+.portal-card.doctor-card:hover {
+  border-color: #d45a3d;
+  box-shadow: 0 12px 30px rgba(231, 111, 81, 0.3);
+}
+
+.portal-card-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.portal-card.patient-card .portal-card-icon {
+  color: #2a9d8f;
+}
+
+.portal-card.doctor-card .portal-card-icon {
+  color: #E76F51;
+}
+
+.portal-card h3 {
+  font-size: 1.4rem;
+  color: #264653;
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
+}
+
+.portal-card p {
+  color: #495057;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.portal-card-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #2a9d8f 0%, #21827A 100%);
+  color: white;
+  padding: 0.5rem 1.25rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
+}
+
+.portal-card.doctor-card .portal-card-badge {
+  background: linear-gradient(135deg, #E76F51 0%, #d45a3d 100%);
+}
+
+.portal-info-note {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border: 2px solid #ffc107;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin: 0 2rem 2rem;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.portal-info-note i {
+  font-size: 1.5rem;
+  color: #856404;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+
+.portal-info-note p {
+  color: #856404;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.portal-info-note strong {
+  font-weight: 700;
+}
+
+.portal-info-footer {
+  padding: 1.5rem 2rem 2rem;
+  text-align: center;
+}
+
+.portal-info-btn {
+  background: linear-gradient(135deg, #2a9d8f 0%, #264653 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2.5rem;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 6px 20px rgba(42, 157, 143, 0.4);
+}
+
+.portal-info-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(42, 157, 143, 0.5);
+}
+
+.portal-info-btn i {
+  transition: transform 0.3s ease;
+}
+
+.portal-info-btn:hover i {
+  transform: scale(1.2);
+}
+
+/* ========================================
+   FLOATING PORTAL BUTTON
+======================================== */
+.floating-portal-btn {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 999;
+}
+
+.portal-fab {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #E76F51 0%, #d45a3d 100%);
+  color: white;
+  border: none;
+  font-size: 1.75rem;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(231, 111, 81, 0.4);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pulse-fab 2s ease-in-out infinite;
+}
+
+.portal-fab:hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 0 12px 32px rgba(231, 111, 81, 0.5);
+}
+
+.floating-portal-btn.active .portal-fab {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: rotate(90deg);
+  animation: none;
+}
+
+.portal-menu {
+  position: absolute;
+  bottom: 80px;
+  right: 0;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+  padding: 0.75rem;
+  min-width: 200px;
+  animation: slideUpFade 0.3s ease-out;
+}
+
+.portal-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #264653;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  margin-bottom: 0.5rem;
+}
+
+.portal-menu-item:last-child {
+  margin-bottom: 0;
+}
+
+.portal-menu-item i {
+  font-size: 1.25rem;
+  width: 24px;
+  text-align: center;
+}
+
+.portal-menu-item.patient {
+  background: linear-gradient(135deg, rgba(42, 157, 143, 0.1) 0%, rgba(42, 157, 143, 0.05) 100%);
+}
+
+.portal-menu-item.patient:hover {
+  background: linear-gradient(135deg, rgba(42, 157, 143, 0.2) 0%, rgba(42, 157, 143, 0.1) 100%);
+  transform: translateX(-5px);
+}
+
+.portal-menu-item.patient i {
+  color: #2a9d8f;
+}
+
+.portal-menu-item.doctor {
+  background: linear-gradient(135deg, rgba(231, 111, 81, 0.1) 0%, rgba(231, 111, 81, 0.05) 100%);
+}
+
+.portal-menu-item.doctor:hover {
+  background: linear-gradient(135deg, rgba(231, 111, 81, 0.2) 0%, rgba(231, 111, 81, 0.1) 100%);
+  transform: translateX(-5px);
+}
+
+.portal-menu-item.doctor i {
+  color: #E76F51;
+}
+
+.portal-menu-item.auth {
+  background: linear-gradient(135deg, rgba(38, 70, 83, 0.1) 0%, rgba(38, 70, 83, 0.05) 100%);
+}
+
+.portal-menu-item.auth:hover {
+  background: linear-gradient(135deg, rgba(38, 70, 83, 0.2) 0%, rgba(38, 70, 83, 0.1) 100%);
+  transform: translateX(-5px);
+}
+
+.portal-menu-item.auth i {
+  color: #264653;
+}
+
+@keyframes pulse-fab {
+  0%, 100% {
+    box-shadow: 0 8px 24px rgba(231, 111, 81, 0.4);
+  }
+  50% {
+    box-shadow: 0 8px 32px rgba(231, 111, 81, 0.6), 0 0 0 8px rgba(231, 111, 81, 0.2);
+  }
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   RESPONSIVE - PORTAL INFO MODAL
+======================================== */
+@media (max-width: 768px) {
+  .portal-info-modal {
+    max-width: 95%;
+    border-radius: 16px;
+  }
+
+  .portal-info-header {
+    padding: 2rem 1.5rem;
+  }
+
+  .portal-info-icon {
+    font-size: 3rem;
+  }
+
+  .portal-info-header h2 {
+    font-size: 1.5rem;
+  }
+
+  .portal-info-subtitle {
+    font-size: 0.9rem;
+  }
+
+  .portal-cards-container {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1.5rem;
+  }
+
+  .portal-card {
+    padding: 1.5rem 1rem;
+  }
+
+  .portal-card-icon {
+    font-size: 2.5rem;
+  }
+
+  .portal-card h3 {
+    font-size: 1.2rem;
+  }
+
+  .portal-card p {
+    font-size: 0.85rem;
+  }
+
+  .portal-info-note {
+    margin: 0 1.5rem 1.5rem;
+    padding: 1rem;
+  }
+
+  .portal-info-note i {
+    font-size: 1.25rem;
+  }
+
+  .portal-info-note p {
+    font-size: 0.85rem;
+  }
+
+  .portal-info-footer {
+    padding: 1rem 1.5rem 1.5rem;
+  }
+
+  .portal-info-btn {
+    padding: 0.875rem 2rem;
+    font-size: 0.95rem;
+  }
+
+  .floating-portal-btn {
+    bottom: 1.5rem;
+    right: 1.5rem;
+  }
+
+  .portal-fab {
+    width: 56px;
+    height: 56px;
+    font-size: 1.5rem;
+  }
+
+  .portal-menu {
+    bottom: 72px;
+    min-width: 180px;
+  }
+
+  .portal-menu-item {
+    padding: 0.875rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .portal-menu-item i {
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .portal-info-header {
+    padding: 1.5rem 1rem;
+  }
+
+  .portal-info-icon {
+    font-size: 2.5rem;
+  }
+
+  .portal-info-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .portal-cards-container {
+    padding: 1rem;
+  }
+
+  .portal-card {
+    padding: 1.25rem 0.875rem;
+  }
+
+  .portal-info-note {
+    margin: 0 1rem 1rem;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .portal-info-btn {
+    width: 100%;
+    max-width: 280px;
+  }
+
+  .floating-portal-btn {
+    bottom: 1rem;
+    right: 1rem;
+  }
+
+  .portal-fab {
+    width: 52px;
+    height: 52px;
+    font-size: 1.4rem;
   }
 }

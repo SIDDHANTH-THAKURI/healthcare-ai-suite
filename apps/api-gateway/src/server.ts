@@ -50,13 +50,6 @@ app.use('/api/api-key', apiKeyRouter);
 
 // Start server first, then connect to MongoDB
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log('Environment check:');
-    console.log('- NODE_ENV:', process.env.NODE_ENV);
-    console.log('- DB_NAME:', process.env.DB_NAME);
-    console.log('- MONGO_URI exists:', !!process.env.MONGO_URI);
-});
 
 // Connect to MongoDB with retry logic
 const connectToMongoDB = async () => {

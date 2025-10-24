@@ -3,7 +3,8 @@
 
 ![Project Banner](https://img.shields.io/badge/DRUGNEXUSAI-DDI%20Checker-2A9D8F?style=for-the-badge&logo=medchart&logoColor=white)
 
-> Built with ❤️ by Team DDI – CSIT998 Capstone Project @ University of Wollongong (2025)
+> Developed by Siddhanth Thakuri – Extended from CSIT998 Capstone Project @ University of Wollongong (2025)  
+> This project represents a significant extension and enhancement of the original capstone work, with extensive additional features, improvements, and production-ready implementations.
 
 ---
 
@@ -43,7 +44,25 @@
 
 ## 📸 UI Snapshots
 
-yet to upload 
+### 🏠 Home Page
+![Home Page](./apps/web/public/Home.png)
+*Modern landing page with drug interaction checker and feature showcase*
+
+### 👨‍⚕️ Doctor Portal
+![Doctor Portal](./apps/web/public/doctor.png)
+*Comprehensive patient management dashboard with real-time DDI alerts*
+
+### 🧑‍⚕️ Patient Portal
+![Patient Portal](./apps/web/public/patient.png)
+*Intuitive medication tracking with adherence monitoring*
+
+### 🤖 AI Chatbot
+![AI Chatbot](./apps/web/public/Chatbot.png)
+*Intelligent health assistant powered by multiple AI models*
+
+### 🔬 Models Playground
+![Models Playground](./apps/web/public/portals.png)
+*Interactive testing environment for AI models and DDI analysis* 
 
 ---
 
@@ -201,12 +220,67 @@ It was built under tight academic deadlines and limited bandwidth – so we appr
 Feel free to report issues or weirdness [here] (https://github.com/Team-DDI-CSIT998/Personalised_DDI_Checker/issues) and we’ll do our best to patch it up! 🧰
 
 
-📬 Contact
+## 🌐 Deployment Architecture
+
+DrugNexusAI is deployed across multiple cloud platforms for optimal performance, scalability, and learning purposes:
+
+### Frontend (Vercel)
+- **Platform**: Vercel
+- **URL**: [Production Link]
+- **Why Vercel**: 
+  - Instant deployments with Git integration
+  - Global CDN for fast content delivery
+  - Automatic HTTPS and SSL certificates
+  - Excellent React/TypeScript support
+  - Zero-config deployment
+
+### Backend API Gateway (AWS)
+- **Platform**: AWS (Amazon Web Services)
+- **Service**: EC2 / Elastic Beanstalk
+- **Why AWS**:
+  - Industry-standard cloud infrastructure
+  - Scalable compute resources
+  - Robust security features
+  - Integration with MongoDB Atlas
+  - Professional-grade reliability
+
+### ML/AI Services (Render)
+- **Platform**: Render
+- **Services**: Python FastAPI microservices
+- **Why Render**:
+  - Native Python support with automatic dependency management
+  - Easy Docker containerization
+  - Auto-scaling capabilities
+  - Cost-effective for ML workloads
+  - Simple deployment from Git
+
+### Database (MongoDB Atlas)
+- **Platform**: MongoDB Atlas (Cloud)
+- **Why MongoDB Atlas**:
+  - Fully managed cloud database
+  - Global distribution and replication
+  - Automatic backups and recovery
+  - Built-in security features
+  - Seamless scaling
+
+### Multi-Platform Benefits
+This distributed architecture provides:
+- **Resilience**: If one service goes down, others continue operating
+- **Performance**: Each service optimized for its specific workload
+- **Learning**: Hands-on experience with multiple cloud platforms
+- **Scalability**: Independent scaling of frontend, backend, and ML services
+- **Cost Optimization**: Use free tiers and pay only for what you need
+
+---
+
+## 📬 Contact
+
 Have questions or want to collaborate with DrugNexusAI?
 
-📧 Email us: thakurisiddhanth3@gmail.com
-🌐 Project Page: Team-DDI-CSIT998 GitHub
-🏢 DrugNexusAI Technologies
+📧 **Email**: thakurisiddhanth3@gmail.com  
+🌐 **GitHub**: [Team-DDI-CSIT998](https://github.com/Team-DDI-CSIT998)  
+💼 **LinkedIn**: [Connect with me](https://linkedin.com/in/siddhanth-thakuri)  
+🏢 **DrugNexusAI Technologies**
 
 ⭐ Show Your Support
 If you liked this project, give it a ⭐ on GitHub!
@@ -319,3 +393,52 @@ Empowering patients with information:
 - **MongoDB Atlas**: Use cloud database for easy setup
 
 ---
+
+## 🐞 Known Issues & Future Improvements
+
+This project is continuously evolving! While the core functionality is solid, there are areas for enhancement:
+
+### Current Limitations
+- Some features are still in development (marked as "Coming Soon")
+- Mobile experience could be further optimized
+- Additional AI models are being integrated
+- Performance optimizations ongoing
+
+### Reporting Issues
+Found a bug or have a suggestion? I'd love to hear from you!  
+📝 **Report issues**: [GitHub Issues](https://github.com/Team-DDI-CSIT998/Personalised_DDI_Checker/issues)
+
+### Contributing
+Contributions are welcome! Feel free to:
+- Fork the repository
+- Create a feature branch
+- Submit a pull request
+- Share your ideas and feedback
+
+---
+
+## 🎓 Academic Context
+
+This project originated as part of the CSIT998 Capstone Project at the University of Wollongong (2025). However, it has been significantly extended beyond the original scope with:
+
+- **Enhanced UI/UX**: Complete redesign with modern aesthetics
+- **Additional Features**: Patient portal, chatbot, models playground
+- **Production Deployment**: Multi-platform cloud architecture
+- **AI Integration**: Multiple LLM models and advanced ML capabilities
+- **Security Enhancements**: JWT authentication, role-based access control
+- **Performance Optimization**: Caching, lazy loading, code splitting
+- **Documentation**: Comprehensive guides and API documentation
+
+The current version represents months of additional development, learning, and refinement beyond the academic requirements.
+
+---
+
+⭐ **Show Your Support**  
+If you liked this project, give it a ⭐ on GitHub!  
+Your support means a lot! 💖
+
+---
+
+**Last Updated**: January 2025  
+**Version**: 2.0.0  
+**Status**: Active Development 🚀

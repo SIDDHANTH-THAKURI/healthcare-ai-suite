@@ -44,7 +44,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   );
 };
 
-
 const Header: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -53,7 +52,6 @@ const Header: React.FC = () => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [activeAnchorLink, setActiveAnchorLink] = useState<string>('');
   const showNavLinks = shouldShowNavLinks(location.pathname);
-  const isHomePage = location.pathname === '/';
   const isHowItWorksPage = location.pathname === '/how-it-works';
 
   const handleLogout = () => {
@@ -167,24 +165,24 @@ const Header: React.FC = () => {
           )}
         </div>
 
-        <ThemeToggle />
-
-        <div className="auth-buttons">
-          {isLoggedIn ? (
-            <div className="logout-action" onClick={handleLogout}>
-              <span>Logout</span>
-              <FiLogOut className="logout-icon" />
-            </div>
-          ) : (
-            showNavLinks && (
-              <>
-                <Link to="/Authentication" state={{ isSignUp: false }} className="signin-btn">Sign In</Link>
-                <Link to="/Authentication" state={{ isSignUp: true }} className="signup-btn">Get Started</Link>
-              </>
-            )
-          )}
-        </div>
+        {showNavLinks && <ThemeToggle />}
       </nav>
+
+      <div className="auth-buttons">
+        {isLoggedIn ? (
+          <div className="logout-action" onClick={handleLogout}>
+            <span>Logout</span>
+            <FiLogOut className="logout-icon" />
+          </div>
+        ) : (
+          showNavLinks && (
+            <>
+              <Link to="/Authentication" state={{ isSignUp: false }} className="signin-btn">Sign In</Link>
+              <Link to="/Authentication" state={{ isSignUp: true }} className="signup-btn">Get Started</Link>
+            </>
+          )
+        )}
+      </div>
     </header>
   );
 };

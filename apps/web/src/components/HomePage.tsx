@@ -36,7 +36,9 @@ const HomePage: React.FC = () => {
 
   // Welcome modal state
   const [showWelcome, setShowWelcome] = useState(false);
+  const [showPortalInfo, setShowPortalInfo] = useState(false);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
+  const [showPortalMenu, setShowPortalMenu] = useState(false);
 
   // Usage limit state
   const MAX_CHECKS = 10;
@@ -67,6 +69,19 @@ const HomePage: React.FC = () => {
   const handleCloseWelcome = () => {
     setShowWelcome(false);
     sessionStorage.setItem('hasSeenWelcome', 'true');
+    
+    // Show portal info popup after welcome closes
+    const hasSeenPortalInfo = sessionStorage.getItem('hasSeenPortalInfo');
+    if (!hasSeenPortalInfo) {
+      setTimeout(() => {
+        setShowPortalInfo(true);
+      }, 500);
+    }
+  };
+
+  const handleClosePortalInfo = () => {
+    setShowPortalInfo(false);
+    sessionStorage.setItem('hasSeenPortalInfo', 'true');
   };
 
   // Fetch available medicines from the backend
@@ -250,9 +265,17 @@ const HomePage: React.FC = () => {
     <div className="home-page">
       {isLoading && (
         <div className="fullscreen-loader">
-          <div className="loader-content">
-            <i className="fas fa-spinner fa-spin fa-2x"></i>
-            <p>Loading... Please wait.</p>
+          <div className="loader-spinner">
+            <div className="spinner-ring"></div>
+            <div className="spinner-ring"></div>
+            <div className="spinner-ring"></div>
+            <div className="loader-icon">
+              <i className="fas fa-pills"></i>
+            </div>
+          </div>
+          <p className="loader-text">Analyzing Drug Interactions...</p>
+          <div className="loader-progress">
+            <div className="progress-bar"></div>
           </div>
         </div>
       )}
@@ -398,6 +421,84 @@ const HomePage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Portal Info Modal */}
+      {showPortalInfo && (
+        <div className="welcome-overlay">
+          <div className="portal-info-modal">
+            <div className="portal-info-content">
+              <div className="portal-info-header">
+                <div className="portal-info-icon">🚀</div>
+                <h2>Explore Our Portals</h2>
+                <p className="portal-info-subtitle">Experience the Full Power of DrugNexusAI</p>
+              </div>
+
+              <div className="portal-cards-container">
+                <Link to="/PatientPortal" className="portal-card patient-card" onClick={handleClosePortalInfo}>
+                  <div className="portal-card-icon">
+                    <i className="fas fa-user-injured"></i>
+                  </div>
+                  <h3>Patient Portal</h3>
+                  <p>View your medications, check interactions, and manage your health profile</p>
+                  <div className="portal-card-badge">Try Demo</div>
+                </Link>
+
+                <Link to="/DrugNexusAIDoctorPortal" className="portal-card doctor-card" onClick={handleClosePortalInfo}>
+                  <div className="portal-card-icon">
+                    <i className="fas fa-user-md"></i>
+                  </div>
+                  <h3>Doctor Portal</h3>
+                  <p>Manage patients, create prescriptions, and access AI-powered insights</p>
+                  <div className="portal-card-badge">Try Demo</div>
+                </Link>
+              </div>
+
+              <div className="portal-info-note">
+                <i className="fas fa-info-circle"></i>
+                <p>
+                  <strong>Demo Mode:</strong> Use any credentials to explore! This is a demonstration 
+                  showcasing how AI can enhance healthcare workflows.
+                </p>
+              </div>
+
+              <div className="portal-info-footer">
+                <button className="portal-info-btn" onClick={handleClosePortalInfo}>
+                  Got it, thanks!
+                  <i className="fas fa-check"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Portal Access Button */}
+      <div className={`floating-portal-btn ${showPortalMenu ? 'active' : ''}`}>
+        <button 
+          className="portal-fab"
+          onClick={() => setShowPortalMenu(!showPortalMenu)}
+          aria-label="Access Portals"
+        >
+          <i className={`fas ${showPortalMenu ? 'fa-times' : 'fa-hospital-user'}`}></i>
+        </button>
+        
+        {showPortalMenu && (
+          <div className="portal-menu">
+            <Link to="/PatientPortal" className="portal-menu-item patient">
+              <i className="fas fa-user-injured"></i>
+              <span>Patient Portal</span>
+            </Link>
+            <Link to="/DrugNexusAIDoctorPortal" className="portal-menu-item doctor">
+              <i className="fas fa-user-md"></i>
+              <span>Doctor Portal</span>
+            </Link>
+            <Link to="/Authentication" className="portal-menu-item auth">
+              <i className="fas fa-sign-in-alt"></i>
+              <span>Sign In</span>
+            </Link>
+          </div>
+        )}
+      </div>
 
       {/* Welcome Modal */}
       {showWelcome && (

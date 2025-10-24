@@ -1126,3 +1126,97 @@ OK Integration Styles */
         height: 18px;
     }
 }
+
+/* ========================================
+   FLOATING BUBBLE BUTTONS
+======================================== */
+.chatbot-floating-back {
+    position: fixed;
+    top: 100px;
+    left: -10px;
+    width: 48px;
+    height: 48px;
+    border-radius: 0 24px 24px 0;
+    background: linear-gradient(135deg, #2A9D8F 0%, #21827A 100%);
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 2px 4px 12px rgba(42, 157, 143, 0.4);
+    transition: left 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+    z-index: 1000;
+    will-change: left;
+}
+
+.chatbot-floating-back:hover {
+    left: 0;
+    box-shadow: 4px 6px 20px rgba(42, 157, 143, 0.6);
+    background: linear-gradient(135deg, #21827A 0%, #1A5F7A 100%);
+}
+
+.chatbot-floating-back:active {
+    transform: scale(0.95);
+}
+
+.chatbot-floating-back svg {
+    transition: transform 0.3s ease;
+}
+
+.chatbot-floating-back:hover svg {
+    transform: translateX(2px);
+}
+
+@keyframes peek-pulse {
+
+    0%,
+    100% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+        height: 24px;
+    }
+}
+
+/* Dark mode */
+.dark .chatbot-floating-back {
+    background: linear-gradient(135deg, #1A5F7A 0%, #264653 100%);
+    box-shadow: 2px 4px 12px rgba(26, 95, 122, 0.5);
+}
+
+.dark .chatbot-floating-back:hover {
+    background: linear-gradient(135deg, #264653 0%, #1a1a2e 100%);
+    box-shadow: 4px 6px 20px rgba(26, 95, 122, 0.7);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .chatbot-floating-back {
+        width: 44px;
+        height: 44px;
+        top: 90px;
+        left: -31px;
+    }
+
+    .chatbot-floating-back svg {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .chatbot-floating-back {
+        width: 40px;
+        height: 40px;
+        top: 85px;
+        left: -28px;
+    }
+
+    .chatbot-floating-back svg {
+        width: 16px;
+        height: 16px;
+    }
+}

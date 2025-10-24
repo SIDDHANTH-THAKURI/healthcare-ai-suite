@@ -5,6 +5,7 @@ import MedicationsPage from './MedicationsPage';
 import AppointmentsPage from './AppointmentsPage';
 import APIKeySettings from './APIKeySettings';
 import UpgradeModal from './UpgradeModal';
+import { BASE_URL_1 } from '../base';
 
 interface Medication {
   _id: string;
@@ -99,7 +100,7 @@ const PatientPortal: React.FC = () => {
       const userData = JSON.parse(user);
       const userId = userData._id || userData.id;
       
-      const response = await fetch(`http://localhost:5000/api/api-key/status/${userId}`);
+      const response = await fetch(`${BASE_URL_1}/api/api-key/status/${userId}`);
       if (response.ok) {
         const data = await response.json();
         setMessageLimit({
@@ -165,17 +166,21 @@ const PatientPortal: React.FC = () => {
       }
 
       // Fetch profile
-      const profileResponse = await fetch(`http://localhost:5000/api/patient-profile/${userId}`);
+      const profileResponse = await fetch(`${BASE_URL_1}/api/patient-profile/${userId}`);
       if (profileResponse.ok) {
         const profileData = await profileResponse.json();
         setProfile(profileData);
+      } else {
+        console.error('Failed to fetch profile:', profileResponse.status);
       }
 
       // Fetch medications
-      const medsResponse = await fetch(`http://localhost:5000/api/medication-schedule/today/${userId}`);
+      const medsResponse = await fetch(`${BASE_URL_1}/api/medication-schedule/today/${userId}`);
       if (medsResponse.ok) {
         const medsData = await medsResponse.json();
         setMedications(medsData);
+      } else {
+        console.error('Failed to fetch medications:', medsResponse.status);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -192,7 +197,7 @@ const PatientPortal: React.FC = () => {
       const userId = userData.email;
       if (!userId) return;
       
-      const response = await fetch(`http://localhost:5000/api/chat/${userId}`);
+      const response = await fetch(`${BASE_URL_1}/api/chat/${userId}`);
       if (response.ok) {
         const data = await response.json();
         setChatMessages(data);

@@ -501,7 +501,7 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
 
       {/* Edit Profile Modal */}
       {showEditModal && (
-        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+        <div className="modal-overlay">
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setShowEditModal(false)}>
               <i className="fas fa-times"></i>
