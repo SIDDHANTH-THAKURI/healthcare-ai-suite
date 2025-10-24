@@ -6,3 +6,6 @@ requests
 pymongo
 aiofiles
 numpy
+python-multipart
+python-docx
+python-pptx
