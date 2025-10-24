@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+PyMuPDF
+pandas
+requests
+pymongo
+aiofiles
+numpy
