@@ -6,6 +6,15 @@ import MedicalDocument from '../models/medicalDocument';
 import axios from 'axios';
 import { OPENROUTER_API_KEY, OPENROUTER_URL, LLM_MODEL } from '../config';
 
+// OpenRouter API response interface
+interface OpenRouterResponse {
+  choices: Array<{
+    message: {
+      content: string;
+    };
+  }>;
+}
+
 const router = express.Router();
 
 // List of free models to try in order
@@ -30,7 +39,7 @@ async function callOpenRouterAPI(prompt: string): Promise<string> {
     try {
       console.log(`[${i + 1}/${FREE_MODELS.length}] Trying model: ${model}`);
 
-      const response = await axios.post(
+      const response = await axios.post<OpenRouterResponse>(
         OPENROUTER_URL,
         {
           model: model,

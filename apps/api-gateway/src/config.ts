@@ -1,8 +1,13 @@
 import path from 'path';
 import dotenv from 'dotenv';
 
-// Load .env from project root (2 levels up from src/)
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+// Load .env from project root (2 levels up from src/) - optional for local development
+try {
+    dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+    console.log('✅ Loaded .env file');
+} catch (err) {
+    console.log('ℹ️ No .env file found, using environment variables');
+}
 
 export const MONGO_URI = process.env.MONGO_URI as string;
 export const DB_NAME = process.env.DB_NAME as string;
@@ -14,7 +19,7 @@ export const USER_DB = process.env.USER_DB as string;
 export const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY as string;
 export const OPENROUTER_URL = process.env.OPENROUTER_URL as string;
 
-// 🔒 Optional: Fail-fast if missing
+// 🔒 Log missing environment variables instead of crashing
 [
     ['MONGO_URI', MONGO_URI],
     ['DB_NAME', DB_NAME],
@@ -25,5 +30,9 @@ export const OPENROUTER_URL = process.env.OPENROUTER_URL as string;
     ['USER_DB', USER_DB],
     ['OPENROUTER_API_KEY', OPENROUTER_API_KEY]
 ].forEach(([key, val]) => {
-    if (!val) throw new Error(`❌ Missing required env var: ${key}`);
+    if (!val) {
+        console.warn(`⚠️ Missing env var: ${key}`);
+    } else {
+        console.log(`✅ ${key}: ${key === 'MONGO_URI' || key === 'OPENROUTER_API_KEY' ? '[REDACTED]' : val}`);
+    }
 });

@@ -7,6 +7,15 @@ import Account from '../models/Account';
 import axios from 'axios';
 import { OPENROUTER_API_KEY, OPENROUTER_URL } from '../config';
 
+// OpenRouter API response interface
+interface OpenRouterResponse {
+  choices: Array<{
+    message: {
+      content: string;
+    };
+  }>;
+}
+
 const router = express.Router();
 
 // Free tier limit
@@ -36,7 +45,7 @@ async function callOpenRouterAPI(prompt: string, apiKey: string): Promise<string
     try {
       console.log(`[${i + 1}/${FREE_MODELS.length}] Trying model: ${model}`);
       
-      const response = await axios.post(
+      const response = await axios.post<OpenRouterResponse>(
         OPENROUTER_URL,
         {
           model: model,

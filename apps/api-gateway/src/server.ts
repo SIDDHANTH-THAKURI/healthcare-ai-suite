@@ -48,16 +48,31 @@ app.use('/api/adherence', adherenceRouter);
 app.use('/api/api-key', apiKeyRouter);
 
 
-mongoose
-    .connect(MONGO_URI, {
-        dbName: process.env.DB_NAME || 'MedPortalDB'
-    })
-    .then(() => {
+// Start server first, then connect to MongoDB
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log('Environment check:');
+    console.log('- NODE_ENV:', process.env.NODE_ENV);
+    console.log('- DB_NAME:', process.env.DB_NAME);
+    console.log('- MONGO_URI exists:', !!process.env.MONGO_URI);
+});
+
+// Connect to MongoDB with retry logic
+const connectToMongoDB = async () => {
+    try {
+        await mongoose.connect(MONGO_URI, {
+            dbName: process.env.DB_NAME || 'MedPortalDB'
+        });
         console.log(`Connected to MongoDB - Database: ${process.env.DB_NAME || 'MedPortalDB'}`);
-        const PORT = process.env.PORT || 5000;
-        app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-    })
-    .catch((err) => console.error('MongoDB connection error:', err));
+    } catch (err) {
+        console.error('MongoDB connection error:', err);
+        console.log('Retrying MongoDB connection in 5 seconds...');
+        setTimeout(connectToMongoDB, 5000);
+    }
+};
+
+connectToMongoDB();
 
 mongoose.connection.on('error', (err) => {
     console.error('MongoDB error:', err.message);
@@ -155,7 +170,7 @@ Description: "${description}"`;
                             },
                         }
                     );
-                    const shortDescription = response.data.choices?.[0]?.message?.content?.trim() || 'Could not simplify.';
+                    const shortDescription = (response.data as any).choices?.[0]?.message?.content?.trim() || 'Could not simplify.';
                     return { pair, shortDescription };
                 })
             );
