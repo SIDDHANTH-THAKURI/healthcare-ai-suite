@@ -1,4 +1,4 @@
-# 💊🧠 DrugNexusAI: Personalized Drug-Drug Interaction (DDI) Checker  
+# 💊🧠 DrugNexusAI: Personalized Drug-Drug Interaction (DDI) Checker (https://drugnexusai.app/)  
 ### 🧬 AI-Powered Drug Interaction Intelligence Platform
 
 ![Project Banner](https://img.shields.io/badge/DRUGNEXUSAI-DDI%20Checker-2A9D8F?style=for-the-badge&logo=medchart&logoColor=white)
