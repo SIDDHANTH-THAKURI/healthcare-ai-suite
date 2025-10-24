@@ -111,7 +111,7 @@ full architecture diagram yet to upload
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/Team-DDI-CSIT998/Personalised_DDI_Checker.git
+git clone https://github.com/SIDDHANTH-THAKURI/healthcare-ai-suite.git
 cd Personalised_DDI_Checker
 
 # 2. Install Node.js dependencies
@@ -217,7 +217,7 @@ Well, let’s just say: **we coded this with caffeine and deadlines.**
 
 💬 **Seriously though**, we're aware this project isn't flawless.  
 It was built under tight academic deadlines and limited bandwidth – so we appreciate your understanding.  
-Feel free to report issues or weirdness [here] (https://github.com/Team-DDI-CSIT998/Personalised_DDI_Checker/issues) and we’ll do our best to patch it up! 🧰
+Feel free to report issues or weirdness [here] (https://github.com/SIDDHANTH-THAKURI/healthcare-ai-suite/issues) and we’ll do our best to patch it up! 🧰
 
 
 ## 🌐 Deployment Architecture
@@ -226,7 +226,7 @@ DrugNexusAI is deployed across multiple cloud platforms for optimal performance,
 
 ### Frontend (Vercel)
 - **Platform**: Vercel
-- **URL**: [Production Link]
+- **URL**: https://drugnexusai.app/
 - **Why Vercel**: 
   - Instant deployments with Git integration
   - Global CDN for fast content delivery
@@ -236,13 +236,14 @@ DrugNexusAI is deployed across multiple cloud platforms for optimal performance,
 
 ### Backend API Gateway (AWS)
 - **Platform**: AWS (Amazon Web Services)
-- **Service**: EC2 / Elastic Beanstalk
-- **Why AWS**:
-  - Industry-standard cloud infrastructure
-  - Scalable compute resources
-  - Robust security features
-  - Integration with MongoDB Atlas
-  - Professional-grade reliability
+- **Service**: AWS App Runner (Node.js backend)
+- **Why AWS App Runner**:
+  - Fully managed service — no manual server maintenance
+  - Seamless GitHub integration and continuous deployment
+  - Scalable compute resources for Node.js APIs
+  - Built-in HTTPS, health checks, and auto-scaling
+  - Easy integration with MongoDB Atlas and Render microservices
+  - Professional-grade reliability and security
 
 ### ML/AI Services (Render)
 - **Platform**: Render
@@ -270,21 +271,6 @@ This distributed architecture provides:
 - **Learning**: Hands-on experience with multiple cloud platforms
 - **Scalability**: Independent scaling of frontend, backend, and ML services
 - **Cost Optimization**: Use free tiers and pay only for what you need
-
----
-
-## 📬 Contact
-
-Have questions or want to collaborate with DrugNexusAI?
-
-📧 **Email**: thakurisiddhanth3@gmail.com  
-🌐 **GitHub**: [Team-DDI-CSIT998](https://github.com/Team-DDI-CSIT998)  
-💼 **LinkedIn**: [Connect with me](https://linkedin.com/in/siddhanth-thakuri)  
-🏢 **DrugNexusAI Technologies**
-
-⭐ Show Your Support
-If you liked this project, give it a ⭐ on GitHub!
-Your support means a lot to us 💖
 
 
 ---
@@ -370,7 +356,7 @@ Empowering patients with information:
 1. **Install dependencies**: `npm run install:all`
 2. **Install Python packages**: 
    ```bash
-   cd apps/ml-service && pip install -r requirements.txt
+   cd apps/ml-service && pip install -r req.txt
    cd ../ddi-service && pip install -r requirements.txt
    ```
 3. **Configure environment**: Create `.env` files with MongoDB URI, JWT secret, and OpenRouter API key
@@ -406,7 +392,7 @@ This project is continuously evolving! While the core functionality is solid, th
 
 ### Reporting Issues
 Found a bug or have a suggestion? I'd love to hear from you!  
-📝 **Report issues**: [GitHub Issues](https://github.com/Team-DDI-CSIT998/Personalised_DDI_Checker/issues)
+📝 **Report issues**: [GitHub Issues](https://github.com/SIDDHANTH-THAKURI/healthcare-ai-suite/issues)
 
 ### Contributing
 Contributions are welcome! Feel free to:
@@ -433,12 +419,23 @@ The current version represents months of additional development, learning, and r
 
 ---
 
+## 📬 Contact
+
+Have questions or want to collaborate with DrugNexusAI?
+
+📧 **Email**: thakurisiddhanth1@gmail.com  
+🌐 **GitHub**: https://github.com/SIDDHANTH-THAKURI/
+💼 **LinkedIn**: [Connect with me](https://www.linkedin.com/in/siddhanththakuri/)  
+🏢 **DrugNexusAI Technologies**
+
+---
+
 ⭐ **Show Your Support**  
 If you liked this project, give it a ⭐ on GitHub!  
 Your support means a lot! 💖
 
 ---
 
-**Last Updated**: January 2025  
+**Last Updated**: October 2025  
 **Version**: 2.0.0  
 **Status**: Active Development 🚀
