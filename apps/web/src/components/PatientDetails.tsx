@@ -175,7 +175,7 @@ const PatientDetails: React.FC = () => {
       const userData = JSON.parse(user);
       const userId = userData._id || userData.id;
       
-      const response = await fetch(`http://localhost:5000/api/api-key/status/${userId}`);
+      const response = await fetch(`${BASE_URL_1}/api/api-key/status/${userId}`);
       if (response.ok) {
         const data = await response.json();
         setApiUsage({

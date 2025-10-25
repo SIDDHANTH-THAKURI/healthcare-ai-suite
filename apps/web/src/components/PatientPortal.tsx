@@ -214,7 +214,7 @@ const PatientPortal: React.FC = () => {
       const userData = JSON.parse(user);
       const userId = userData.email;
       if (!userId) return;
-      const response = await fetch(`http://localhost:5000/api/adherence/streak/${userId}`);
+      const response = await fetch(`${BASE_URL_1}/api/adherence/streak/${userId}`);
       if (response.ok) {
         const data = await response.json();
         setStreak(data.streak);
@@ -264,7 +264,7 @@ const PatientPortal: React.FC = () => {
 
       console.log('Sending message to chat API:', messageToSend);
 
-      const response = await fetch('http://localhost:5000/api/chat/message', {
+      const response = await fetch(`${BASE_URL_1}/api/chat/message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -331,7 +331,7 @@ const PatientPortal: React.FC = () => {
       let errorMessage = 'Sorry, I encountered an error. ';
       
       if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
-        errorMessage += 'Cannot connect to the server. Please make sure the backend is running on http://localhost:5000';
+        errorMessage += `Cannot connect to the server. Please make sure the backend is running on ${BASE_URL_1}`;
       } else if (error.message?.includes('All') && error.message?.includes('models failed')) {
         errorMessage += 'The AI service is currently unavailable. All AI models failed to respond. This might be due to OpenRouter API privacy settings. Please visit https://openrouter.ai/settings/privacy to configure your account.';
       } else if (error.message?.includes('OpenRouter') || error.message?.includes('API')) {
@@ -400,7 +400,7 @@ const PatientPortal: React.FC = () => {
     formData.append('documentType', 'medical_history');
 
     try {
-      const response = await fetch('http://localhost:5000/api/documents/upload', {
+      const response = await fetch(`${BASE_URL_1}/api/documents/upload`, {
         method: 'POST',
         body: formData
       });
@@ -445,7 +445,7 @@ const PatientPortal: React.FC = () => {
     const userId = user ? JSON.parse(user).email : 'demo-patient-001';
 
     try {
-      const response = await fetch('http://localhost:5000/api/documents/upload-text', {
+      const response = await fetch(`${BASE_URL_1}/api/documents/upload-text`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -496,7 +496,7 @@ const PatientPortal: React.FC = () => {
 
   const markAsTaken = async (scheduleId: string, time: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/medication-schedule/${scheduleId}/take`, {
+      const response = await fetch(`${BASE_URL_1}/api/medication-schedule/${scheduleId}/take`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ time })
@@ -513,7 +513,7 @@ const PatientPortal: React.FC = () => {
 
   const skipMedication = async (scheduleId: string, time: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/medication-schedule/${scheduleId}/skip`, {
+      const response = await fetch(`${BASE_URL_1}/api/medication-schedule/${scheduleId}/skip`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ time, reason: 'User skipped' })

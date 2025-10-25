@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './AppointmentsPage.css';
+import { BASE_URL_1 } from '../base';
+
 
 interface Appointment {
   _id: string;
@@ -39,7 +41,7 @@ const AppointmentsPage: React.FC<Props> = ({ onClose }) => {
     try {
       const user = localStorage.getItem('user');
       const userId = user ? JSON.parse(user).email : 'demo-patient-001';
-      const response = await fetch(`http://localhost:5000/api/appointments/${userId}`);
+      const response = await fetch(`${BASE_URL_1}/api/appointments/${userId}`);
       if (response.ok) {
         const data = await response.json();
         setAppointments(data);
@@ -55,7 +57,7 @@ const AppointmentsPage: React.FC<Props> = ({ onClose }) => {
     try {
       const user = localStorage.getItem('user');
       const userId = user ? JSON.parse(user).email : 'demo-patient-001';
-      const response = await fetch('http://localhost:5000/api/appointments', {
+      const response = await fetch('${BASE_URL_1}/api/appointments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...newAppt, patientId: userId, status: 'scheduled' })
@@ -73,7 +75,7 @@ const AppointmentsPage: React.FC<Props> = ({ onClose }) => {
   const cancelAppointment = async (apptId: string) => {
     if (!confirm('Are you sure you want to cancel this appointment?')) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/appointments/${apptId}`, {
+      const response = await fetch(`${BASE_URL_1}/api/appointments/${apptId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'cancelled' })

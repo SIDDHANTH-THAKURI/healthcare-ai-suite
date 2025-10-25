@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { BASE_URL_1 } from '../base';
+
 import './MedicationsPage.css';
 
 interface Medication {
@@ -58,7 +60,7 @@ const MedicationsPage: React.FC<Props> = ({ onClose }) => {
     try {
       const user = localStorage.getItem('user');
       const userId = user ? JSON.parse(user).email : 'demo-patient-001';
-      const response = await fetch(`http://localhost:5000/api/medication-schedule/${userId}`);
+      const response = await fetch(`${BASE_URL_1}/api/medication-schedule/${userId}`);
       if (response.ok) {
         const data = await response.json();
         setMedications(data);
@@ -74,7 +76,7 @@ const MedicationsPage: React.FC<Props> = ({ onClose }) => {
 
   const markAsTaken = async (medId: string, time: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/medication-schedule/${medId}/take`, {
+      const response = await fetch(`${BASE_URL_1}/api/medication-schedule/${medId}/take`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ time })
@@ -130,7 +132,7 @@ const MedicationsPage: React.FC<Props> = ({ onClose }) => {
         ? newMed.customFrequency 
         : newMed.frequencyType.charAt(0).toUpperCase() + newMed.frequencyType.slice(1);
 
-      const response = await fetch('http://localhost:5000/api/medication-schedule', {
+      const response = await fetch('${BASE_URL_1}/api/medication-schedule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -186,7 +188,7 @@ const MedicationsPage: React.FC<Props> = ({ onClose }) => {
   const deleteMedication = async (medId: string) => {
     if (!confirm('Are you sure you want to delete this medication?')) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/medication-schedule/${medId}`, {
+      const response = await fetch(`${BASE_URL_1}/api/medication-schedule/${medId}`, {
         method: 'DELETE'
       });
       if (response.ok) {

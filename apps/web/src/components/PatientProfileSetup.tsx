@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import './PatientProfileSetup.css';
 import CustomDatePicker from './CustomDatePicker';
+import { BASE_URL_1 } from '../base';
+
 
 interface ProfileData {
   personalInfo: {
@@ -133,7 +135,7 @@ const PatientProfileSetup: React.FC = () => {
 
       console.log('Submitting profile data:', submissionData);
 
-      const API_URL = import.meta.env.VITE_API_URL_NODE || 'http://localhost:5000';
+      const API_URL = BASE_URL_1;
       const response = await fetch(`${API_URL}/api/patient-profile`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

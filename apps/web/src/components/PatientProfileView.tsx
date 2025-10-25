@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { BASE_URL_1 } from '../base';
 import './PatientProfileView.css';
 
 interface PatientProfile {
@@ -61,7 +62,7 @@ const PatientProfileView: React.FC<Props> = ({ onClose }) => {
     try {
       const user = localStorage.getItem('user');
       const userId = user ? JSON.parse(user).email : 'demo-patient-001';
-      const response = await fetch(`http://localhost:5000/api/patient-profile/${userId}`);
+      const response = await fetch(`${BASE_URL_1}/api/patient-profile/${userId}`);
       if (response.ok) {
         const data = await response.json();
         setProfile(data);
@@ -77,7 +78,7 @@ const PatientProfileView: React.FC<Props> = ({ onClose }) => {
   const handleSave = async () => {
     if (!editedProfile) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/patient-profile/${editedProfile.userId}`, {
+      const response = await fetch(`${BASE_URL_1}/api/patient-profile/${editedProfile.userId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editedProfile)
