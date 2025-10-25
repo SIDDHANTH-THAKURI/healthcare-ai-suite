@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './PatientProfileSetup.css';
 import CustomDatePicker from './CustomDatePicker';
 import { BASE_URL_1 } from '../base';
@@ -37,6 +38,7 @@ interface ProfileData {
 }
 
 const PatientProfileSetup: React.FC = () => {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [profileData, setProfileData] = useState<ProfileData>({
     personalInfo: {
@@ -147,7 +149,8 @@ const PatientProfileSetup: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         console.log('Profile saved successfully:', data);
-        window.location.href = '/patient-portal';
+        // Use React Router navigation instead of window.location.href
+        navigate('/patient-portal');
       } else {
         const errorData = await response.json();
         console.error('Error response:', errorData);
