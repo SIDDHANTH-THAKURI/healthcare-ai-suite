@@ -51,13 +51,16 @@ app.use('/api/api-key', apiKeyRouter);
 // Start server first, then connect to MongoDB
 const PORT = process.env.PORT || 5000;
 
+// Start the server
+app.listen(PORT, () => {
+});
+
 // Connect to MongoDB with retry logic
 const connectToMongoDB = async () => {
     try {
         await mongoose.connect(MONGO_URI, {
             dbName: process.env.DB_NAME || 'MedPortalDB'
         });
-        console.log(`Connected to MongoDB - Database: ${process.env.DB_NAME || 'MedPortalDB'}`);
     } catch (err) {
         console.error('MongoDB connection error:', err);
         console.log('Retrying MongoDB connection in 5 seconds...');
@@ -83,16 +86,30 @@ mongoose.connection.on('disconnected', () => {
 app.get('/api/medicines', (req: Request, res: Response): void => {
     (async () => {
         try {
+            // Check if MongoDB is connected
+            if (mongoose.connection.readyState !== 1) {
+                console.error('MongoDB not connected. Current state:', mongoose.connection.readyState);
+                res.status(503).json({ error: 'Database not ready. Please try again in a moment.' });
+                return;
+            }
+
             const db = mongoose.connection.db;
-            if (!db) throw new Error('MongoDB not ready');
+            if (!db) {
+                console.error('MongoDB database instance not available');
+                res.status(503).json({ error: 'Database not ready' });
+                return;
+            }
+
             const drugs = await db
                 .collection(COLLECTION_NAME)
                 .find({}, { projection: { name: 1, _id: 0 } })
                 .toArray();
+            
             res.json(drugs);
         } catch (error: any) {
-            console.error('Fetch error:', error.message);
-            res.status(500).json({ error: 'Failed to fetch medicines' });
+            console.error('Fetch medicines error:', error.message);
+            console.error('Error stack:', error.stack);
+            res.status(500).json({ error: 'Failed to fetch medicines', details: error.message });
         }
     })();
 });
@@ -138,7 +155,6 @@ app.post('/api/interactions', (req: Request, res: Response): void => {
 // Simplify Interactions
 app.post('/api/simplify_interactions', (req: Request, res: Response): void => {
     (async () => {
-        console.log(req, res);
         const { interactions } = req.body;
         if (!interactions?.length) return res.status(400).json({ error: 'No interactions provided' });
 
@@ -270,7 +286,6 @@ app.post("/api/auth/login", async (req: Request, res: Response) => {
 app.post("/api/auth/check-email", async (req: Request, res: Response) => {
     try {
         const { email } = req.body;
-        console.log(req.body);
         if (!email) {
             res.status(400).json({ error: "Email is required." });
             return;

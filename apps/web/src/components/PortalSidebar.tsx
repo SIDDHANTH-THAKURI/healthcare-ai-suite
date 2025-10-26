@@ -57,18 +57,18 @@ const Sidebar: React.FC<SidebarProps> = ({ navItems, profile }) => {
 
 export const patientNavItems: NavItem[] = [
   { to: '/PatientPortal', icon: 'fa-tachometer-alt', label: 'Dashboard' },
-  { to: '/UnderConstruction', icon: 'fa-notes-medical', label: 'Medical History' },
-  { to: '/UnderConstruction', icon: 'fa-flask', label: 'Lab Results' },
-  { to: '/UnderConstruction', icon: 'fa-pills', label: 'Prescriptions' },
-  { to: '/UnderConstruction', icon: 'fa-calendar-alt', label: 'Appointments' }
+  { to: '/UnderConstruction?feature=medical-history', icon: 'fa-notes-medical', label: 'Medical History' },
+  { to: '/UnderConstruction?feature=lab-results', icon: 'fa-flask', label: 'Lab Results' },
+  { to: '/UnderConstruction?feature=prescriptions', icon: 'fa-pills', label: 'Prescriptions' },
+  { to: '/UnderConstruction?feature=appointments', icon: 'fa-calendar-alt', label: 'Appointments' }
 ];
 
 export const doctorNavItems: NavItem[] = [
   { to: '/DrugNexusAIDoctorPortal', icon: 'fa-tachometer-alt', label: 'Dashboard' },
-  { to: '/UnderConstruction', icon: 'fa-users', label: 'Patients' },
-  { to: '/UnderConstruction', icon: 'fa-calendar-check', label: 'Appointments' },
-  { to: '/UnderConstruction', icon: 'fa-vial', label: 'Lab Requests' },
-  { to: '/UnderConstruction', icon: 'fa-prescription-bottle-alt', label: 'Prescriptions Review' }
+  { to: '/UnderConstruction?feature=patients', icon: 'fa-users', label: 'Patients' },
+  { to: '/UnderConstruction?feature=doctor-appointments', icon: 'fa-calendar-check', label: 'Appointments' },
+  { to: '/UnderConstruction?feature=lab-requests', icon: 'fa-vial', label: 'Lab Requests' },
+  { to: '/UnderConstruction?feature=prescriptions-review', icon: 'fa-prescription-bottle-alt', label: 'Prescriptions Review' }
 ];
 
 export const PatientSidebar: React.FC<{ profile: ProfileData }> = ({ profile }) => (

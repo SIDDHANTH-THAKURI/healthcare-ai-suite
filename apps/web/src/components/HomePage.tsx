@@ -45,6 +45,20 @@ const HomePage: React.FC = () => {
   const [checksUsed, setChecksUsed] = useState<number>(0);
   const [showLimitModal, setShowLimitModal] = useState(false);
 
+  // Lock body scroll when any modal is open
+  useEffect(() => {
+    if (showPopup || showWelcome || showPortalInfo || showLimitModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showPopup, showWelcome, showPortalInfo, showLimitModal]);
+
   // Check for mobile device and show welcome on first visit
   useEffect(() => {
     const width = window.innerWidth;
@@ -367,22 +381,68 @@ const HomePage: React.FC = () => {
 
       {showPopup && (
         <div className="modal-overlay" onClick={() => setShowPopup(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3>Interaction Analysis</h3>
-            {error ? (
-              <p className="error">{error}</p>
-            ) : interactionResults.length > 0 ? (
-              <ul>
-                {interactionResults.map((result, index) => (
-                  <li key={index}>
-                    <strong>{result.pair}</strong>: {result.shortDescription}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No interactions found between the selected medications.</p>
-            )}
-            <button onClick={() => setShowPopup(false)}>Close</button>
+          <div className="interaction-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close-btn" onClick={() => setShowPopup(false)}>
+              <i className="fas fa-times"></i>
+            </button>
+            
+            <div className="interaction-modal-header">
+              <div className="interaction-icon">
+                {error ? (
+                  <i className="fas fa-exclamation-triangle"></i>
+                ) : interactionResults.length > 0 ? (
+                  <i className="fas fa-exclamation-circle"></i>
+                ) : (
+                  <i className="fas fa-check-circle"></i>
+                )}
+              </div>
+              <h3>
+                {error ? 'Error' : interactionResults.length > 0 ? 'Drug Interactions Found' : 'No Interactions Found'}
+              </h3>
+              <p className="interaction-subtitle">
+                {error ? 'Something went wrong' : interactionResults.length > 0 
+                  ? `Found ${interactionResults.length} potential interaction${interactionResults.length > 1 ? 's' : ''}`
+                  : 'These medications appear safe to take together'}
+              </p>
+            </div>
+
+            <div className="interaction-modal-body">
+              {error ? (
+                <div className="error-message">
+                  <i className="fas fa-times-circle"></i>
+                  <p>{error}</p>
+                </div>
+              ) : interactionResults.length > 0 ? (
+                <div className="interaction-list">
+                  {interactionResults.map((result, index) => (
+                    <div className="interaction-card" key={index}>
+                      <div className="interaction-card-header">
+                        <div className="interaction-badge">
+                          <i className="fas fa-pills"></i>
+                        </div>
+                        <h4>{result.pair}</h4>
+                      </div>
+                      <div className="interaction-card-body">
+                        <p>{result.shortDescription}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="no-interaction-message">
+                  <i className="fas fa-shield-alt"></i>
+                  <p>No known interactions were found between the selected medications.</p>
+                  <span className="safety-note">Always consult with your healthcare provider before starting any new medications.</span>
+                </div>
+              )}
+            </div>
+
+            <div className="interaction-modal-footer">
+              <button className="btn-close-modal" onClick={() => setShowPopup(false)}>
+                <i className="fas fa-check"></i>
+                Got it
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -484,17 +544,42 @@ const HomePage: React.FC = () => {
         
         {showPortalMenu && (
           <div className="portal-menu">
+            <div className="portal-menu-header">
+              <h3>Access Portals</h3>
+              <p>Choose your role to continue</p>
+            </div>
+            
             <Link to="/PatientPortal" className="portal-menu-item patient">
-              <i className="fas fa-user-injured"></i>
-              <span>Patient Portal</span>
+              <div className="portal-item-icon">
+                <i className="fas fa-user-injured"></i>
+              </div>
+              <div className="portal-item-content">
+                <span className="portal-item-title">Patient Portal</span>
+                <span className="portal-item-desc">View medications & health records</span>
+              </div>
+              <i className="fas fa-arrow-right portal-item-arrow"></i>
             </Link>
+            
             <Link to="/DrugNexusAIDoctorPortal" className="portal-menu-item doctor">
-              <i className="fas fa-user-md"></i>
-              <span>Doctor Portal</span>
+              <div className="portal-item-icon">
+                <i className="fas fa-user-md"></i>
+              </div>
+              <div className="portal-item-content">
+                <span className="portal-item-title">Doctor Portal</span>
+                <span className="portal-item-desc">Manage patients & prescriptions</span>
+              </div>
+              <i className="fas fa-arrow-right portal-item-arrow"></i>
             </Link>
+            
             <Link to="/Authentication" className="portal-menu-item auth">
-              <i className="fas fa-sign-in-alt"></i>
-              <span>Sign In</span>
+              <div className="portal-item-icon">
+                <i className="fas fa-sign-in-alt"></i>
+              </div>
+              <div className="portal-item-content">
+                <span className="portal-item-title">Sign In</span>
+                <span className="portal-item-desc">Access your account</span>
+              </div>
+              <i className="fas fa-arrow-right portal-item-arrow"></i>
             </Link>
           </div>
         )}

@@ -104,33 +104,40 @@ body {
 }
 
 .history-item {
-    padding: 0.5rem 1rem;
-    border: solid 1px beige !important;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     margin-top: 10px;
     margin-bottom: 0.5rem;
     border-radius: var(--border-radius);
-    border: solid var(--rgb-primary);
-    cursor: pointer;
-    transition: background-color var(--transition, 0.2s ease), border-left-color var(--transition, 0.2s ease);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease;
     border-left: 3px solid transparent;
     color: var(--text-light);
     background-color: var(--primary-dark);
+    position: relative;
 }
 
 .history-item:hover {
     background-color: var(--glass);
+    border-left-color: var(--accent);
 }
 
 .history-item.active-history {
     background-color: var(--primary-dark);
-    /* Darken active history to contrast with primary sidebar */
     color: var(--text-light);
     border-left-color: var(--accent);
-    /* Use accent for active border */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.history-item.active-history .history-date {
-    color: rgba(253, 254, 254, 0.8);
+.history-item-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    padding: 0.75rem 1rem;
 }
 
 .history-item .history-title {
@@ -145,6 +152,34 @@ body {
 .history-item .history-date {
     font-size: 0.75rem;
     color: rgba(253, 254, 254, 0.7);
+}
+
+.history-item.active-history .history-date {
+    color: rgba(253, 254, 254, 0.9);
+}
+
+.history-delete-btn {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.5rem;
+}
+
+.history-delete-btn:hover {
+    background: rgba(231, 111, 81, 0.2);
+    color: #E76F51;
+}
+
+.history-delete-btn svg {
+    width: 14px;
+    height: 14px;
 }
 
 .empty-history {
@@ -189,6 +224,12 @@ body {
     display: flex;
     flex-direction: column;
     background-color: var(--bg-light);
+}
+
+.chat-main-fullwidth {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .chat-area-header {
