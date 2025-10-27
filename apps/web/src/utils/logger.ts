@@ -28,7 +28,7 @@ class Logger {
         };
 
         this.logs.push(logEntry);
-        
+
         // Keep only the most recent logs
         if (this.logs.length > this.maxLogs) {
             this.logs = this.logs.slice(-this.maxLogs);

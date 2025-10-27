@@ -239,11 +239,11 @@ const APIKeySettings: React.FC<APIKeySettingsProps> = ({ userId, onStatusChange 
             </div>
           </div>
 
-          <div className="info-box" style={{ 
-            background: '#f0f9ff', 
-            border: '1px solid #bae6fd', 
-            borderRadius: '8px', 
-            padding: '12px 16px', 
+          <div className="info-box" style={{
+            background: '#f0f9ff',
+            border: '1px solid #bae6fd',
+            borderRadius: '8px',
+            padding: '12px 16px',
             marginTop: '16px',
             display: 'flex',
             gap: '12px',

@@ -17,7 +17,6 @@ type Patient = {
 // Auth middleware using the built‑in RequestHandler type.
 const authMiddleware: express.RequestHandler = (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
-    console.log("Auth Header:", req.headers.authorization);
     if (!authHeader) {
         res.status(401).json({ error: "Unauthorized: No token provided." });
         return;
@@ -45,8 +44,6 @@ router.post("/patients/add", authMiddleware,
 
         try {
             const account = await Account.findById(accountId);
-            console.log(account);
-            console.log(Role);
             if (!account || !account.roles.includes(Role.DOCTOR)) {
                 res.status(403).json({ error: "Unauthorized doctor access" });
                 return;

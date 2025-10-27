@@ -83,7 +83,7 @@ const HomePage: React.FC = () => {
   const handleCloseWelcome = () => {
     setShowWelcome(false);
     sessionStorage.setItem('hasSeenWelcome', 'true');
-    
+
     // Show portal info popup after welcome closes
     const hasSeenPortalInfo = sessionStorage.getItem('hasSeenPortalInfo');
     if (!hasSeenPortalInfo) {
@@ -385,7 +385,7 @@ const HomePage: React.FC = () => {
             <button className="modal-close-btn" onClick={() => setShowPopup(false)}>
               <i className="fas fa-times"></i>
             </button>
-            
+
             <div className="interaction-modal-header">
               <div className="interaction-icon">
                 {error ? (
@@ -400,7 +400,7 @@ const HomePage: React.FC = () => {
                 {error ? 'Error' : interactionResults.length > 0 ? 'Drug Interactions Found' : 'No Interactions Found'}
               </h3>
               <p className="interaction-subtitle">
-                {error ? 'Something went wrong' : interactionResults.length > 0 
+                {error ? 'Something went wrong' : interactionResults.length > 0
                   ? `Found ${interactionResults.length} potential interaction${interactionResults.length > 1 ? 's' : ''}`
                   : 'These medications appear safe to take together'}
               </p>
@@ -516,7 +516,7 @@ const HomePage: React.FC = () => {
               <div className="portal-info-note">
                 <i className="fas fa-info-circle"></i>
                 <p>
-                  <strong>Demo Mode:</strong> Use any credentials to explore! This is a demonstration 
+                  <strong>Demo Mode:</strong> Use any credentials to explore! This is a demonstration
                   showcasing how AI can enhance healthcare workflows.
                 </p>
               </div>
@@ -534,21 +534,21 @@ const HomePage: React.FC = () => {
 
       {/* Floating Portal Access Button */}
       <div className={`floating-portal-btn ${showPortalMenu ? 'active' : ''}`}>
-        <button 
+        <button
           className="portal-fab"
           onClick={() => setShowPortalMenu(!showPortalMenu)}
           aria-label="Access Portals"
         >
           <i className={`fas ${showPortalMenu ? 'fa-times' : 'fa-hospital-user'}`}></i>
         </button>
-        
+
         {showPortalMenu && (
           <div className="portal-menu">
             <div className="portal-menu-header">
               <h3>Access Portals</h3>
               <p>Choose your role to continue</p>
             </div>
-            
+
             <Link to="/PatientPortal" className="portal-menu-item patient">
               <div className="portal-item-icon">
                 <i className="fas fa-user-injured"></i>
@@ -559,7 +559,7 @@ const HomePage: React.FC = () => {
               </div>
               <i className="fas fa-arrow-right portal-item-arrow"></i>
             </Link>
-            
+
             <Link to="/DrugNexusAIDoctorPortal" className="portal-menu-item doctor">
               <div className="portal-item-icon">
                 <i className="fas fa-user-md"></i>
@@ -570,7 +570,7 @@ const HomePage: React.FC = () => {
               </div>
               <i className="fas fa-arrow-right portal-item-arrow"></i>
             </Link>
-            
+
             <Link to="/Authentication" className="portal-menu-item auth">
               <div className="portal-item-icon">
                 <i className="fas fa-sign-in-alt"></i>

@@ -31,13 +31,12 @@ const FREE_MODELS = [
 ];
 
 // Helper function to call OpenRouter API with fallback models
-async function callOpenRouterAPI(prompt: string): Promise<string> {
+async function callOpenRouterAPI(prompt: string, apiKey: string): Promise<string> {
   // Try each model in order
   for (let i = 0; i < FREE_MODELS.length; i++) {
     const model = FREE_MODELS[i];
 
     try {
-      console.log(`[${i + 1}/${FREE_MODELS.length}] Trying model: ${model}`);
 
       const response = await axios.post<OpenRouterResponse>(
         OPENROUTER_URL,
@@ -52,7 +51,7 @@ async function callOpenRouterAPI(prompt: string): Promise<string> {
         },
         {
           headers: {
-            'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+            'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
             'HTTP-Referer': 'http://localhost:5173',
             'X-Title': 'DrugNexusAI Patient Portal'
@@ -67,12 +66,10 @@ async function callOpenRouterAPI(prompt: string): Promise<string> {
         throw new Error('No response from AI');
       }
 
-      console.log(`✅ SUCCESS with model: ${model}`);
       return aiResponse;
 
     } catch (error: any) {
       const errorMsg = error.response?.data?.error?.message || error.message;
-      console.log(`❌ Model ${model} failed: ${errorMsg}`);
 
       // If this is the last model, throw the error
       if (i === FREE_MODELS.length - 1) {
@@ -80,8 +77,6 @@ async function callOpenRouterAPI(prompt: string): Promise<string> {
         throw new Error(`All ${FREE_MODELS.length} models failed. Last error: ${errorMsg}`);
       }
 
-      // Otherwise, continue to next model
-      console.log(`⏭️  Trying next model...`);
     }
   }
 
@@ -131,8 +126,10 @@ const upload = multer({
   }
 });
 
+import { trackUsage, getApiKey } from '../middleware/usageTracking';
+
 // Upload document
-router.post('/upload', upload.single('document'), async (req: Request, res: Response): Promise<void> => {
+router.post('/upload', upload.single('document'), trackUsage, async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.file) {
       res.status(400).json({ message: 'No file uploaded' });
@@ -163,7 +160,8 @@ Write a brief, natural paragraph summary (2-3 sentences) of the medical informat
 
     let medicalSummary = '';
     try {
-      medicalSummary = await callOpenRouterAPI(aiPrompt);
+      const apiKey = getApiKey(req);
+      medicalSummary = await callOpenRouterAPI(aiPrompt, apiKey);
     } catch (e) {
       console.error('Error processing with AI:', e);
       medicalSummary = 'Medical information stored.';
@@ -200,7 +198,7 @@ Write a brief, natural paragraph summary (2-3 sentences) of the medical informat
 });
 
 // Upload text (manual entry)
-router.post('/upload-text', async (req: Request, res: Response): Promise<void> => {
+router.post('/upload-text', trackUsage, async (req: Request, res: Response): Promise<void> => {
   try {
     const { patientId, text, documentType } = req.body;
 
@@ -223,7 +221,8 @@ Write a brief, natural paragraph summary (2-3 sentences) of the medical informat
 
     let medicalSummary = '';
     try {
-      medicalSummary = await callOpenRouterAPI(aiPrompt);
+      const apiKey = getApiKey(req);
+      medicalSummary = await callOpenRouterAPI(aiPrompt, apiKey);
     } catch (e) {
       console.error('Error processing with AI:', e);
       medicalSummary = 'Medical information stored.';

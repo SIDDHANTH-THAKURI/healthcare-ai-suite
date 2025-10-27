@@ -24,7 +24,6 @@ async function callOpenRouterAPI(prompt: string, apiKey: string): Promise<string
     const model = FREE_MODELS[i];
     
     try {
-      console.log(`[${i + 1}/${FREE_MODELS.length}] Trying model: ${model}`);
       
       const response = await axios.post(
         OPENROUTER_URL,
@@ -49,12 +48,10 @@ async function callOpenRouterAPI(prompt: string, apiKey: string): Promise<string
         throw new Error('No response from AI');
       }
       
-      console.log(`✅ SUCCESS with model: ${model}`);
       return aiResponse;
       
     } catch (error: any) {
       const errorMsg = error.response?.data?.error?.message || error.message;
-      console.log(`❌ Model ${model} failed: ${errorMsg}`);
       
       if (i === FREE_MODELS.length - 1) {
         throw new Error(`All models failed. Last error: ${errorMsg}`);
@@ -75,11 +72,6 @@ router.post('/', trackUsage, async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    console.log('Checking contraindications for:', {
-      medications: medications.map((m: any) => m.name),
-      conditions,
-      allergies
-    });
 
     // Build patient context
     const patientContext = [];
@@ -142,14 +134,12 @@ RULES:
     try {
       const apiKey = getApiKey(req);
       const aiResponse = await callOpenRouterAPI(prompt, apiKey);
-      console.log('AI contraindication response:', aiResponse);
       
       // Extract JSON from response
       const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
         contraindications = parsed.contraindications || [];
-        console.log('Extracted contraindications:', contraindications);
       }
     } catch (error: any) {
       console.error('AI processing failed:', error.message);

@@ -44,7 +44,6 @@ async function callOpenRouterAPI(prompt: string, apiKey: string): Promise<string
     const model = FREE_MODELS[i];
     
     try {
-      console.log(`[${i + 1}/${FREE_MODELS.length}] Trying model: ${model}`);
       
       const response = await axios.post<OpenRouterResponse>(
         OPENROUTER_URL,
@@ -78,13 +77,10 @@ async function callOpenRouterAPI(prompt: string, apiKey: string): Promise<string
         throw new Error('No response from AI');
       }
       
-      console.log(`✅ SUCCESS with model: ${model}`);
-      console.log('AI response:', aiResponse.substring(0, 100) + '...');
       return aiResponse;
       
     } catch (error: any) {
       const errorMsg = error.response?.data?.error?.message || error.message;
-      console.log(`❌ Model ${model} failed: ${errorMsg}`);
       
       // If this is the last model, throw the error
       if (i === FREE_MODELS.length - 1) {
@@ -92,8 +88,6 @@ async function callOpenRouterAPI(prompt: string, apiKey: string): Promise<string
         throw new Error(`All ${FREE_MODELS.length} models failed. Last error: ${errorMsg}`);
       }
       
-      // Otherwise, continue to next model
-      console.log(`⏭️  Trying next model...`);
     }
   }
   
@@ -159,9 +153,6 @@ router.get('/:patientId', async (req: Request, res: Response): Promise<void> => 
 router.post('/message', trackUsage, async (req: Request, res: Response): Promise<void> => {
   try {
     const { patientId, content, userId } = req.body;
-
-    console.log('=== CHAT REQUEST START ===');
-    console.log('Received chat message:', { patientId, content, userId });
     
     // Validate input
     if (!patientId || !content || !userId) {
@@ -174,11 +165,8 @@ router.post('/message', trackUsage, async (req: Request, res: Response): Promise
     const apiKey = getApiKey(req);
     const user = await Account.findById(userId);
     
-    console.log(`Using ${user?.openrouterApiKey ? 'user' : 'default'} API key`);
-    
 
     // Save user message
-    console.log('💾 Saving user message to database...');
     const userMessage = new ChatMessage({
       patientId,
       role: 'user',
@@ -186,7 +174,6 @@ router.post('/message', trackUsage, async (req: Request, res: Response): Promise
       timestamp: new Date()
     });
     await userMessage.save();
-    console.log('✅ User message saved:', userMessage._id);
 
     // Use AI to detect intent and extract data
     const analysisPrompt = `Analyze this patient message and extract structured information:
@@ -212,7 +199,6 @@ Rules:
     
     try {
       const analysisResponse = await callOpenRouterAPI(analysisPrompt, apiKey);
-      console.log('AI analysis response:', analysisResponse);
       
       // Extract JSON from response
       const jsonMatch = analysisResponse.match(/\{[\s\S]*\}/);
@@ -220,7 +206,6 @@ Rules:
         const parsed = JSON.parse(jsonMatch[0]);
         intent = parsed.intent || 'general';
         extractedData = parsed;
-        console.log('Parsed intent:', intent, 'Data:', extractedData);
       }
     } catch (error: any) {
       console.error('AI analysis failed:', error.message);
@@ -245,7 +230,6 @@ Rules:
             adherenceScore: 0
           });
           await schedule.save();
-          console.log('Medication added:', med.name);
         }
       }
     }
@@ -263,17 +247,18 @@ Rules:
             status: 'scheduled'
           });
           await appointment.save();
-          console.log('Appointment created:', apt.doctorName, apt.date);
         }
       }
     }
 
     // Fetch patient's medical document summaries
     const medicalDocs = await MedicalDocument.find({ patientId }).sort({ uploadDate: -1 });
+    
     const medicalContext = medicalDocs
-      .filter(doc => doc.aiSummary)
+      .filter(doc => doc.aiSummary && doc.aiSummary !== 'Medical information stored.')
       .map(doc => doc.aiSummary)
       .join('\n\n');
+
 
     // Generate AI response using OpenRouter
     let aiContent = '';
@@ -282,8 +267,11 @@ Rules:
     let aiPrompt = '';
     
     // Add medical context if available
-    if (medicalContext) {
+    if (medicalContext && medicalContext.trim().length > 0) {
       aiPrompt += `PATIENT'S MEDICAL HISTORY:\n${medicalContext}\n\n`;
+      console.log('✅ Added medical context to prompt');
+    } else {
+      console.log('⚠️ No medical context available');
     }
     
     aiPrompt += `Patient message: "${content}"\n\n`;
@@ -301,7 +289,6 @@ Rules:
     // Call AI
     aiContent = await callOpenRouterAPI(aiPrompt, apiKey);
     
-    console.log('AI response generated:', aiContent);
 
     // Save AI response
     const assistantMessage = new ChatMessage({

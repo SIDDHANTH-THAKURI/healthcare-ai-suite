@@ -135,69 +135,83 @@ const DDIAlertSystem: React.FC<DDIAlertSystemProps> = ({
     try {
       // Extract just the medication names for the DDI check
       const medicineNames = currentMedications.map(med => med.name);
-      console.log('Checking DDI for medications:', medicineNames);
       
-      // First, check drug-drug interactions
-      const response = await fetch(`${BASE_URL_1}/api/interactions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          medicines: medicineNames
-        })
-      });
-
-      if (!response.ok) {
-        console.error('DDI check failed with status:', response.status);
-        throw new Error('DDI check failed');
-      }
-
-      const interactions = await response.json();
-      console.log('DDI interactions response:', interactions);
-      
-      // Check if we need to simplify the interactions
+      // First, check drug-drug interactions (only if 2+ medications)
       let data: any = { interactions: [], safe: true };
       
-      if (Array.isArray(interactions) && interactions.length > 0) {
-        console.log('Found', interactions.length, 'interactions, simplifying...');
+      if (medicineNames.length >= 2) {
         
-        // Simplify the interactions
-        const simplifyResponse = await fetch(`${BASE_URL_1}/api/simplify_interactions`, {
+        const response = await fetch(`${BASE_URL_1}/api/interactions`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({ interactions })
+        },
+          body: JSON.stringify({
+            medicines: medicineNames
+          })
         });
-        
-        if (simplifyResponse.ok) {
-          const simplified = await simplifyResponse.json();
-          console.log('Simplified interactions:', simplified);
-          
-          data = {
-            safe: false,
-            interactions: simplified.map((item: any) => ({
-              severity: 'major', // Default severity, could be enhanced
-              drugs: item.pair.split(' and '),
-              message: item.shortDescription,
-              recommendation: 'Consult with healthcare provider before combining these medications.'
-            }))
-          };
+
+        if (!response.ok) {
+          console.error('❌ DDI check failed with status:', response.status);
+          const errorText = await response.text();
+          console.error('Error details:', errorText);
         } else {
-          console.error('Simplify failed with status:', simplifyResponse.status);
+          const interactions = await response.json();
+          // Check if we need to simplify the interactions
+          if (Array.isArray(interactions) && interactions.length > 0) {
+            // Simplify the interactions
+            const simplifyResponse = await fetch(`${BASE_URL_1}/api/simplify_interactions`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`
+              },
+              body: JSON.stringify({ interactions })
+            });
+            
+            if (simplifyResponse.ok) {
+              const simplified = await simplifyResponse.json();
+              
+              data = {
+                safe: false,
+                interactions: simplified.map((item: any) => ({
+                  severity: 'major', // Default severity, could be enhanced
+                  drugs: item.pair.split(' and '),
+                  message: item.shortDescription,
+                  recommendation: 'Consult with healthcare provider before combining these medications.'
+                }))
+              };
+              
+            } else {
+              console.error('❌ Simplify failed with status:', simplifyResponse.status);
+              const errorText = await simplifyResponse.text();
+              console.error('Error details:', errorText);
+              
+              // Fallback: Use original descriptions if simplification fails
+              data = {
+                safe: false,
+                interactions: interactions.map((item: any) => ({
+                  severity: 'major',
+                  drugs: item.pair.split(' and '),
+                  message: item.description.length > 200 ? item.description.substring(0, 200) + '...' : item.description,
+                  recommendation: 'Consult with healthcare provider before combining these medications.'
+                }))
+              };
+              
+            }
+          } else {
+            console.log('✅ No drug-drug interactions found in database');
+          }
         }
       } else {
-        console.log('No drug-drug interactions found');
+        console.log('⚠️ Skipping drug-drug interaction check (need 2+ medications, have', medicineNames.length, ')');
       }
 
       // Second, check drug-condition contraindications
       let conditionAlerts: any[] = [];
       if (conditions.length > 0 || allergies.length > 0) {
         try {
-          console.log('Checking contraindications for:', { medications: currentMedications.length, conditions: conditions.length, allergies: allergies.length });
           
           const contraindicationResponse = await fetch(`${BASE_URL_1}/api/check-contraindications`, {
             method: 'POST',
@@ -216,7 +230,6 @@ const DDIAlertSystem: React.FC<DDIAlertSystemProps> = ({
 
           if (contraindicationResponse.ok) {
             const contraindicationData = await contraindicationResponse.json();
-            console.log('Contraindication response:', contraindicationData);
             
             if (contraindicationData.contraindications && contraindicationData.contraindications.length > 0) {
               conditionAlerts = contraindicationData.contraindications.map((item: any) => ({
@@ -225,30 +238,34 @@ const DDIAlertSystem: React.FC<DDIAlertSystemProps> = ({
                 message: item.message,
                 recommendation: item.recommendation
               }));
-              console.log('Found contraindications:', conditionAlerts.length);
+              
+            } else {
+              console.log('✅ No drug-condition contraindications found');
             }
           } else {
-            console.error('Contraindication check failed with status:', contraindicationResponse.status);
+            console.error('❌ Contraindication check failed with status:', contraindicationResponse.status);
+            const errorText = await contraindicationResponse.text();
+            console.error('Error details:', errorText);
           }
         } catch (error: any) {
-          console.error('Contraindication check error:', error);
+          console.error('❌ Contraindication check error:', error);
           // Check if it's a usage limit error
           if (error.response?.status === 429 || error.response?.data?.exhausted) {
             throw error; // Re-throw to be caught by outer catch
           }
           // Continue without contraindication data for other errors
         }
+      } else {
+        console.log('⚠️ Skipping contraindication check (no conditions or allergies)');
       }
 
       const timestamp = new Date().toISOString();
 
       // Combine drug-drug interactions and drug-condition contraindications
       const allInteractions = [...(data.interactions || []), ...conditionAlerts];
-      console.log('Total alerts found:', allInteractions.length, '(DDI:', data.interactions?.length || 0, ', Contraindications:', conditionAlerts.length, ')');
 
       // If safe (no interactions or contraindications), move all active alerts to old
       if (allInteractions.length === 0) {
-        console.log('No alerts - marking all as resolved');
         const resolvedAlerts = activeAlerts.map(a => ({
           ...a,
           status: 'resolved' as const,

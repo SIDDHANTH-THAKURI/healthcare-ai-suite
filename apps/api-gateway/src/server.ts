@@ -19,6 +19,7 @@ import adherenceRouter from './routes/adherenceRouter';
 import apiKeyRouter from './routes/apiKeyRouter';
 import patientHistoryRouter from './routes/patientHistoryRouter';
 import contraindicationRouter from './routes/contraindicationRouter';
+import simplifyInteractionsRouter from './routes/simplifyInteractionsRouter';
 import { MONGO_URI, COLLECTION_NAME, LLM_MODEL, OPENROUTER_API_KEY, OPENROUTER_URL } from './config';
 
 const app = express();
@@ -50,6 +51,7 @@ app.use('/api/adherence', adherenceRouter);
 app.use('/api/api-key', apiKeyRouter);
 app.use('/api/patient-history', patientHistoryRouter);
 app.use('/api/check-contraindications', contraindicationRouter);
+app.use('/api/simplify_interactions', simplifyInteractionsRouter);
 
 
 // Start server first, then connect to MongoDB
@@ -155,46 +157,6 @@ app.post('/api/interactions', (req: Request, res: Response): void => {
         }
     })();
 });
-
-// Simplify Interactions
-app.post('/api/simplify_interactions', (req: Request, res: Response): void => {
-    (async () => {
-        const { interactions } = req.body;
-        if (!interactions?.length) return res.status(400).json({ error: 'No interactions provided' });
-
-        try {
-            const simplified = await Promise.all(
-                interactions.map(async ({ pair, description }: { pair: string; description: string }) => {
-                    const prompt = `Explain this drug interaction in a short, clear, and understandable way. Keep all important details from the description. Do not add any extra commentary or unrelated information.
-
-Description: "${description}"`;
-                    const response = await axios.post(
-                        OPENROUTER_URL,
-                        {
-                            model: LLM_MODEL,
-                            messages: [{ role: 'user', content: prompt }],
-                        },
-                        {
-                            headers: {
-                                Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-                                'Content-Type': 'application/json',
-                                'HTTP-Referer': 'http://localhost:5173',
-                                'X-Title': 'DrugNexusAI DDI Checker',
-                            },
-                        }
-                    );
-                    const shortDescription = (response.data as any).choices?.[0]?.message?.content?.trim() || 'Could not simplify.';
-                    return { pair, shortDescription };
-                })
-            );
-            res.json(simplified);
-        } catch (err: any) {
-            console.error('OpenRouter API error:', err.response?.data || err.message);
-            res.status(500).json({ error: 'Failed to simplify interactions' });
-        }
-    })();
-});
-
 
 // Updated Registration Endpoint for Multi-Role Account
 app.post("/api/auth/register", async (req: Request, res: Response) => {

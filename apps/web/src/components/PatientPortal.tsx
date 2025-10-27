@@ -262,11 +262,18 @@ const PatientPortal: React.FC = () => {
       const userId = userData._id || userData.id;
       const patientId = userData.email;
 
-      console.log('Sending message to chat API:', messageToSend);
+      // Get authentication token
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Authentication token not found. Please log in again.');
+      }
 
       const response = await fetch(`${BASE_URL_1}/api/chat/message`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           patientId: patientId,
           content: messageToSend,
@@ -274,7 +281,6 @@ const PatientPortal: React.FC = () => {
         })
       });
 
-      console.log('Chat API response status:', response.status);
 
       // Handle limit exceeded
       if (response.status === 429) {
@@ -290,7 +296,6 @@ const PatientPortal: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Chat API response data:', data);
         
         setChatMessages(prev => [...prev, {
           role: 'assistant',
@@ -320,6 +325,8 @@ const PatientPortal: React.FC = () => {
           fetchPatientData();
           fetchStreakData();
         }
+      } else if (response.status === 401) {
+        throw new Error('Authentication failed. Your session may have expired. Please log out and log in again.');
       } else {
         const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
         console.error('Chat API error:', errorData);
@@ -327,17 +334,26 @@ const PatientPortal: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Error sending message:', error);
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        response: error.response?.data
+      });
       
-      let errorMessage = 'Sorry, I encountered an error. ';
+      let errorMessage = '❌ Sorry, I encountered an error.\n\n';
       
       if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
-        errorMessage += `Cannot connect to the server. Please make sure the backend is running on ${BASE_URL_1}`;
+        errorMessage += `🔌 **Connection Error**\nCannot connect to the server at ${BASE_URL_1}\n\nPlease check:\n• Is the backend server running?\n• Is the URL correct in your .env file?`;
+      } else if (error.message?.includes('User not authenticated')) {
+        errorMessage += `🔐 **Authentication Error**\nYour session has expired. Please log out and log in again.`;
       } else if (error.message?.includes('All') && error.message?.includes('models failed')) {
-        errorMessage += 'The AI service is currently unavailable. All AI models failed to respond. This might be due to OpenRouter API privacy settings. Please visit https://openrouter.ai/settings/privacy to configure your account.';
+        errorMessage += `🤖 **AI Service Unavailable**\nAll AI models are currently unavailable.\n\nThis might be due to:\n• OpenRouter API privacy settings\n• Service outage\n• API key issues\n\nPlease visit https://openrouter.ai/settings/privacy to configure your account.`;
       } else if (error.message?.includes('OpenRouter') || error.message?.includes('API')) {
-        errorMessage += 'There was an issue with the AI service. Please check your API configuration.';
+        errorMessage += `⚙️ **API Configuration Error**\nThere was an issue with the AI service.\n\nPlease check your API configuration in the backend.`;
+      } else if (error.message?.includes('Database') || error.message?.includes('MongoDB')) {
+        errorMessage += `💾 **Database Error**\nThere was an issue connecting to the database.\n\nPlease check if MongoDB is running.`;
       } else {
-        errorMessage += error.message || 'Please try again.';
+        errorMessage += `📝 **Error Details**\n${error.message || 'Unknown error occurred'}\n\nPlease try again or contact support if the issue persists.`;
       }
       
       setChatMessages(prev => [...prev, {

@@ -5,7 +5,6 @@ import './PatientDetails.css';
 import { DocSidebar } from './PortalSidebar';
 import { BASE_URL_1, BASE_URL_2 } from '../base';
 import { decodePatientId, isValidPatientIdFormat } from '../utils/patientSecurity';
-import { logger } from '../utils/logger';
 import DDIAlertSystem from './DDIAlertSystem';
 import APIKeySettings from './APIKeySettings';
 import ExhaustedModal from './ExhaustedModal';
@@ -79,16 +78,6 @@ const PatientDetails: React.FC = () => {
 
   // Decode the patient ID and validate access
   const patientId = encodedPatientId ? decodePatientId(encodedPatientId) : null;
-
-  // Log patient details page access
-  useEffect(() => {
-    logger.info('PATIENT_DETAILS_PAGE_ACCESSED', {
-      encodedPatientId,
-      decodedPatientId: patientId,
-      isValidFormat: patientId ? isValidPatientIdFormat(patientId) : false,
-      referrer: document.referrer
-    });
-  }, [encodedPatientId, patientId]);
 
   const [doctorProfile, setDoctorProfile] = useState<DoctorProfile | null>(null);
   const [editForm, setEditForm] = useState<DoctorProfile>({ fullName: '', phone: '', specialization: '', qualifications: '', experienceYears: 0, age: 0, gender: '', profileImage: '' });
@@ -281,7 +270,6 @@ const PatientDetails: React.FC = () => {
       if (res.ok) {
         const data = await res.json();
         setServiceStatus(`✅ ML Service is running (${data.service || 'ml-service'})`);
-        console.log('Service health:', data);
       } else {
         setServiceStatus(`⚠️ ML Service responded with status ${res.status}`);
       }
@@ -296,7 +284,6 @@ const PatientDetails: React.FC = () => {
   };
 
   useEffect(() => {
-    console.log('PatientDetails useEffect triggered for patientId:', patientId);
     const token = localStorage.getItem('token');
     
     if (!token) {
@@ -308,19 +295,15 @@ const PatientDetails: React.FC = () => {
     
     if (!patientId || !isValidPatientIdFormat(patientId)) {
       console.error('Invalid patient ID:', patientId);
-      logger.patientValidation(patientId || 'null', false, 'Invalid patient ID format');
       setError('Invalid patient ID');
       navigate('/DrugNexusAIDoctorPortal');
       return;
     }
 
-    console.log('Patient ID validation passed:', patientId);
-    logger.patientValidation(patientId, true, 'Patient ID format valid');
 
     // Alert functionality disabled
 
     // Fetch doctor profile
-    console.log('Fetching doctor profile...');
     fetch(`${BASE_URL_1}/api/profile/me`, { headers: { Authorization: `Bearer ${token}` } })
       .then(res => {
         if (!res.ok) {
@@ -329,7 +312,6 @@ const PatientDetails: React.FC = () => {
         return res.json();
       })
       .then(data => {
-        console.log('Doctor profile response:', data);
         if (data.doctorProfile) {
           setDoctorProfile(data.doctorProfile);
           setEditForm(data.doctorProfile);
@@ -343,26 +325,21 @@ const PatientDetails: React.FC = () => {
       });
 
     // Try to fetch patient data directly from the patients list (simplified approach)
-    console.log('Fetching patient data for ID:', patientId);
+    
     fetch(`${BASE_URL_1}/api/patients`, { headers: { Authorization: `Bearer ${token}` } })
       .then(res => {
-        console.log('Patient fetch response status:', res.status);
         if (!res.ok) {
           throw new Error(`Failed to fetch patients: ${res.status} ${res.statusText}`);
         }
         return res.json();
       })
       .then(data => {
-        console.log('Patient fetch response data:', data);
         if (data.patients) {
-          console.log('Looking for patient with ID:', patientId, 'in', data.patients.length, 'patients');
           const patient = data.patients.find((p: Patient) => p.id === patientId);
           if (patient) {
-            console.log('Patient found:', patient);
             setPatientBio(patient);
             setHasAccess(true);
             setError(null);
-            logger.patientDataFetch(patientId, 'direct_fetch', true, { patientName: patient.name });
             return;
           } else {
             console.error('Patient not found in list. Available patient IDs:', data.patients.map((p: Patient) => p.id));
@@ -374,7 +351,6 @@ const PatientDetails: React.FC = () => {
       })
       .catch((error) => {
         console.error('Patient fetch error:', error);
-        logger.patientDataFetch(patientId, 'direct_fetch', false, { error: error.message });
         setError(`Unable to load patient data: ${error.message}`);
         setTimeout(() => {
           navigate('/DrugNexusAIDoctorPortal');
@@ -388,26 +364,20 @@ const PatientDetails: React.FC = () => {
           return res.json();
         } else if (res.status === 404) {
           // No prescription found - this is normal, not an error
-          logger.patientDataFetch(patientId, 'prescriptions', true, { message: 'No prescriptions found' });
           return { prescription: null };
         } else {
           throw new Error(`Failed to fetch prescriptions: ${res.status} ${res.statusText}`);
         }
       })
       .then((data: PrescriptionResp) => {
-        console.log('Prescriptions data:', data);
         if (data.prescription?.medicines) {
-          console.log('Setting medications:', data.prescription.medicines);
           // Update status based on current date
           const updatedMeds = updateMedicationStatus(data.prescription.medicines);
           setCurrentMedications(updatedMeds);
-          logger.patientDataFetch(patientId, 'prescriptions', true, {
-            medicineCount: data.prescription.medicines.length
-          });
+          
         }
       })
       .catch((error) => {
-        logger.patientDataFetch(patientId, 'prescriptions', false, { error: error.message });
         console.warn('Failed to fetch prescriptions:', error.message);
         // Don't set error for prescriptions as it's not critical for page load
       });
@@ -458,10 +428,6 @@ const PatientDetails: React.FC = () => {
     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
     
     try {
-      console.log('Saving consultation note for patient:', patientId);
-      console.log('API endpoint:', `${BASE_URL_1}/api/patient-history`);
-      console.log('Request payload:', { patientId, notes: noteInput.substring(0, 50) + '...' });
-      
       const res = await fetch(`${BASE_URL_1}/api/patient-history`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -470,7 +436,6 @@ const PatientDetails: React.FC = () => {
       });
 
       clearTimeout(timeoutId);
-      console.log('Response status:', res.status, res.statusText);
       
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({ detail: 'Unknown error' }));
@@ -478,7 +443,6 @@ const PatientDetails: React.FC = () => {
       }
 
       const result = await res.json();
-      console.log('Save response:', result);
       
       if (result.success && result.note) {
         // Update notes
@@ -493,15 +457,12 @@ const PatientDetails: React.FC = () => {
           setPastConditions(s.conditions?.past || []);
           setAllergies(s.allergies || []);
           
-          // Don't touch currentMedications - they come from prescriptions
-          console.log('Updated conditions and allergies from consultation note');
         }
 
         // Cleanup
         setNoteInput('');
         setCurrentPage(1);
         setSaveError(null); // Clear any previous errors
-        console.log('Consultation note saved successfully');
       } else {
         throw new Error('Invalid response format from server');
       }

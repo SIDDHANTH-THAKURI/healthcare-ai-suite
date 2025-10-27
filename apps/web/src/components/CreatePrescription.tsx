@@ -525,7 +525,6 @@ const CreatePrescription: React.FC = () => {
         }
       });
 
-      console.log('Prescription saved:', response.data);
 
       // Navigate back to patient details
       navigate(`/patient-details/${encodePatientId(patientId)}`);

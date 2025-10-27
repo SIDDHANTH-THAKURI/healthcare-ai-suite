@@ -135,7 +135,6 @@ const PatientProfileSetup: React.FC = () => {
         onboardingCompleted: true
       };
 
-      console.log('Submitting profile data:', submissionData);
 
       const API_URL = BASE_URL_1;
       const response = await fetch(`${API_URL}/api/patient-profile`, {
@@ -144,11 +143,9 @@ const PatientProfileSetup: React.FC = () => {
         body: JSON.stringify(submissionData)
       });
 
-      console.log('Response status:', response.status);
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Profile saved successfully:', data);
         // Use React Router navigation instead of window.location.href
         navigate('/patient-portal');
       } else {

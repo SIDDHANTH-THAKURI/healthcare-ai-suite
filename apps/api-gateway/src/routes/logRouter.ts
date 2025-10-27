@@ -53,10 +53,6 @@ export const logToFile = async (level: LogEntry['level'], action: string, detail
     
     await fs.appendFile(logFile, logLine);
     
-    // Also log to console in development
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`[BACKEND LOG] ${logLine.trim()}`);
-    }
   } catch (error) {
     console.error('Failed to write to log file:', error);
   }

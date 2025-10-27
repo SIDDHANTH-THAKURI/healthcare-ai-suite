@@ -39,6 +39,7 @@ const MedicationsPage: React.FC<Props> = ({ onClose }) => {
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
   const [showAddForm, setShowAddForm] = useState(false);
   const [imagePreview, setImagePreview] = useState<string>('');
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'warning' } | null>(null);
   const [newMed, setNewMed] = useState({
     medicationName: '',
     dosage: '',
@@ -51,6 +52,18 @@ const MedicationsPage: React.FC<Props> = ({ onClose }) => {
     startDate: new Date().toISOString().split('T')[0],
     endDate: ''
   });
+
+  // Auto-hide toast after 3 seconds
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'warning' = 'success') => {
+    setToast({ message, type });
+  };
 
   useEffect(() => {
     fetchMedications();
@@ -102,7 +115,7 @@ const MedicationsPage: React.FC<Props> = ({ onClose }) => {
 
   const addMedication = async () => {
     if (!newMed.medicationName || !newMed.dosage || !newMed.startDate || newMed.timesOfDay.length === 0) {
-      alert('Please fill in medication name, dosage, start date, and select at least one time of day');
+      showToast('Please fill in medication name, dosage, start date, and select at least one time of day', 'warning');
       return;
     }
 
@@ -132,7 +145,7 @@ const MedicationsPage: React.FC<Props> = ({ onClose }) => {
         ? newMed.customFrequency 
         : newMed.frequencyType.charAt(0).toUpperCase() + newMed.frequencyType.slice(1);
 
-      const response = await fetch('${BASE_URL_1}/api/medication-schedule', {
+      const response = await fetch(`${BASE_URL_1}/api/medication-schedule`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -158,7 +171,7 @@ const MedicationsPage: React.FC<Props> = ({ onClose }) => {
       });
 
       if (response.ok) {
-        alert('Medication added successfully!');
+        showToast('Medication added successfully!', 'success');
         fetchMedications();
         setShowAddForm(false);
         setImagePreview('');
@@ -177,25 +190,32 @@ const MedicationsPage: React.FC<Props> = ({ onClose }) => {
       } else {
         const errorData = await response.json();
         console.error('Error response:', errorData);
-        alert('Failed to add medication. Please try again.');
+        showToast('Failed to add medication. Please try again.', 'error');
       }
     } catch (error) {
       console.error('Error adding medication:', error);
-      alert('Error adding medication. Please check console for details.');
+      showToast('Error adding medication. Please try again.', 'error');
     }
   };
 
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
   const deleteMedication = async (medId: string) => {
-    if (!confirm('Are you sure you want to delete this medication?')) return;
     try {
       const response = await fetch(`${BASE_URL_1}/api/medication-schedule/${medId}`, {
         method: 'DELETE'
       });
       if (response.ok) {
+        showToast('Medication deleted successfully', 'success');
         fetchMedications();
+      } else {
+        showToast('Failed to delete medication', 'error');
       }
     } catch (error) {
       console.error('Error deleting medication:', error);
+      showToast('Error deleting medication', 'error');
+    } finally {
+      setDeleteConfirm(null);
     }
   };
 
@@ -490,7 +510,7 @@ const MedicationsPage: React.FC<Props> = ({ onClose }) => {
                   <button className="action-btn edit">
                     <i className="fas fa-edit"></i> Edit
                   </button>
-                  <button className="action-btn delete" onClick={() => deleteMedication(med._id)}>
+                  <button className="action-btn delete" onClick={() => setDeleteConfirm(med._id)}>
                     <i className="fas fa-trash"></i> Delete
                   </button>
                 </div>
@@ -498,6 +518,35 @@ const MedicationsPage: React.FC<Props> = ({ onClose }) => {
             ))
           )}
         </div>
+
+        {/* Toast Notification */}
+        {toast && (
+          <div className={`toast-notification toast-${toast.type}`}>
+            <i className={`fas fa-${toast.type === 'success' ? 'check-circle' : toast.type === 'error' ? 'exclamation-circle' : 'exclamation-triangle'}`}></i>
+            <span>{toast.message}</span>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {deleteConfirm && (
+          <div className="confirm-modal-overlay" onClick={() => setDeleteConfirm(null)}>
+            <div className="confirm-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="confirm-icon">
+                <i className="fas fa-exclamation-triangle"></i>
+              </div>
+              <h3>Delete Medication?</h3>
+              <p>Are you sure you want to delete this medication? This action cannot be undone.</p>
+              <div className="confirm-actions">
+                <button className="confirm-btn delete" onClick={() => deleteMedication(deleteConfirm)}>
+                  <i className="fas fa-trash"></i> Delete
+                </button>
+                <button className="confirm-btn cancel" onClick={() => setDeleteConfirm(null)}>
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

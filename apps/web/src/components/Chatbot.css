@@ -1261,3 +1261,26 @@ OK Integration Styles */
         height: 16px;
     }
 }
+
+
+/* Toast Notification Animation */
+@keyframes slideInUp {
+  from {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.toast-notification {
+  font-size: 14px;
+  font-weight: 500;
+  transition: opacity 0.3s ease-out;
+}
+
+.toast-notification:hover button {
+  opacity: 1 !important;
+}

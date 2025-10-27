@@ -25,7 +25,6 @@ async function callOpenRouterAPI(prompt: string, apiKey: string): Promise<string
     const model = FREE_MODELS[i];
     
     try {
-      console.log(`[${i + 1}/${FREE_MODELS.length}] Trying model: ${model}`);
       
       const response = await axios.post(
         OPENROUTER_URL,
@@ -50,12 +49,10 @@ async function callOpenRouterAPI(prompt: string, apiKey: string): Promise<string
         throw new Error('No response from AI');
       }
       
-      console.log(`✅ SUCCESS with model: ${model}`);
       return aiResponse;
       
     } catch (error: any) {
       const errorMsg = error.response?.data?.error?.message || error.message;
-      console.log(`❌ Model ${model} failed: ${errorMsg}`);
       
       if (i === FREE_MODELS.length - 1) {
         throw new Error(`All models failed. Last error: ${errorMsg}`);
@@ -76,7 +73,6 @@ router.post('/', trackUsage, async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    console.log('Processing consultation notes for patient:', patientId);
 
     // Fetch previous notes to provide context
     const previousNotes = await PatientHistory.find({ patientId })
@@ -140,7 +136,6 @@ CRITICAL RULES:
     try {
       const apiKey = getApiKey(req);
       const aiResponse = await callOpenRouterAPI(prompt, apiKey);
-      console.log('AI response:', aiResponse);
       
       // Extract JSON from response
       const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
@@ -200,7 +195,6 @@ CRITICAL RULES:
           allergies: parsed.allergies || [],
           summary: parsed.summary || notes.substring(0, 200)
         };
-        console.log('Extracted structured data:', structured);
       }
     } catch (error: any) {
       console.error('AI processing failed:', error.message);
@@ -256,7 +250,6 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    console.log('Fetching consultation notes for patient:', patientId);
 
     const notes = await PatientHistory.find({ patientId })
       .sort({ createdAt: -1 })
@@ -298,7 +291,6 @@ router.put('/:noteId', trackUsage, async (req: Request, res: Response): Promise<
       return;
     }
 
-    console.log('Updating consultation note:', noteId);
 
     // Get the note being edited to find patientId
     const existingNote = await PatientHistory.findById(noteId);
@@ -472,7 +464,6 @@ router.delete('/:noteId', async (req: Request, res: Response): Promise<void> => 
   try {
     const { noteId } = req.params;
 
-    console.log('Deleting consultation note:', noteId);
 
     const deletedNote = await PatientHistory.findByIdAndDelete(noteId);
 

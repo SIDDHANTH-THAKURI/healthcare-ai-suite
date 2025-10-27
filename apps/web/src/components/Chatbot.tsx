@@ -93,7 +93,46 @@ export default function Chatbot() {
     fetchApiUsageStatus();
     loadChatSessions();
     startNewChat();
+    fetchUploadedDocuments();
   }, []);
+
+  const fetchUploadedDocuments = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${BASE_URL_1}/api/documents/${userId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const docs = await response.json();
+        setUploadedDocuments(docs);
+      }
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+    }
+  };
+
+  const [documentToDelete, setDocumentToDelete] = useState<string | null>(null);
+
+  const deleteDocument = async (documentId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${BASE_URL_1}/api/documents/${documentId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        setUploadedDocuments(prev => prev.filter(doc => doc._id !== documentId));
+        showToast('Document deleted successfully', 'success');
+      } else {
+        showToast('Failed to delete document', 'error');
+      }
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      showToast('Error deleting document', 'error');
+    }
+  };
 
   const loadChatSessions = () => {
     const saved = localStorage.getItem(`chat_sessions_${userId}`);
@@ -160,16 +199,29 @@ export default function Chatbot() {
   };
 
   const clearAllChats = () => {
-    if (window.confirm('Are you sure you want to delete all chat history? This cannot be undone.')) {
-      chatSessions.forEach(s => localStorage.removeItem(`chat_${s.id}`));
-      setChatSessions([]);
-      localStorage.removeItem(`chat_sessions_${userId}`);
-      startNewChat();
-    }
+    setShowClearConfirm(true);
+  };
+
+  const confirmClearAllChats = () => {
+    chatSessions.forEach(s => localStorage.removeItem(`chat_${s.id}`));
+    setChatSessions([]);
+    localStorage.removeItem(`chat_sessions_${userId}`);
+    startNewChat();
+    setShowClearConfirm(false);
+    showToast('All chat history cleared', 'success');
   };
 
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [filesToUpload, setFilesToUpload] = useState<File[]>([]);
+  const [uploadedDocuments, setUploadedDocuments] = useState<any[]>([]);
+  const [showDocumentsModal, setShowDocumentsModal] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
 
   const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) setFilesToUpload(Array.from(e.target.files));
@@ -206,10 +258,11 @@ export default function Chatbot() {
 
       setFilesToUpload([]);
       setShowUploadModal(false);
-      alert(`Successfully uploaded ${filesToUpload.length} document(s). The AI has processed your medical history and will use it in our conversations.`);
+      await fetchUploadedDocuments(); // Refresh the documents list
+      showToast(`Successfully uploaded ${filesToUpload.length} document(s)! AI has processed your medical history.`, 'success');
     } catch (err: any) {
       console.error('Upload failed', err);
-      alert(`Upload failed: ${err.message || 'Please try again.'}`);
+      showToast(`Upload failed: ${err.message || 'Please try again.'}`, 'error');
     } finally {
       setIsUploading(false);
     }
@@ -443,6 +496,27 @@ export default function Chatbot() {
                 <p className="chat-status">Online</p> {/* Or dynamically set status */}
               </div>
             </div>
+            <button
+              className="view-documents-btn"
+              onClick={() => setShowDocumentsModal(true)}
+              title="View uploaded medical history"
+              style={{
+                padding: '8px 16px',
+                background: '#10b981',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}
+            >
+              <i className="fas fa-file-medical"></i>
+              Documents ({uploadedDocuments.length})
+            </button>
           </header>
 
           <div className="messages-display-area" ref={messagesContainerRef}>
@@ -554,6 +628,139 @@ export default function Chatbot() {
         </div>
       )}
 
+      {/* Clear All Chats Confirmation Modal */}
+      {showClearConfirm && (
+        <div className="modal-overlay" onClick={() => setShowClearConfirm(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '450px' }}>
+            <h3 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <i className="fas fa-exclamation-triangle" style={{ color: '#f59e0b' }}></i>
+              Clear All Chat History?
+            </h3>
+            <p style={{ marginBottom: '24px', color: '#666', lineHeight: '1.6' }}>
+              Are you sure you want to delete all chat history? This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowClearConfirm(false)}
+                style={{
+                  padding: '10px 20px',
+                  background: '#e5e7eb',
+                  color: '#374151',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '500'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmClearAllChats}
+                style={{
+                  padding: '10px 20px',
+                  background: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '500'
+                }}
+              >
+                Delete All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Document Confirmation Modal */}
+      {documentToDelete && (
+        <div className="modal-overlay" onClick={() => setDocumentToDelete(null)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '450px' }}>
+            <h3 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <i className="fas fa-exclamation-triangle" style={{ color: '#f59e0b' }}></i>
+              Delete Document?
+            </h3>
+            <p style={{ marginBottom: '24px', color: '#666', lineHeight: '1.6' }}>
+              The AI will no longer reference this document in conversations. This action cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setDocumentToDelete(null)}
+                style={{
+                  padding: '10px 20px',
+                  background: '#e5e7eb',
+                  color: '#374151',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '500'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  deleteDocument(documentToDelete);
+                  setDocumentToDelete(null);
+                }}
+                style={{
+                  padding: '10px 20px',
+                  background: '#ef4444',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: '500'
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Notification */}
+      {toast && (
+        <div 
+          className="toast-notification"
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px',
+            background: toast.type === 'success' ? '#10b981' : toast.type === 'error' ? '#ef4444' : '#3b82f6',
+            color: 'white',
+            padding: '16px 24px',
+            borderRadius: '12px',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+            zIndex: 10000,
+            maxWidth: '400px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            animation: 'slideInUp 0.3s ease-out'
+          }}
+        >
+          <i className={`fas fa-${toast.type === 'success' ? 'check-circle' : toast.type === 'error' ? 'exclamation-circle' : 'info-circle'}`} style={{ fontSize: '20px' }}></i>
+          <span style={{ flex: 1 }}>{toast.message}</span>
+          <button 
+            onClick={() => setToast(null)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'white',
+              cursor: 'pointer',
+              fontSize: '20px',
+              padding: '0',
+              opacity: 0.8
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       {/* Usage Indicator */}
       <DoctorUsageIndicator
         hasOwnKey={apiUsage.hasOwnKey}
@@ -562,6 +769,123 @@ export default function Chatbot() {
         usage={apiUsage.usage}
         onSettingsClick={() => setShowSettings(true)}
       />
+
+      {/* Documents Modal */}
+      {showDocumentsModal && (
+        <div className="modal-overlay" onClick={() => setShowDocumentsModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '700px', maxHeight: '80vh', overflow: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <i className="fas fa-file-medical"></i>
+                Uploaded Medical History
+              </h3>
+              <button 
+                onClick={() => setShowDocumentsModal(false)}
+                style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#666' }}
+              >
+                ×
+              </button>
+            </div>
+
+            {uploadedDocuments.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px 20px', color: '#666' }}>
+                <i className="fas fa-folder-open" style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}></i>
+                <p>No documents uploaded yet</p>
+                <p style={{ fontSize: '14px', marginTop: '8px' }}>
+                  Upload medical history documents to help the AI provide personalized responses
+                </p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {uploadedDocuments.map((doc) => (
+                  <div 
+                    key={doc._id} 
+                    style={{
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      padding: '16px',
+                      background: '#f9fafb'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          <i className="fas fa-file-alt" style={{ color: '#10b981' }}></i>
+                          <strong>{doc.fileName}</strong>
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
+                          Uploaded: {new Date(doc.uploadDate).toLocaleDateString()} at {new Date(doc.uploadDate).toLocaleTimeString()}
+                        </div>
+                        {doc.aiSummary && (
+                          <div style={{ 
+                            background: 'white', 
+                            padding: '12px', 
+                            borderRadius: '6px', 
+                            fontSize: '14px',
+                            border: '1px solid #e5e7eb',
+                            marginTop: '8px'
+                          }}>
+                            <div style={{ fontWeight: '500', marginBottom: '4px', color: '#10b981' }}>
+                              <i className="fas fa-robot"></i> AI Summary:
+                            </div>
+                            {doc.aiSummary}
+                          </div>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => setDocumentToDelete(doc._id)}
+                        style={{
+                          background: '#ef4444',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          padding: '8px 12px',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}
+                        title="Delete document"
+                      >
+                        <i className="fas fa-trash"></i>
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
+              <button
+                onClick={() => {
+                  setShowDocumentsModal(false);
+                  setShowUploadModal(true);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  background: '#10b981',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+              >
+                <i className="fas fa-plus"></i>
+                Upload New Document
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Settings Modal */}
       {showSettings && (

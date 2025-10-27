@@ -25,7 +25,6 @@ export const useMobileRedirect = () => {
     const isMobile = width < 1024 || mobileKeywords.test(userAgent);
 
     if (isMobile) {
-      console.log('Mobile detected, redirecting to mobile-not-supported page');
       // Redirect to mobile not supported page
       navigate('/mobile-not-supported', { 
         state: { from: location.pathname },

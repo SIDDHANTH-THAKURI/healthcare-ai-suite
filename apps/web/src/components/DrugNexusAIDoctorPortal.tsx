@@ -340,7 +340,6 @@ const DrugNexusAIDoctorPortal: React.FC = () => {
 
       if (res.ok) {
         const data = await res.json();
-        console.log('Patient updated successfully on server:', data);
 
         // Update local state with server response
         setPatients(prev => prev.map(p => p.id === editingPatient.id ? updatedPatient : p));
