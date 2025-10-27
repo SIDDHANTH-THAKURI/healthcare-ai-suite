@@ -53,19 +53,13 @@ export default function Chatbot() {
     usage: 0
   });
   const endRef = useRef<HTMLDivElement | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
 
+  // Auto-scroll to bottom of messages container whenever messages change
   useEffect(() => {
-    const container = document.querySelector('.messages-display-area');
-    if (!container) return;
-
-    if (container.scrollHeight <= container.clientHeight) {
-      return;
-    }
-    const threshold = 10;
-    const isUserNearBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + threshold;
-
-    if (isUserNearBottom) {
-      endRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
   }, [messages]);
 
@@ -187,6 +181,8 @@ export default function Chatbot() {
     if (!filesToUpload.length) return;
     setIsUploading(true);
     try {
+      const token = localStorage.getItem('token');
+      
       for (const f of filesToUpload) {
         const fd = new FormData();
         fd.append('document', f);
@@ -195,6 +191,9 @@ export default function Chatbot() {
 
         const response = await fetch(`${BASE_URL_1}/api/documents/upload`, {
           method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
           body: fd
         });
 
@@ -218,9 +217,13 @@ export default function Chatbot() {
 
   async function sendToBackend(question: string): Promise<string> {
     try {
+      const token = localStorage.getItem('token');
       const res = await fetch(`${BASE_URL_1}/api/chat/message`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           patientId: userId,
           content: question,
@@ -442,7 +445,7 @@ export default function Chatbot() {
             </div>
           </header>
 
-          <div className="messages-display-area">
+          <div className="messages-display-area" ref={messagesContainerRef}>
             {messages.map((msg, idx) => (
               <div key={idx} className={`message ${msg.sender === 'user' ? 'user-msg' : 'bot-msg'}`}>
                 {msg.sender === 'bot' && <img src={botAvatarUrl} alt="Bot Avatar" className="avatar" />}
@@ -459,7 +462,7 @@ export default function Chatbot() {
                 {msg.sender === 'user' && <img src={userAvatarUrl} alt="User Avatar" className="avatar" />}
               </div>
             ))}
-            <div ref={endRef} />
+            <div ref={messagesEndRef} />
           </div>
 
           <footer className="chat-input-area">

@@ -17,6 +17,8 @@ import documentRouter from './routes/documentRouter';
 import appointmentRouter from './routes/appointmentRouter';
 import adherenceRouter from './routes/adherenceRouter';
 import apiKeyRouter from './routes/apiKeyRouter';
+import patientHistoryRouter from './routes/patientHistoryRouter';
+import contraindicationRouter from './routes/contraindicationRouter';
 import { MONGO_URI, COLLECTION_NAME, LLM_MODEL, OPENROUTER_API_KEY, OPENROUTER_URL } from './config';
 
 const app = express();
@@ -46,6 +48,8 @@ app.use('/api/documents', documentRouter);
 app.use('/api/appointments', appointmentRouter);
 app.use('/api/adherence', adherenceRouter);
 app.use('/api/api-key', apiKeyRouter);
+app.use('/api/patient-history', patientHistoryRouter);
+app.use('/api/check-contraindications', contraindicationRouter);
 
 
 // Start server first, then connect to MongoDB

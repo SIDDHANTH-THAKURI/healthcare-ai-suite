@@ -4,9 +4,10 @@ import { BASE_URL_1 } from '../base';
 
 interface APIKeySettingsProps {
   userId: string;
+  onStatusChange?: () => void;
 }
 
-const APIKeySettings: React.FC<APIKeySettingsProps> = ({ userId }) => {
+const APIKeySettings: React.FC<APIKeySettingsProps> = ({ userId, onStatusChange }) => {
   const [apiKey, setApiKey] = useState('');
   const [hasKey, setHasKey] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -54,7 +55,8 @@ const APIKeySettings: React.FC<APIKeySettingsProps> = ({ userId }) => {
         setHasKey(true);
         setApiKey('');
         setMessage({ type: 'success', text: '✅ API key saved! You now have unlimited messages.' });
-        fetchStatus();
+        await fetchStatus();
+        onStatusChange?.(); // Notify parent to refresh
       } else {
         const error = await response.json();
         setMessage({ type: 'error', text: error.message || 'Failed to save API key' });
@@ -67,7 +69,7 @@ const APIKeySettings: React.FC<APIKeySettingsProps> = ({ userId }) => {
   };
 
   const removeApiKey = async () => {
-    if (!confirm('Are you sure you want to remove your API key? You will be limited to 20 messages per day.')) {
+    if (!confirm('Remove your API key and switch back to free tier?\n\nYou will:\n• Use the default system API key\n• Be limited to 25 messages per day\n• Keep all your data and chat history')) {
       return;
     }
 
@@ -82,8 +84,9 @@ const APIKeySettings: React.FC<APIKeySettingsProps> = ({ userId }) => {
       if (response.ok) {
         setHasKey(false);
         setApiKey('');
-        setMessage({ type: 'success', text: 'API key removed. You are now on the free tier (20 messages/day).' });
-        fetchStatus();
+        setMessage({ type: 'success', text: '✅ Switched back to free tier! You now have 25 messages/day using our default API key.' });
+        await fetchStatus();
+        onStatusChange?.(); // Notify parent to refresh
       }
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to remove API key' });
@@ -236,18 +239,38 @@ const APIKeySettings: React.FC<APIKeySettingsProps> = ({ userId }) => {
             </div>
           </div>
 
+          <div className="info-box" style={{ 
+            background: '#f0f9ff', 
+            border: '1px solid #bae6fd', 
+            borderRadius: '8px', 
+            padding: '12px 16px', 
+            marginTop: '16px',
+            display: 'flex',
+            gap: '12px',
+            alignItems: 'start'
+          }}>
+            <i className="fas fa-info-circle" style={{ color: '#0284c7', marginTop: '2px' }}></i>
+            <div style={{ fontSize: '14px', color: '#0c4a6e' }}>
+              <strong>Want to switch back?</strong>
+              <p style={{ margin: '4px 0 0 0', opacity: 0.9 }}>
+                You can remove your API key anytime to return to the free tier (25 messages/day using our default key).
+              </p>
+            </div>
+          </div>
+
           <button
             className="remove-button"
             onClick={removeApiKey}
             disabled={isLoading}
+            title="Switch back to free tier (25 messages/day)"
           >
             {isLoading ? (
               <>
-                <i className="fas fa-spinner fa-spin"></i> Removing...
+                <i className="fas fa-spinner fa-spin"></i> Switching...
               </>
             ) : (
               <>
-                <i className="fas fa-trash"></i> Remove API Key
+                <i className="fas fa-undo"></i> Switch to Free Tier
               </>
             )}
           </button>

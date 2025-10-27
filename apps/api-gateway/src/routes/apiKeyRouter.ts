@@ -19,9 +19,9 @@ router.get('/status/:userId', async (req: Request, res: Response): Promise<void>
 
     res.json({
       hasApiKey: !!user.openrouterApiKey,
-      dailyMessageCount: dailyCount,
-      dailyLimit: 20,
-      remaining: Math.max(0, 20 - dailyCount),
+      usage: dailyCount,
+      dailyLimit: 25,
+      remaining: Math.max(0, 25 - dailyCount),
       isUnlimited: !!user.openrouterApiKey
     });
   } catch (error) {

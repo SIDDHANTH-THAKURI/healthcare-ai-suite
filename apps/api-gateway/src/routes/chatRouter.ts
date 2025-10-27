@@ -5,7 +5,8 @@ import Appointment from '../models/appointment';
 import MedicalDocument from '../models/medicalDocument';
 import Account from '../models/Account';
 import axios from 'axios';
-import { OPENROUTER_API_KEY, OPENROUTER_URL } from '../config';
+import { OPENROUTER_URL } from '../config';
+import { trackUsage, getApiKey } from '../middleware/usageTracking';
 
 // OpenRouter API response interface
 interface OpenRouterResponse {
@@ -155,7 +156,7 @@ router.get('/:patientId', async (req: Request, res: Response): Promise<void> => 
 });
 
 // Send message and get AI response
-router.post('/message', async (req: Request, res: Response): Promise<void> => {
+router.post('/message', trackUsage, async (req: Request, res: Response): Promise<void> => {
   try {
     const { patientId, content, userId } = req.body;
 
@@ -169,27 +170,11 @@ router.post('/message', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Check message limit and get API key
-    const limitCheck = await checkMessageLimit(userId);
-    
-    if (!limitCheck.allowed) {
-      console.log('❌ User exceeded free daily limit');
-      res.status(429).json({
-        message: 'Daily message limit reached',
-        error: 'FREE_LIMIT_EXCEEDED',
-        remaining: 0,
-        limit: FREE_DAILY_LIMIT,
-        needsApiKey: true,
-        upgradeMessage: 'You have used all 20 free messages today. Add your own OpenRouter API key in Settings for unlimited messages!'
-      });
-      return;
-    }
-
-    // Get user's API key or use default
+    // Get API key from middleware (already checked usage limit)
+    const apiKey = getApiKey(req);
     const user = await Account.findById(userId);
-    const apiKey = user?.openrouterApiKey || OPENROUTER_API_KEY;
     
-    console.log(`Using ${user?.openrouterApiKey ? 'user' : 'default'} API key. Remaining free messages: ${limitCheck.remaining}`);
+    console.log(`Using ${user?.openrouterApiKey ? 'user' : 'default'} API key`);
     
 
     // Save user message
@@ -318,9 +303,6 @@ Rules:
     
     console.log('AI response generated:', aiContent);
 
-    // Increment message count (only if using free tier)
-    await incrementMessageCount(userId);
-
     // Save AI response
     const assistantMessage = new ChatMessage({
       patientId,
@@ -333,16 +315,13 @@ Rules:
     });
     await assistantMessage.save();
 
-    // Get updated remaining count
-    const updatedLimit = await checkMessageLimit(userId);
-
     res.json({
       userMessage,
       assistantMessage,
       intent,
       extractedData,
-      remaining: updatedLimit.remaining,
-      limit: FREE_DAILY_LIMIT,
+      remaining: (req as any).remaining || 0,
+      limit: 25,
       hasOwnKey: !!user?.openrouterApiKey
     });
   } catch (error: any) {

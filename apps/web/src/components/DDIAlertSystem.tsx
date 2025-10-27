@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './DDIAlertSystem.css';
-import { BASE_URL_1, BASE_URL_2 } from '../base';
+import { BASE_URL_1 } from '../base';
 
 interface DDIAlert {
   id: string;
@@ -20,6 +20,7 @@ interface DDIAlertSystemProps {
   patientAge?: number;
   patientGender?: string;
   onAlertsUpdate?: (alerts: DDIAlert[]) => void;
+  onExhausted?: () => void;
 }
 
 const DDIAlertSystem: React.FC<DDIAlertSystemProps> = ({
@@ -29,7 +30,8 @@ const DDIAlertSystem: React.FC<DDIAlertSystemProps> = ({
   allergies,
   patientAge,
   patientGender,
-  onAlertsUpdate
+  onAlertsUpdate,
+  onExhausted
 }) => {
   const [activeAlerts, setActiveAlerts] = useState<DDIAlert[]>([]);
   const [oldAlerts, setOldAlerts] = useState<DDIAlert[]>([]);
@@ -131,31 +133,122 @@ const DDIAlertSystem: React.FC<DDIAlertSystemProps> = ({
     const token = localStorage.getItem('token');
 
     try {
-      const response = await fetch(`${BASE_URL_2}/api/check-ddi`, {
+      // Extract just the medication names for the DDI check
+      const medicineNames = currentMedications.map(med => med.name);
+      console.log('Checking DDI for medications:', medicineNames);
+      
+      // First, check drug-drug interactions
+      const response = await fetch(`${BASE_URL_1}/api/interactions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
-          patientId,
-          medications: currentMedications,
-          conditions,
-          allergies,
-          age: patientAge,
-          gender: patientGender
+          medicines: medicineNames
         })
       });
 
       if (!response.ok) {
+        console.error('DDI check failed with status:', response.status);
         throw new Error('DDI check failed');
       }
 
-      const data = await response.json();
+      const interactions = await response.json();
+      console.log('DDI interactions response:', interactions);
+      
+      // Check if we need to simplify the interactions
+      let data: any = { interactions: [], safe: true };
+      
+      if (Array.isArray(interactions) && interactions.length > 0) {
+        console.log('Found', interactions.length, 'interactions, simplifying...');
+        
+        // Simplify the interactions
+        const simplifyResponse = await fetch(`${BASE_URL_1}/api/simplify_interactions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ interactions })
+        });
+        
+        if (simplifyResponse.ok) {
+          const simplified = await simplifyResponse.json();
+          console.log('Simplified interactions:', simplified);
+          
+          data = {
+            safe: false,
+            interactions: simplified.map((item: any) => ({
+              severity: 'major', // Default severity, could be enhanced
+              drugs: item.pair.split(' and '),
+              message: item.shortDescription,
+              recommendation: 'Consult with healthcare provider before combining these medications.'
+            }))
+          };
+        } else {
+          console.error('Simplify failed with status:', simplifyResponse.status);
+        }
+      } else {
+        console.log('No drug-drug interactions found');
+      }
+
+      // Second, check drug-condition contraindications
+      let conditionAlerts: any[] = [];
+      if (conditions.length > 0 || allergies.length > 0) {
+        try {
+          console.log('Checking contraindications for:', { medications: currentMedications.length, conditions: conditions.length, allergies: allergies.length });
+          
+          const contraindicationResponse = await fetch(`${BASE_URL_1}/api/check-contraindications`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              medications: currentMedications,
+              conditions,
+              allergies,
+              patientAge,
+              patientGender
+            })
+          });
+
+          if (contraindicationResponse.ok) {
+            const contraindicationData = await contraindicationResponse.json();
+            console.log('Contraindication response:', contraindicationData);
+            
+            if (contraindicationData.contraindications && contraindicationData.contraindications.length > 0) {
+              conditionAlerts = contraindicationData.contraindications.map((item: any) => ({
+                severity: item.severity || 'major',
+                drugs: [item.medication],
+                message: item.message,
+                recommendation: item.recommendation
+              }));
+              console.log('Found contraindications:', conditionAlerts.length);
+            }
+          } else {
+            console.error('Contraindication check failed with status:', contraindicationResponse.status);
+          }
+        } catch (error: any) {
+          console.error('Contraindication check error:', error);
+          // Check if it's a usage limit error
+          if (error.response?.status === 429 || error.response?.data?.exhausted) {
+            throw error; // Re-throw to be caught by outer catch
+          }
+          // Continue without contraindication data for other errors
+        }
+      }
+
       const timestamp = new Date().toISOString();
 
-      // If safe (no interactions), move all active alerts to old
-      if (data.safe) {
+      // Combine drug-drug interactions and drug-condition contraindications
+      const allInteractions = [...(data.interactions || []), ...conditionAlerts];
+      console.log('Total alerts found:', allInteractions.length, '(DDI:', data.interactions?.length || 0, ', Contraindications:', conditionAlerts.length, ')');
+
+      // If safe (no interactions or contraindications), move all active alerts to old
+      if (allInteractions.length === 0) {
+        console.log('No alerts - marking all as resolved');
         const resolvedAlerts = activeAlerts.map(a => ({
           ...a,
           status: 'resolved' as const,
@@ -168,7 +261,7 @@ const DDIAlertSystem: React.FC<DDIAlertSystemProps> = ({
       }
 
       // Process new alerts
-      const newAlerts: DDIAlert[] = (data.interactions || []).map((interaction: any) => ({
+      const newAlerts: DDIAlert[] = allInteractions.map((interaction: any) => ({
         id: `${Date.now()}-${Math.random()}`,
         severity: interaction.severity,
         drugs: interaction.drugs,
@@ -194,8 +287,13 @@ const DDIAlertSystem: React.FC<DDIAlertSystemProps> = ({
       setActiveAlerts(newAlerts);
       setOldAlerts(prev => [...resolvedAlerts, ...prev].slice(0, 20));
       setLastCheckTime(timestamp);
-    } catch (error) {
+    } catch (error: any) {
       console.error('DDI check error:', error);
+      
+      // Check if it's a usage limit error
+      if (error.response?.status === 429 || error.response?.data?.exhausted) {
+        onExhausted?.();
+      }
     } finally {
       setIsChecking(false);
     }
@@ -251,7 +349,7 @@ const DDIAlertSystem: React.FC<DDIAlertSystemProps> = ({
       <div className="ddi-header">
         <div className="ddi-title">
           <i className="fas fa-shield-alt"></i>
-          <h3>Drug Interaction Alerts</h3>
+          <h3>Safety Alerts</h3>
           {activeAlerts.length > 0 && (
             <span className="alert-badge">{activeAlerts.length}</span>
           )}
@@ -291,7 +389,12 @@ const DDIAlertSystem: React.FC<DDIAlertSystemProps> = ({
       {!isLoadingAlerts && currentMedications.length === 0 && (
         <div className="ddi-info-message">
           <i className="fas fa-info-circle"></i>
-          Add medications to check for drug interactions and contraindications
+          Add medications to check for:
+          <ul style={{ marginTop: '8px', paddingLeft: '20px', textAlign: 'left' }}>
+            <li>Drug-drug interactions</li>
+            <li>Drug-condition contraindications</li>
+            <li>Allergy conflicts</li>
+          </ul>
         </div>
       )}
 
@@ -343,8 +446,8 @@ const DDIAlertSystem: React.FC<DDIAlertSystemProps> = ({
       {activeAlerts.length === 0 && currentMedications.length >= 1 && lastCheckTime && (
         <div className="no-alerts-message">
           <i className="fas fa-check-circle"></i>
-          <p>No drug interactions detected</p>
-          <span>All current medications, conditions, and allergies appear safe together</span>
+          <p>No interactions or contraindications detected</p>
+          <span>All medications appear safe with current conditions, allergies, and other medications</span>
         </div>
       )}
 

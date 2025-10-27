@@ -122,8 +122,8 @@ const PatientDetails: React.FC = () => {
   const [isFreeTierExhausted, setIsFreeTierExhausted] = useState(false);
   const [apiUsage, setApiUsage] = useState({
     hasOwnKey: false,
-    remaining: 50,
-    limit: 50,
+    remaining: 25,
+    limit: 25,
     usage: 0
   });
 
@@ -413,7 +413,7 @@ const PatientDetails: React.FC = () => {
       });
 
     // Fetch history notes
-    fetch(`${BASE_URL_2}/api/patient-history?patientId=${patientId}`, { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${BASE_URL_1}/api/patient-history?patientId=${patientId}`, { headers: { Authorization: `Bearer ${token}` } })
       .then(res => res.json())
       .then(data => {
         if (data.notes) {
@@ -459,10 +459,10 @@ const PatientDetails: React.FC = () => {
     
     try {
       console.log('Saving consultation note for patient:', patientId);
-      console.log('API endpoint:', `${BASE_URL_2}/api/patient-history`);
+      console.log('API endpoint:', `${BASE_URL_1}/api/patient-history`);
       console.log('Request payload:', { patientId, notes: noteInput.substring(0, 50) + '...' });
       
-      const res = await fetch(`${BASE_URL_2}/api/patient-history`, {
+      const res = await fetch(`${BASE_URL_1}/api/patient-history`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ patientId, notes: noteInput }),
@@ -484,13 +484,17 @@ const PatientDetails: React.FC = () => {
         // Update notes
         setHistoryNotes(prev => [result.note, ...prev]);
 
-        // Update structured data
+        // Update structured data (but DON'T overwrite medications from prescriptions)
         const s = result.note.structured;
         if (s) {
-          setCurrentMedications(s.medications || []);
+          // Only update conditions and allergies from consultation notes
+          // Medications should come from prescriptions, not consultation notes
           setCurrentConditions(s.conditions?.current || []);
           setPastConditions(s.conditions?.past || []);
           setAllergies(s.allergies || []);
+          
+          // Don't touch currentMedications - they come from prescriptions
+          console.log('Updated conditions and allergies from consultation note');
         }
 
         // Cleanup
@@ -510,8 +514,12 @@ const PatientDetails: React.FC = () => {
         stack: err.stack
       });
       
-      // Use setSaveError instead of setError to avoid triggering error page
-      if (err.name === 'AbortError') {
+      // Check if it's a usage limit error
+      if (err.response?.status === 429 || err.response?.data?.exhausted) {
+        setShowExhaustedModal(true);
+        setIsFreeTierExhausted(true);
+        setSaveError(null); // Don't show error message, modal will handle it
+      } else if (err.name === 'AbortError') {
         setSaveError('Request timed out after 60 seconds. The ML service may be slow or unresponsive.');
       } else if (err.message === 'Failed to fetch') {
         setSaveError(`Cannot connect to ML service at ${BASE_URL_2}. Please ensure the ML service is running on port 8000.`);
@@ -544,7 +552,7 @@ const PatientDetails: React.FC = () => {
     if (!window.confirm('Are you sure you want to delete this note?')) return;
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`${BASE_URL_2}/api/patient-history/${selectedNote.id}`, {
+      const res = await fetch(`${BASE_URL_1}/api/patient-history/${selectedNote.id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -579,7 +587,7 @@ const PatientDetails: React.FC = () => {
     setSaveError(null);
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`${BASE_URL_2}/api/patient-history/${selectedNote.id}`, {
+      const res = await fetch(`${BASE_URL_1}/api/patient-history/${selectedNote.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ rawText: editText })
@@ -893,7 +901,7 @@ const PatientDetails: React.FC = () => {
                           <span className="timeline-date">{new Date(note.createdAt).toLocaleDateString()}</span>
                           <span className="timeline-time">{new Date(note.createdAt).toLocaleTimeString()}</span>
                         </div>
-                        <div className="timeline-text">{note.summary.length > 150 ? note.summary.slice(0, 150) + '...' : note.summary}</div>
+                        <div className="timeline-text">{note.summary && note.summary.length > 150 ? note.summary.slice(0, 150) + '...' : (note.summary || note.rawText?.slice(0, 150) + '...' || 'No summary available')}</div>
                       </div>
                     </div>
                   ))
@@ -1259,11 +1267,14 @@ const PatientDetails: React.FC = () => {
             <button className="modal-close-btn" onClick={() => setShowSettings(false)}>
               <i className="fas fa-times"></i>
             </button>
-            <APIKeySettings userId={(() => {
-              const user = localStorage.getItem('user');
-              const userData = user ? JSON.parse(user) : null;
-              return userData?._id || userData?.id || '';
-            })()} />
+            <APIKeySettings 
+              userId={(() => {
+                const user = localStorage.getItem('user');
+                const userData = user ? JSON.parse(user) : null;
+                return userData?._id || userData?.id || '';
+              })()} 
+              onStatusChange={fetchApiUsageStatus}
+            />
           </div>
         </div>
       )}
