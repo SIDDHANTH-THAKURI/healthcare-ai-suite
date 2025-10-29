@@ -1,7 +1,8 @@
 import express, { Request, Response } from 'express';
-import { OPENROUTER_URL } from '../config';
+import { OPENROUTER_URL, FRONTEND_URL } from '../config';
 import axios from 'axios';
 import { trackUsage, getApiKey } from '../middleware/usageTracking';
+
 
 const router = express.Router();
 
@@ -22,9 +23,9 @@ const FREE_MODELS = [
 async function callOpenRouterAPI(prompt: string, apiKey: string): Promise<string> {
   for (let i = 0; i < FREE_MODELS.length; i++) {
     const model = FREE_MODELS[i];
-    
+
     try {
-      
+
       const response = await axios.post(
         OPENROUTER_URL,
         {
@@ -35,7 +36,7 @@ async function callOpenRouterAPI(prompt: string, apiKey: string): Promise<string
           headers: {
             'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
-            'HTTP-Referer': 'http://localhost:5173',
+            'HTTP-Referer': FRONTEND_URL,
             'X-Title': 'DrugNexusAI Contraindication Check'
           },
           timeout: 30000
@@ -43,22 +44,22 @@ async function callOpenRouterAPI(prompt: string, apiKey: string): Promise<string
       );
 
       const aiResponse = (response.data as any).choices?.[0]?.message?.content?.trim();
-      
+
       if (!aiResponse) {
         throw new Error('No response from AI');
       }
-      
+
       return aiResponse;
-      
+
     } catch (error: any) {
       const errorMsg = error.response?.data?.error?.message || error.message;
-      
+
       if (i === FREE_MODELS.length - 1) {
         throw new Error(`All models failed. Last error: ${errorMsg}`);
       }
     }
   }
-  
+
   throw new Error('Failed to get AI response');
 }
 
@@ -88,7 +89,7 @@ router.post('/', trackUsage, async (req: Request, res: Response): Promise<void> 
       patientContext.push(`Gender: ${patientGender}`);
     }
 
-    const medicationList = medications.map((m: any) => 
+    const medicationList = medications.map((m: any) =>
       `${m.name} (${m.dosage}${m.frequency ? ', ' + m.frequency : ''})`
     ).join('\n');
 
@@ -134,7 +135,7 @@ RULES:
     try {
       const apiKey = getApiKey(req);
       const aiResponse = await callOpenRouterAPI(prompt, apiKey);
-      
+
       // Extract JSON from response
       const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
       if (jsonMatch) {

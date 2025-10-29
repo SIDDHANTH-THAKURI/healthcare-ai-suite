@@ -17,6 +17,8 @@ export const MEDS_DB = process.env.MEDS_DB as string;
 export const USER_DB = process.env.USER_DB as string;
 export const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY as string;
 export const OPENROUTER_URL = process.env.OPENROUTER_URL as string;
+export const ML_SERVICE_URL = process.env.ML_SERVICE_URL || process.env.VITE_API_URL_FASTAPI1 || 'http://localhost:8000';
+export const FRONTEND_URL = process.env.FRONTEND_URL || process.env.VITE_FRONTEND_URL || 'http://localhost:5173';
 
 // 🔒 Validate critical environment variables (only log if missing)
 const requiredEnvVars = [

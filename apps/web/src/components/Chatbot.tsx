@@ -46,6 +46,7 @@ export default function Chatbot() {
   const [showSettings, setShowSettings] = useState(false);
   const [showExhaustedModal, setShowExhaustedModal] = useState(false);
   const [isFreeTierExhausted, setIsFreeTierExhausted] = useState(false);
+  const [showDisclaimer, setShowDisclaimer] = useState(true);
   const [apiUsage, setApiUsage] = useState({
     hasOwnKey: false,
     remaining: 50,
@@ -675,7 +676,7 @@ export default function Chatbot() {
 
       {/* Delete Document Confirmation Modal */}
       {documentToDelete && (
-        <div className="modal-overlay" onClick={() => setDocumentToDelete(null)}>
+        <div className="modal-overlay" onClick={() => setDocumentToDelete(null)} style={{ zIndex: 9999 }}>
           <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '450px' }}>
             <h3 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
               <i className="fas fa-exclamation-triangle" style={{ color: '#f59e0b' }}></i>
@@ -717,6 +718,74 @@ export default function Chatbot() {
                 Delete
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Disclaimer Modal */}
+      {showDisclaimer && (
+        <div className="modal-overlay" style={{ zIndex: 10000 }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '550px', borderTop: '4px solid #f59e0b' }}>
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <div style={{ 
+                width: '60px', 
+                height: '60px', 
+                margin: '0 auto 16px', 
+                background: '#fef3c7',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <i className="fas fa-exclamation-triangle" style={{ fontSize: '28px', color: '#f59e0b' }}></i>
+              </div>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '22px', color: '#1f2937' }}>Important Medical Disclaimer</h3>
+            </div>
+            
+            <div style={{ 
+              background: '#fffbeb', 
+              border: '1px solid #fde68a', 
+              borderRadius: '8px', 
+              padding: '16px', 
+              marginBottom: '20px',
+              fontSize: '14px',
+              lineHeight: '1.7',
+              color: '#78350f'
+            }}>
+              <p style={{ margin: '0 0 12px 0' }}>
+                <strong>⚠️ This AI assistant is for informational purposes only.</strong>
+              </p>
+              <ul style={{ margin: '0', paddingLeft: '20px' }}>
+                <li>AI responses may contain errors or inaccuracies</li>
+                <li>Not a substitute for professional medical advice</li>
+                <li>Always consult your healthcare provider before making medical decisions</li>
+                <li>In case of emergency, call your local emergency services immediately</li>
+              </ul>
+            </div>
+
+            <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '20px', lineHeight: '1.6' }}>
+              By using this chatbot, you acknowledge that AI-generated responses should be verified with qualified healthcare professionals. DrugNexusAI is not liable for any decisions made based on AI recommendations.
+            </div>
+
+            <button
+              onClick={() => setShowDisclaimer(false)}
+              style={{
+                width: '100%',
+                padding: '14px',
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                fontSize: '15px',
+                fontWeight: '600',
+                transition: 'transform 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+            >
+              I Understand - Continue to Chat
+            </button>
           </div>
         </div>
       )}
@@ -772,92 +841,144 @@ export default function Chatbot() {
 
       {/* Documents Modal */}
       {showDocumentsModal && (
-        <div className="modal-overlay" onClick={() => setShowDocumentsModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '700px', maxHeight: '80vh', overflow: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <i className="fas fa-file-medical"></i>
-                Uploaded Medical History
+        <div className="modal-overlay" onClick={() => setShowDocumentsModal(false)} style={{ zIndex: 9998 }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '800px', maxHeight: '85vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', paddingBottom: '16px', borderBottom: '2px solid #e5e7eb' }}>
+              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '12px', fontSize: '20px', color: '#1f2937' }}>
+                <i className="fas fa-file-medical" style={{ color: '#10b981', fontSize: '24px' }}></i>
+                Medical History Documents
               </h3>
               <button 
                 onClick={() => setShowDocumentsModal(false)}
-                style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#666' }}
+                style={{ background: 'none', border: 'none', fontSize: '28px', cursor: 'pointer', color: '#9ca3af', transition: 'color 0.2s' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#ef4444'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#9ca3af'}
               >
                 ×
               </button>
             </div>
 
-            {uploadedDocuments.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px 20px', color: '#666' }}>
-                <i className="fas fa-folder-open" style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}></i>
-                <p>No documents uploaded yet</p>
-                <p style={{ fontSize: '14px', marginTop: '8px' }}>
-                  Upload medical history documents to help the AI provide personalized responses
-                </p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {uploadedDocuments.map((doc) => (
-                  <div 
-                    key={doc._id} 
-                    style={{
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      padding: '16px',
-                      background: '#f9fafb'
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                          <i className="fas fa-file-alt" style={{ color: '#10b981' }}></i>
-                          <strong>{doc.fileName}</strong>
-                        </div>
-                        <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
-                          Uploaded: {new Date(doc.uploadDate).toLocaleDateString()} at {new Date(doc.uploadDate).toLocaleTimeString()}
-                        </div>
-                        {doc.aiSummary && (
-                          <div style={{ 
-                            background: 'white', 
-                            padding: '12px', 
-                            borderRadius: '6px', 
-                            fontSize: '14px',
-                            border: '1px solid #e5e7eb',
-                            marginTop: '8px'
-                          }}>
-                            <div style={{ fontWeight: '500', marginBottom: '4px', color: '#10b981' }}>
-                              <i className="fas fa-robot"></i> AI Summary:
-                            </div>
-                            {doc.aiSummary}
-                          </div>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => setDocumentToDelete(doc._id)}
-                        style={{
-                          background: '#ef4444',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '6px',
-                          padding: '8px 12px',
-                          cursor: 'pointer',
-                          fontSize: '14px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '6px'
-                        }}
-                        title="Delete document"
-                      >
-                        <i className="fas fa-trash"></i>
-                        Delete
-                      </button>
-                    </div>
+            <div style={{ flex: 1, overflowY: 'auto', marginBottom: '20px' }}>
+              {uploadedDocuments.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '60px 20px', color: '#6b7280' }}>
+                  <div style={{ 
+                    width: '80px', 
+                    height: '80px', 
+                    margin: '0 auto 20px', 
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: 0.2
+                  }}>
+                    <i className="fas fa-folder-open" style={{ fontSize: '40px', color: 'white' }}></i>
                   </div>
-                ))}
-              </div>
-            )}
+                  <p style={{ fontSize: '18px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>No documents uploaded yet</p>
+                  <p style={{ fontSize: '14px', color: '#6b7280', maxWidth: '400px', margin: '0 auto' }}>
+                    Upload your medical history documents to help the AI provide personalized and accurate health recommendations
+                  </p>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gap: '16px' }}>
+                  {uploadedDocuments.map((doc) => (
+                    <div 
+                      key={doc._id} 
+                      style={{
+                        border: '2px solid #e5e7eb',
+                        borderRadius: '12px',
+                        padding: '20px',
+                        background: 'linear-gradient(to bottom, #ffffff, #f9fafb)',
+                        transition: 'all 0.2s',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = '#10b981';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.15)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = '#e5e7eb';
+                        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)';
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', gap: '16px' }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                            <div style={{ 
+                              width: '36px', 
+                              height: '36px', 
+                              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                              borderRadius: '8px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}>
+                              <i className="fas fa-file-alt" style={{ color: 'white', fontSize: '16px' }}></i>
+                            </div>
+                            <strong style={{ fontSize: '16px', color: '#1f2937' }}>{doc.fileName}</strong>
+                          </div>
+                          <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px', marginLeft: '46px' }}>
+                            <i className="fas fa-clock" style={{ marginRight: '6px' }}></i>
+                            {new Date(doc.uploadDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at {new Date(doc.uploadDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                          {doc.aiSummary && (
+                            <div style={{ 
+                              background: 'white', 
+                              padding: '14px', 
+                              borderRadius: '8px', 
+                              fontSize: '14px',
+                              border: '1px solid #d1fae5',
+                              marginTop: '12px',
+                              marginLeft: '46px',
+                              lineHeight: '1.6'
+                            }}>
+                              <div style={{ fontWeight: '600', marginBottom: '8px', color: '#059669', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <i className="fas fa-robot"></i> AI Analysis
+                              </div>
+                              <div style={{ color: '#374151' }}>{doc.aiSummary}</div>
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => setDocumentToDelete(doc._id)}
+                          style={{
+                            background: '#fee2e2',
+                            color: '#dc2626',
+                            border: '1px solid #fecaca',
+                            borderRadius: '8px',
+                            padding: '10px 16px',
+                            cursor: 'pointer',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            transition: 'all 0.2s',
+                            flexShrink: 0
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = '#ef4444';
+                            e.currentTarget.style.color = 'white';
+                            e.currentTarget.style.borderColor = '#ef4444';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = '#fee2e2';
+                            e.currentTarget.style.color = '#dc2626';
+                            e.currentTarget.style.borderColor = '#fecaca';
+                          }}
+                          title="Delete document"
+                        >
+                          <i className="fas fa-trash"></i>
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-            <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e5e7eb' }}>
+            <div style={{ paddingTop: '20px', borderTop: '2px solid #e5e7eb' }}>
               <button
                 onClick={() => {
                   setShowDocumentsModal(false);
@@ -865,21 +986,31 @@ export default function Chatbot() {
                 }}
                 style={{
                   width: '100%',
-                  padding: '12px',
-                  background: '#10b981',
+                  padding: '14px',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: '10px',
                   cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500',
+                  fontSize: '15px',
+                  fontWeight: '600',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '8px'
+                  gap: '10px',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                  boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(16, 185, 129, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
                 }}
               >
-                <i className="fas fa-plus"></i>
+                <i className="fas fa-plus-circle" style={{ fontSize: '18px' }}></i>
                 Upload New Document
               </button>
             </div>

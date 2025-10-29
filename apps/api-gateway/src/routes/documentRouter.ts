@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import MedicalDocument from '../models/medicalDocument';
 import axios from 'axios';
-import { OPENROUTER_API_KEY, OPENROUTER_URL, LLM_MODEL } from '../config';
+import { OPENROUTER_API_KEY, OPENROUTER_URL, LLM_MODEL, FRONTEND_URL } from '../config';
 
 // OpenRouter API response interface
 interface OpenRouterResponse {
@@ -53,7 +53,7 @@ async function callOpenRouterAPI(prompt: string, apiKey: string): Promise<string
           headers: {
             'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
-            'HTTP-Referer': 'http://localhost:5173',
+            'HTTP-Referer': FRONTEND_URL,
             'X-Title': 'DrugNexusAI Patient Portal'
           },
           timeout: 30000

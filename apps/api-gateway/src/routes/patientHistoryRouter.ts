@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { OPENROUTER_URL } from '../config';
+import { OPENROUTER_URL, FRONTEND_URL } from '../config';
 import axios from 'axios';
 import PatientHistory from '../models/patientHistory';
 import { trackUsage, getApiKey } from '../middleware/usageTracking';
@@ -36,7 +36,7 @@ async function callOpenRouterAPI(prompt: string, apiKey: string): Promise<string
           headers: {
             'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
-            'HTTP-Referer': 'http://localhost:5173',
+            'HTTP-Referer': FRONTEND_URL,
             'X-Title': 'DrugNexusAI Patient History'
           },
           timeout: 30000
