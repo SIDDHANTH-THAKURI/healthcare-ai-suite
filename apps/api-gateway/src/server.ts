@@ -59,29 +59,37 @@ const PORT = process.env.PORT || 5000;
 
 // Start the server
 app.listen(PORT, () => {
+    console.log('🚀 API Gateway server started on port', PORT);
+    console.log('📍 Health check: http://localhost:' + PORT + '/health');
 });
 
 // Connect to MongoDB with retry logic
 const connectToMongoDB = async () => {
     try {
+        console.log('🔄 Connecting to MongoDB...');
         await mongoose.connect(MONGO_URI, {
             dbName: process.env.DB_NAME || 'MedPortalDB'
         });
+        console.log('✅ MongoDB connected successfully');
     } catch (err) {
-        console.error('MongoDB connection error:', err);
-        console.log('Retrying MongoDB connection in 5 seconds...');
+        console.error('❌ MongoDB connection error:', err);
+        console.log('⏳ Retrying MongoDB connection in 5 seconds...');
         setTimeout(connectToMongoDB, 5000);
     }
 };
 
 connectToMongoDB();
 
+mongoose.connection.on('connected', () => {
+    console.log('✅ MongoDB connection established');
+});
+
 mongoose.connection.on('error', (err) => {
-    console.error('MongoDB error:', err.message);
+    console.error('❌ MongoDB error:', err.message);
 });
 
 mongoose.connection.on('disconnected', () => {
-    console.log('MongoDB disconnected');
+    console.log('⚠️ MongoDB disconnected');
 });
 
 // =======================
@@ -94,15 +102,21 @@ app.get('/api/medicines', (req: Request, res: Response): void => {
         try {
             // Check if MongoDB is connected
             if (mongoose.connection.readyState !== 1) {
-                console.error('MongoDB not connected. Current state:', mongoose.connection.readyState);
-                res.status(503).json({ error: 'Database not ready. Please try again in a moment.' });
+                console.log('⏳ MongoDB not ready yet. Current state:', mongoose.connection.readyState, '(0=disconnected, 1=connected, 2=connecting, 3=disconnecting)');
+                res.status(503).json({ 
+                    error: 'Database is connecting. Please try again in a moment.',
+                    retryAfter: 2 
+                });
                 return;
             }
 
             const db = mongoose.connection.db;
             if (!db) {
-                console.error('MongoDB database instance not available');
-                res.status(503).json({ error: 'Database not ready' });
+                console.log('⏳ MongoDB database instance not available yet');
+                res.status(503).json({ 
+                    error: 'Database is initializing. Please try again in a moment.',
+                    retryAfter: 2 
+                });
                 return;
             }
 
@@ -113,8 +127,7 @@ app.get('/api/medicines', (req: Request, res: Response): void => {
             
             res.json(drugs);
         } catch (error: any) {
-            console.error('Fetch medicines error:', error.message);
-            console.error('Error stack:', error.stack);
+            console.error('❌ Fetch medicines error:', error.message);
             res.status(500).json({ error: 'Failed to fetch medicines', details: error.message });
         }
     })();

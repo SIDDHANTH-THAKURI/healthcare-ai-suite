@@ -131,7 +131,9 @@ def get_consultation_notes(patient_id: str) -> List[dict]:
 def get_all_notes_with_dates(patient_id: str) -> List[str]:
     pres = prescriptions_collection.find_one({"patient": patient_id}, {"consultationNotes": 1})
     notes = pres.get("consultationNotes", []) if pres else []
-    return [f"{n['createdAt']}: {n['summary']}" for n in notes]
+    # Sort by date to ensure chronological order (oldest first)
+    sorted_notes = sorted(notes, key=lambda n: n.get('createdAt', ''))
+    return [f"{n['createdAt']}: {n.get('summary', n.get('rawText', ''))}" for n in sorted_notes]
 
 
 def get_current_medications(patient_id: str) -> List[dict]:
@@ -215,32 +217,70 @@ Your job is to analyze the following consultation history and return structured 
   "allergies": ["allergy1", "allergy2"]
 }}
 
-Instructions:
-- Only use the patient's history to extract conditions, allergies, and medications.
+CRITICAL INSTRUCTIONS FOR CONDITIONS - READ CAREFULLY:
+
+STEP 1: Read the FIRST note below (most recent consultation)
+STEP 2: Extract ALL conditions mentioned in that latest note
+STEP 3: Determine if each condition is CURRENT or PAST based on these rules:
+
+IF the latest note says:
+- "has returned" / "is back" / "recurring" / "again" → CURRENT (even if it was past before)
+- "resolved" / "cured" / "no longer" / "recovered" → PAST
+- Just mentions the condition without resolution words → CURRENT
+- "still has" / "continues to have" / "ongoing" → CURRENT
+
+IMPORTANT: The word "returned" or "back" means the condition is NOW ACTIVE (CURRENT), not past!
+
+Step-by-step example:
+Note 1 (old): "Patient had asthma as a child" → asthma was PAST
+Note 2 (latest): "Patient's asthma has returned" → asthma is NOW CURRENT (moved from past to current)
+
+Another example:
+Note 1 (old): "Patient has fever and headache" → both CURRENT
+Note 2 (latest): "Fever resolved, but headache persists" → fever is PAST, headache is CURRENT
+
+RULE: Any condition mentioned in the LATEST note is CURRENT unless explicitly stated as resolved/cured
+
+Other Instructions:
 - For medications, use the provided list below as the current master and update based on the latest entry.
 - Always include `status` in medications.
 - ❌ Do not add commentary, explanation, or markdown. Just return JSON.
 
 ---
 
-Consultation Notes:
-{chr(10).join(full_notes)}
+Consultation Notes (MOST RECENT FIRST):
+{chr(10).join(reversed(full_notes))}
 
 Current Medication List (JSON):
 {current_meds_json}
 """
 
     try:
+        print("\n" + "="*80)
+        print("🔍 CALLING LLM TO EXTRACT STRUCTURED DATA")
+        print("="*80)
+        print(f"📝 Input Notes (most recent first):")
+        for i, note in enumerate(reversed(full_notes), 1):
+            print(f"   {i}. {note[:100]}...")
+        print(f"💊 Current Medications Count: {len(current_meds)}")
+        print("="*80 + "\n")
+        
         raw = call_llm(prompt)
         
         # If LLM call failed (empty response), return fallback
         if not raw or not raw.strip():
-            print("LLM returned empty response, using fallback")
+            print("❌ LLM returned empty response, using fallback")
             return fallback_response
+        
+        print("\n" + "="*80)
+        print("📥 RAW LLM RESPONSE:")
+        print("="*80)
+        print(raw[:500] + "..." if len(raw) > 500 else raw)
+        print("="*80 + "\n")
             
         match = re.search(r"\{.*\}", raw, re.DOTALL)
         if not match:
-            print("No JSON found in LLM response, using fallback")
+            print("❌ No JSON found in LLM response, using fallback")
             return fallback_response
             
         cleaned = match.group(0).strip()
@@ -248,7 +288,7 @@ Current Medication List (JSON):
         
         # Validate the structure
         if not isinstance(structured_data, dict):
-            print("Invalid JSON structure from LLM, using fallback")
+            print("❌ Invalid JSON structure from LLM, using fallback")
             return fallback_response
             
         # Ensure required fields exist
@@ -260,6 +300,61 @@ Current Medication List (JSON):
             structured_data["medications"] = fallback_response["medications"]
         if "allergies" not in structured_data:
             structured_data["allergies"] = fallback_response["allergies"]
+        
+        # Ensure conditions structure exists
+        if 'conditions' not in structured_data or not isinstance(structured_data['conditions'], dict):
+            structured_data['conditions'] = {'current': [], 'past': []}
+        if 'current' not in structured_data['conditions']:
+            structured_data['conditions']['current'] = []
+        if 'past' not in structured_data['conditions']:
+            structured_data['conditions']['past'] = []
+        
+        # Post-process: Check if latest note mentions conditions with "returned", "back", etc.
+        if full_notes and len(full_notes) > 0:
+            latest_note = full_notes[-1].split(":", 1)[-1].lower().strip()  # Get the most recent note
+            print(f"📝 Latest note for analysis: {latest_note[:200]}...")
+            
+            returned_keywords = ['returned', 'is back', 'has returned', 'came back', 'recurred', 'recurring', 'again', 'flare-up', 'flare up']
+            
+            # Check if any past conditions are mentioned with "returned" keywords in latest note
+            past_conditions = structured_data.get('conditions', {}).get('past', []) or []
+            current_conditions = structured_data.get('conditions', {}).get('current', []) or []
+            
+            print(f"🔍 Before post-processing - Current: {current_conditions}, Past: {past_conditions}")
+            
+            conditions_to_move = []
+            for condition in past_conditions:
+                condition_lower = condition.lower()
+                pattern = r'\b' + re.escape(condition_lower) + r'\b'
+                # Check if this condition is mentioned with "returned" keywords in latest note
+                for keyword in returned_keywords:
+                    if re.search(pattern, latest_note) and keyword in latest_note:
+                        conditions_to_move.append(condition)
+                        print(f"🔄 Moving '{condition}' from PAST to CURRENT (found '{keyword}' in latest note)")
+                        break
+            
+            # Move conditions from past to current
+            if conditions_to_move:
+                for condition in conditions_to_move:
+                    past_conditions.remove(condition)
+                    if condition not in current_conditions:
+                        current_conditions.append(condition)
+                
+                past_conditions = [c for c in past_conditions if c not in conditions_to_move]
+                current_conditions = list(set(current_conditions + conditions_to_move))
+                structured_data['conditions']['past'] = past_conditions
+                structured_data['conditions']['current'] = current_conditions
+                print(f"✅ After post-processing - Current: {current_conditions}, Past: {past_conditions}")
+        
+        print("\n" + "="*80)
+        print("✅ STRUCTURED DATA EXTRACTED SUCCESSFULLY")
+        print("="*80)
+        print(f"📋 Summary: {structured_data.get('summary', 'N/A')[:100]}...")
+        print(f"🏥 Current Conditions: {structured_data.get('conditions', {}).get('current', [])}")
+        print(f"📜 Past Conditions: {structured_data.get('conditions', {}).get('past', [])}")
+        print(f"💊 Medications: {len(structured_data.get('medications', []))} items")
+        print(f"⚠️  Allergies: {structured_data.get('allergies', [])}")
+        print("="*80 + "\n")
             
         return structured_data
         
@@ -281,16 +376,26 @@ async def save_patient_history(data: HistoryInput):
         if not data.patientId or not data.notes or not data.notes.strip():
             raise HTTPException(400, "Missing patientId or notes")
 
+        print("\n" + "🔵"*40)
+        print("🆕 NEW CONSULTATION NOTE RECEIVED")
+        print("🔵"*40)
+        print(f"👤 Patient ID: {data.patientId}")
+        print(f"📝 New Note: {data.notes.strip()}")
+        print("🔵"*40 + "\n")
+
         past_summaries = get_all_notes_with_dates(data.patientId)
         current_meds = get_current_medications(data.patientId)
         now_ts = datetime.utcnow().isoformat()
         formatted_ts = datetime.utcnow().isoformat()
         past_summaries.append(f"{formatted_ts}: {data.notes.strip()}")
         
+        print(f"📚 Total notes in history (including new): {len(past_summaries)}")
+        print(f"💊 Current medications count: {len(current_meds)}")
+        
         # Extract structured summary with timeout protection
-        print(f"Processing consultation note for patient {data.patientId}")
+        print(f"\n🔄 Processing consultation note for patient {data.patientId}...")
         result = extract_structured_summary(past_summaries, current_meds)
-        print(f"Structured summary extracted successfully")
+        print(f"✅ Structured summary extracted successfully")
 
         entry = {
             "id": str(uuid.uuid4()),
@@ -300,23 +405,45 @@ async def save_patient_history(data: HistoryInput):
             "structured": result
         }
 
+        print("\n" + "💾"*40)
+        print("💾 SAVING TO DATABASE")
+        print("💾"*40)
+        print(f"📄 Entry ID: {entry['id']}")
+        print(f"📝 Summary: {entry['summary'][:100]}...")
+        print(f"🏥 Structured Data:")
+        print(f"   - Current Conditions: {result.get('conditions', {}).get('current', [])}")
+        print(f"   - Past Conditions: {result.get('conditions', {}).get('past', [])}")
+        print(f"   - Medications: {len(result.get('medications', []))} items")
+        print(f"   - Allergies: {result.get('allergies', [])}")
+        print("💾"*40 + "\n")
+
         # Save to database with error handling
         try:
+            merged_meds = merge_medications(current_meds, result.get("medications", []))
+            print(f"💊 Merged medications count: {len(merged_meds)}")
+            
             update_result = prescriptions_collection.update_one(
                 {"patient": data.patientId, "source": "notes"},
                 {
                     "$push": {"consultationNotes": entry},
                     "$set": {
-                        "medicines": merge_medications(current_meds, result.get("medications", [])),
+                        "medicines": merged_meds,
                         "createdAt": now_ts,
                         "source": "notes"
                     }
                 },
                 upsert=True
             )
-            print(f"Database update result: {update_result.modified_count} modified, {update_result.upserted_id} upserted")
+            
+            print("\n" + "✅"*40)
+            print("✅ DATABASE SAVE SUCCESSFUL")
+            print("✅"*40)
+            print(f"📊 Modified: {update_result.modified_count} document(s)")
+            print(f"🆕 Upserted ID: {update_result.upserted_id}")
+            print("✅"*40 + "\n")
+            
         except Exception as db_error:
-            print(f"Database error: {db_error}")
+            print(f"❌ Database error: {db_error}")
             raise HTTPException(500, f"Database error: {str(db_error)}")
 
         return {"success": True, "note": entry}

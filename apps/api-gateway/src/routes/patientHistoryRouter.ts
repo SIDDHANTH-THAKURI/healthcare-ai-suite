@@ -23,9 +23,9 @@ const FREE_MODELS = [
 async function callOpenRouterAPI(prompt: string, apiKey: string): Promise<string> {
   for (let i = 0; i < FREE_MODELS.length; i++) {
     const model = FREE_MODELS[i];
-    
+
     try {
-      
+
       const response = await axios.post(
         OPENROUTER_URL,
         {
@@ -44,22 +44,22 @@ async function callOpenRouterAPI(prompt: string, apiKey: string): Promise<string
       );
 
       const aiResponse = (response.data as any).choices?.[0]?.message?.content?.trim();
-      
+
       if (!aiResponse) {
         throw new Error('No response from AI');
       }
-      
+
       return aiResponse;
-      
+
     } catch (error: any) {
       const errorMsg = error.response?.data?.error?.message || error.message;
-      
+
       if (i === FREE_MODELS.length - 1) {
         throw new Error(`All models failed. Last error: ${errorMsg}`);
       }
     }
   }
-  
+
   throw new Error('Failed to get AI response');
 }
 
@@ -136,39 +136,39 @@ CRITICAL RULES:
     try {
       const apiKey = getApiKey(req);
       const aiResponse = await callOpenRouterAPI(prompt, apiKey);
-      
+
       // Extract JSON from response
       const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
-        
+
         // Get AI's interpretation
         let aiCurrent = parsed.conditions?.current || [];
         let aiPast = parsed.conditions?.past || [];
-        
+
         // Merge with previous history intelligently
         if (previousNotes.length > 0) {
           const latestNote = previousNotes[0];
           const prevCurrent = latestNote.structured?.conditions?.current || [];
           const prevPast = latestNote.structured?.conditions?.past || [];
-          
+
           // Start with AI's past conditions and add all previous past conditions
           const allPast = new Set([...aiPast, ...prevPast]);
-          
+
           // For current conditions: use AI's judgment but ensure we don't lose ongoing conditions
           // If a previous current condition is not mentioned at all in the new note, keep it as current
           const mentionedInNote = notes.toLowerCase();
           prevCurrent.forEach((condition: string) => {
             const conditionLower = condition.toLowerCase();
             // If condition is not in AI's current or past, and not explicitly mentioned as resolved
-            if (!aiCurrent.some((c: string) => c.toLowerCase() === conditionLower) && 
-                !aiPast.some((c: string) => c.toLowerCase() === conditionLower)) {
+            if (!aiCurrent.some((c: string) => c.toLowerCase() === conditionLower) &&
+              !aiPast.some((c: string) => c.toLowerCase() === conditionLower)) {
               // Check if it's mentioned as resolved in the note
               const resolvedKeywords = ['no longer', 'resolved', 'cured', 'recovered from', 'healed'];
-              const isResolved = resolvedKeywords.some(keyword => 
+              const isResolved = resolvedKeywords.some(keyword =>
                 mentionedInNote.includes(keyword) && mentionedInNote.includes(conditionLower)
               );
-              
+
               if (isResolved) {
                 allPast.add(condition);
               } else if (!mentionedInNote.includes(conditionLower)) {
@@ -177,15 +177,46 @@ CRITICAL RULES:
               }
             }
           });
-          
+
           // Remove duplicates from current that are in past
-          aiCurrent = aiCurrent.filter((c: string) => 
+          aiCurrent = aiCurrent.filter((c: string) =>
             !Array.from(allPast).some((p: string) => p.toLowerCase() === c.toLowerCase())
           );
-          
+
           aiPast = Array.from(allPast);
         }
-        
+
+        // --- POST-PROCESSING: Move conditions from past → current if "returned" keywords found ---
+        const noteLower = notes.toLowerCase();
+        const prevPast = (previousNotes[0]?.structured?.conditions?.past ?? []) as string[];
+        const returnKeywords = [
+          'recurred', 'has recurred', 'recurrence',
+          'returned', 'has returned', 'is back', 'came back', 'back again',
+          'again', 'relapsed', 'flare-up', 'flare up'
+        ];
+
+        const movedFromPast: string[] = [];
+        prevPast.forEach((cond: string) => {
+          const c = cond.trim();
+          if (!c) return;
+          const rx = new RegExp(`\\b${c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+          const mentioned = rx.test(noteLower);
+          const hasReturnCue = returnKeywords.some((k: string) => noteLower.includes(k));
+          if (mentioned && hasReturnCue) movedFromPast.push(c);
+        });
+
+        if (movedFromPast.length) {
+          console.log(`🔄 Moving from past to current: ${movedFromPast.join(', ')}`);
+          aiPast = aiPast.filter((p: string) =>
+            !movedFromPast.some((m: string) => m.toLowerCase() === p.toLowerCase())
+          );
+          aiCurrent = Array.from(new Set([
+            ...aiCurrent,
+            ...movedFromPast
+          ]));
+        }
+        // --- END POST-PROCESSING ---
+
         structured = {
           medications: parsed.medications || [],
           conditions: {
@@ -300,7 +331,7 @@ router.put('/:noteId', trackUsage, async (req: Request, res: Response): Promise<
     }
 
     // Fetch previous notes (excluding the one being edited) to provide context
-    const previousNotes = await PatientHistory.find({ 
+    const previousNotes = await PatientHistory.find({
       patientId: existingNote.patientId,
       _id: { $ne: noteId }
     })
@@ -367,29 +398,29 @@ CRITICAL RULES:
       const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
-        
+
         // Get AI's interpretation
         let aiCurrent = parsed.conditions?.current || [];
         let aiPast = parsed.conditions?.past || [];
-        
+
         // Merge with previous history intelligently
         if (previousNotes.length > 0) {
           const latestNote = previousNotes[0];
           const prevCurrent = latestNote.structured?.conditions?.current || [];
           const prevPast = latestNote.structured?.conditions?.past || [];
-          
+
           const allPast = new Set([...aiPast, ...prevPast]);
-          
+
           const mentionedInNote = rawText.toLowerCase();
           prevCurrent.forEach((condition: string) => {
             const conditionLower = condition.toLowerCase();
-            if (!aiCurrent.some((c: string) => c.toLowerCase() === conditionLower) && 
-                !aiPast.some((c: string) => c.toLowerCase() === conditionLower)) {
+            if (!aiCurrent.some((c: string) => c.toLowerCase() === conditionLower) &&
+              !aiPast.some((c: string) => c.toLowerCase() === conditionLower)) {
               const resolvedKeywords = ['no longer', 'resolved', 'cured', 'recovered from', 'healed'];
-              const isResolved = resolvedKeywords.some(keyword => 
+              const isResolved = resolvedKeywords.some(keyword =>
                 mentionedInNote.includes(keyword) && mentionedInNote.includes(conditionLower)
               );
-              
+
               if (isResolved) {
                 allPast.add(condition);
               } else if (!mentionedInNote.includes(conditionLower)) {
@@ -397,14 +428,45 @@ CRITICAL RULES:
               }
             }
           });
-          
-          aiCurrent = aiCurrent.filter((c: string) => 
+
+          aiCurrent = aiCurrent.filter((c: string) =>
             !Array.from(allPast).some((p: string) => p.toLowerCase() === c.toLowerCase())
           );
-          
+
           aiPast = Array.from(allPast);
         }
-        
+
+        // --- POST-PROCESSING: Move conditions from past → current if "returned" keywords found ---
+        const noteLower = rawText.toLowerCase();
+        const prevPast = (previousNotes[0]?.structured?.conditions?.past ?? []) as string[];
+        const returnKeywords = [
+          'recurred', 'has recurred', 'recurrence',
+          'returned', 'has returned', 'is back', 'came back', 'back again',
+          'again', 'relapsed', 'flare-up', 'flare up'
+        ];
+
+        const movedFromPast: string[] = [];
+        prevPast.forEach((cond: string) => {
+          const c = cond.trim();
+          if (!c) return;
+          const rx = new RegExp(`\\b${c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+          const mentioned = rx.test(noteLower);
+          const hasReturnCue = returnKeywords.some((k: string) => noteLower.includes(k));
+          if (mentioned && hasReturnCue) movedFromPast.push(c);
+        });
+
+        if (movedFromPast.length) {
+          console.log(`🔄 Moving from past to current: ${movedFromPast.join(', ')}`);
+          aiPast = aiPast.filter((p: string) =>
+            !movedFromPast.some((m: string) => m.toLowerCase() === p.toLowerCase())
+          );
+          aiCurrent = Array.from(new Set([
+            ...aiCurrent,
+            ...movedFromPast
+          ]));
+        }
+        // --- END POST-PROCESSING ---
+
         structured = {
           medications: parsed.medications || [],
           conditions: {

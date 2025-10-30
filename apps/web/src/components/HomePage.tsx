@@ -106,8 +106,13 @@ const HomePage: React.FC = () => {
         setAvailableMedicines(
           (response.data as { name: string }[]).map((drug: { name: string }) => drug.name)
         );
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching medicines:", error);
+        // Retry after 2 seconds if service is unavailable
+        if (error.response?.status === 503 || error.code === 'ERR_CONNECTION_REFUSED') {
+          console.log("Service unavailable, retrying in 2 seconds...");
+          setTimeout(fetchMedicines, 2000);
+        }
       }
     };
     fetchMedicines();

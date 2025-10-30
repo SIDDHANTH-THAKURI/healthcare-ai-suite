@@ -218,85 +218,84 @@
 }
 
 .features {
-  padding: 2rem 5%;
-  background: var(--bg-light);
+  padding: 2rem 5% !important;
+  background: var(--bg-light) !important;
 }
 
 .dark .features h3 {
-  color: var(--text-light);
+  color: var(--text-light) !important;
 }
 
 .features h3 {
-  text-align: center;
-  font-size: 2.5rem;
-  margin-bottom: 4rem;
-  color: var(--secondary);
-  font-weight: 700;
+  text-align: center !important;
+  font-size: 2.5rem !important;
+  margin-bottom: 4rem !important;
+  color: var(--secondary) !important;
+  font-weight: 700 !important;
 }
 
 .feature-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important;
+  gap: 2rem !important;
+  max-width: 1200px !important;
+  margin: 0 auto !important;
 }
 
 /* Dark mode specific styles */
 .dark .feature-card {
-  background: var(--secondary);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--secondary) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
 .feature-card {
   background: #ffffff !important;
-  padding: 2rem;
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow);
-  transition: var(--transition);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 2rem !important;
+  border-radius: var(--border-radius) !important;
+  box-shadow: var(--shadow) !important;
+  transition: var(--transition) !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
 }
 
 .feature-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-5px) !important;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08) !important;
 }
 
 .feature-card h4 {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-  color: #2a9d8f;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  font-size: 1.5rem !important;
+  margin-bottom: 1rem !important;
+  color: #2a9d8f !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
 }
 
 .dark .feature-card h4 {
-  color: #E76F51;
+  color: #E76F51 !important;
 }
 
 .feature-card h4 i {
-  color: #E76F51;
+  color: #E76F51 !important;
+}
+
+.feature-card h4 svg {
+  color: #E76F51 !important;
 }
 
 .dark .feature-card p {
-  color: #ffffff;
-  opacity: 0.85;
+  color: #ffffff !important;
+  opacity: 0.85 !important;
 }
 
 .feature-card p {
   color: #333333 !important;
-  opacity: 0.9;
-  line-height: 1.6;
-}
-
-.feature-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+  opacity: 0.9 !important;
+  line-height: 1.6 !important;
 }
 
 .dark .feature-card:hover {
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3) !important;
 }
 
 .modal-overlay {
@@ -473,16 +472,20 @@
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
 }
 
 @keyframes pulse-icon {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translate(-50%, -50%) scale(1);
     opacity: 1;
   }
+
   50% {
     transform: translate(-50%, -50%) scale(1.1);
     opacity: 0.8;
@@ -490,9 +493,12 @@
 }
 
 @keyframes fade-in-out {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.7;
   }
@@ -502,6 +508,7 @@
   0% {
     background-position: 200% 0;
   }
+
   100% {
     background-position: -200% 0;
   }
@@ -2064,6 +2071,7 @@
     font-size: 0.85rem;
   }
 }
+
 /*
  ========================================
    PORTAL INFO MODAL
@@ -2645,9 +2653,12 @@
 }
 
 @keyframes pulse-fab {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 10px 30px rgba(42, 157, 143, 0.5);
   }
+
   50% {
     box-shadow: 0 10px 40px rgba(42, 157, 143, 0.7), 0 0 0 10px rgba(42, 157, 143, 0.15);
   }
@@ -2658,6 +2669,7 @@
     opacity: 0;
     transform: translateY(20px) scale(0.9);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -3265,9 +3277,12 @@
 }
 
 @keyframes pulse-marker {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 20px rgba(231, 111, 81, 0.6);
   }
+
   50% {
     box-shadow: 0 0 40px rgba(231, 111, 81, 0.8);
   }

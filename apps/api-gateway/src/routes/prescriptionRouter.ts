@@ -21,7 +21,12 @@ router.get(
                 .sort({ createdAt: -1 });
 
             if (!prescription) {
-                res.status(404).json({ error: 'No prescription found for that patient' });
+                // Return 404 but with a more informative message
+                res.status(404).json({ 
+                    error: 'No prescription found for that patient',
+                    message: 'This is normal for new patients who have not been prescribed medications yet.',
+                    patientId: patientId
+                });
                 return;
             }
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './DrugNexusAIDoctorPortal.css';
 import './PatientDetails.css';
 import { DocSidebar } from './PortalSidebar';
@@ -160,10 +161,10 @@ const PatientDetails: React.FC = () => {
     try {
       const user = localStorage.getItem('user');
       if (!user) return;
-      
+
       const userData = JSON.parse(user);
       const userId = userData._id || userData.id;
-      
+
       const response = await fetch(`${BASE_URL_1}/api/api-key/status/${userId}`);
       if (response.ok) {
         const data = await response.json();
@@ -187,10 +188,10 @@ const PatientDetails: React.FC = () => {
   const isMedicationActive = (medication: Medicine): boolean => {
     // Respect manually set status - if it's inactive, keep it inactive
     if (medication.status === 'inactive') return false;
-    
+
     // If no end date, it's ongoing and active
     if (!medication.endDate) return true;
-    
+
     // Check if medication has expired based on end date
     const today = new Date();
     const endDate = new Date(medication.endDate);
@@ -221,7 +222,7 @@ const PatientDetails: React.FC = () => {
   // Toggle medication status manually
   const toggleMedicationStatus = async (medicationIndex: number) => {
     if (!patientId) return;
-    
+
     const updatedMedications = currentMedications.map((med, idx) => {
       if (idx === medicationIndex) {
         return {
@@ -231,9 +232,9 @@ const PatientDetails: React.FC = () => {
       }
       return med;
     });
-    
+
     setCurrentMedications(updatedMedications);
-    
+
     // Save all medications to backend
     const token = localStorage.getItem('token');
     try {
@@ -248,7 +249,7 @@ const PatientDetails: React.FC = () => {
           medicines: updatedMedications
         })
       });
-      
+
       if (response.ok) {
         console.log('Medication status updated successfully');
       } else {
@@ -263,7 +264,7 @@ const PatientDetails: React.FC = () => {
   const checkServiceHealth = async () => {
     try {
       setServiceStatus('Checking...');
-      const res = await fetch(`${BASE_URL_2}/health`, { 
+      const res = await fetch(`${BASE_URL_2}/health`, {
         method: 'GET',
         signal: AbortSignal.timeout(5000) // 5 second timeout
       });
@@ -285,14 +286,14 @@ const PatientDetails: React.FC = () => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    
+
     if (!token) {
       console.error('No authentication token found');
       setError('Authentication required. Please log in again.');
       navigate('/login');
       return;
     }
-    
+
     if (!patientId || !isValidPatientIdFormat(patientId)) {
       console.error('Invalid patient ID:', patientId);
       setError('Invalid patient ID');
@@ -325,7 +326,7 @@ const PatientDetails: React.FC = () => {
       });
 
     // Try to fetch patient data directly from the patients list (simplified approach)
-    
+
     fetch(`${BASE_URL_1}/api/patients`, { headers: { Authorization: `Bearer ${token}` } })
       .then(res => {
         if (!res.ok) {
@@ -357,30 +358,30 @@ const PatientDetails: React.FC = () => {
         }, 5000);
       });
 
-    // Fetch prescriptions
-    fetch(`${BASE_URL_1}/api/prescriptions?patientId=${patientId}`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(res => {
-        if (res.ok) {
-          return res.json();
-        } else if (res.status === 404) {
-          // No prescription found - this is normal, not an error
-          return { prescription: null };
-        } else {
-          throw new Error(`Failed to fetch prescriptions: ${res.status} ${res.statusText}`);
-        }
-      })
-      .then((data: PrescriptionResp) => {
-        if (data.prescription?.medicines) {
-          // Update status based on current date
-          const updatedMeds = updateMedicationStatus(data.prescription.medicines);
+    // Fetch prescriptions (silently handle 404 for new patients)
+    const fetchPrescriptions = async () => {
+      try {
+        const response = await axios.get<PrescriptionResp>(`${BASE_URL_1}/api/prescriptions`, {
+          params: { patientId },
+          headers: { Authorization: `Bearer ${token}` },
+          validateStatus: (status) => status < 500 // Don't throw for 4xx errors
+        });
+
+        if (response.status === 200 && response.data.prescription?.medicines) {
+          const updatedMeds = updateMedicationStatus(response.data.prescription.medicines);
           setCurrentMedications(updatedMeds);
-          
         }
-      })
-      .catch((error) => {
-        console.warn('Failed to fetch prescriptions:', error.message);
-        // Don't set error for prescriptions as it's not critical for page load
-      });
+        // 404 and other 4xx responses are silently ignored (normal for new patients)
+
+      } catch (error: any) {
+        // Only catch actual network/server errors (5xx), not 404s
+        if (error?.response?.status && error.response.status >= 500) {
+          console.warn('Server error fetching prescriptions:', error.message);
+        }
+      }
+    };
+
+    fetchPrescriptions();
 
     // Fetch history notes
     fetch(`${BASE_URL_1}/api/patient-history?patientId=${patientId}`, { headers: { Authorization: `Bearer ${token}` } })
@@ -422,11 +423,11 @@ const PatientDetails: React.FC = () => {
     setSaveError(null); // Clear previous save errors
     setIsLoading(true); // 🔄 Show loading
     const token = localStorage.getItem('token');
-    
+
     // Set a timeout for the request
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
-    
+
     try {
       const res = await fetch(`${BASE_URL_1}/api/patient-history`, {
         method: 'POST',
@@ -436,15 +437,20 @@ const PatientDetails: React.FC = () => {
       });
 
       clearTimeout(timeoutId);
-      
+
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({ detail: 'Unknown error' }));
         throw new Error(errorData.detail || `HTTP ${res.status}: ${res.statusText}`);
       }
 
       const result = await res.json();
-      
+
       if (result.success && result.note) {
+        console.log('📥 Received note from server:', result.note);
+        console.log('🏥 Structured data:', result.note.structured);
+        console.log('📋 Current conditions:', result.note.structured?.conditions?.current);
+        console.log('📜 Past conditions:', result.note.structured?.conditions?.past);
+
         // Update notes
         setHistoryNotes(prev => [result.note, ...prev]);
 
@@ -453,10 +459,11 @@ const PatientDetails: React.FC = () => {
         if (s) {
           // Only update conditions and allergies from consultation notes
           // Medications should come from prescriptions, not consultation notes
+          console.log('✅ Updating UI with conditions:', s.conditions);
           setCurrentConditions(s.conditions?.current || []);
           setPastConditions(s.conditions?.past || []);
           setAllergies(s.allergies || []);
-          
+
         }
 
         // Cleanup
@@ -474,7 +481,7 @@ const PatientDetails: React.FC = () => {
         message: err.message,
         stack: err.stack
       });
-      
+
       // Check if it's a usage limit error
       if (err.response?.status === 429 || err.response?.data?.exhausted) {
         setShowExhaustedModal(true);
@@ -761,8 +768,8 @@ const PatientDetails: React.FC = () => {
                 <i className="fas fa-prescription-bottle-alt"></i>
                 <span>Manage Prescription</span>
               </button>
-              <button 
-                className="prescription-btn alerts-btn" 
+              <button
+                className="prescription-btn alerts-btn"
                 onClick={() => setShowAlertsModal(true)}
               >
                 <i className="fas fa-shield-alt"></i>
@@ -806,22 +813,22 @@ const PatientDetails: React.FC = () => {
               </div>
 
               {saveError && (
-                <div className="save-error-message" style={{ 
-                  padding: '12px', 
-                  margin: '10px 0', 
-                  backgroundColor: '#fee', 
-                  border: '1px solid #fcc', 
-                  borderRadius: '8px', 
+                <div className="save-error-message" style={{
+                  padding: '12px',
+                  margin: '10px 0',
+                  backgroundColor: '#fee',
+                  border: '1px solid #fcc',
+                  borderRadius: '8px',
                   color: '#c33'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                     <i className="fas fa-exclamation-circle"></i>
                     <span style={{ flex: 1 }}>{saveError}</span>
-                    <button 
-                      onClick={() => setSaveError(null)} 
-                      style={{ 
-                        background: 'none', 
-                        border: 'none', 
+                    <button
+                      onClick={() => setSaveError(null)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
                         cursor: 'pointer',
                         fontSize: '18px',
                         color: '#c33'
@@ -832,7 +839,7 @@ const PatientDetails: React.FC = () => {
                   </div>
                   {saveError.includes('Cannot connect') && (
                     <div style={{ marginTop: '8px', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <button 
+                      <button
                         onClick={checkServiceHealth}
                         style={{
                           padding: '6px 12px',
@@ -920,45 +927,45 @@ const PatientDetails: React.FC = () => {
                       {activeMedications.map((med, idx) => {
                         const originalIndex = currentMedications.findIndex(m => m === med);
                         return (
-                        <div key={idx} className="medication-item active-med">
-                          <div className="medication-header">
-                            <h4 className="medication-name">{med.name || 'Unknown Medication'}</h4>
-                            <button
-                              className="status-toggle-btn active"
-                              onClick={() => toggleMedicationStatus(originalIndex)}
-                              title="Mark as inactive"
-                            >
-                              <i className="fas fa-check-circle"></i>
-                            </button>
-                          </div>
-                          <div className="medication-details">
-                            <div className="detail-row">
-                              <i className="fas fa-weight"></i>
-                              <span>Dosage: {med.dosage || 'Not specified'}</span>
+                          <div key={idx} className="medication-item active-med">
+                            <div className="medication-header">
+                              <h4 className="medication-name">{med.name || 'Unknown Medication'}</h4>
+                              <button
+                                className="status-toggle-btn active"
+                                onClick={() => toggleMedicationStatus(originalIndex)}
+                                title="Mark as inactive"
+                              >
+                                <i className="fas fa-check-circle"></i>
+                              </button>
                             </div>
-                            <div className="detail-row">
-                              <i className="fas fa-clock"></i>
-                              <span>Frequency: {med.frequency || 'Not specified'}</span>
-                            </div>
-                            <div className="detail-row">
-                              <i className="fas fa-calendar"></i>
-                              <span>Duration: {med.duration || 'Ongoing'}</span>
-                            </div>
-                            {med.startDate && (
+                            <div className="medication-details">
                               <div className="detail-row">
-                                <i className="fas fa-calendar-plus"></i>
-                                <span>Started: {new Date(med.startDate).toLocaleDateString()}</span>
+                                <i className="fas fa-weight"></i>
+                                <span>Dosage: {med.dosage || 'Not specified'}</span>
                               </div>
-                            )}
-                            {med.endDate && (
                               <div className="detail-row">
-                                <i className="fas fa-calendar-check"></i>
-                                <span>Ends: {new Date(med.endDate).toLocaleDateString()}</span>
+                                <i className="fas fa-clock"></i>
+                                <span>Frequency: {med.frequency || 'Not specified'}</span>
                               </div>
-                            )}
+                              <div className="detail-row">
+                                <i className="fas fa-calendar"></i>
+                                <span>Duration: {med.duration || 'Ongoing'}</span>
+                              </div>
+                              {med.startDate && (
+                                <div className="detail-row">
+                                  <i className="fas fa-calendar-plus"></i>
+                                  <span>Started: {new Date(med.startDate).toLocaleDateString()}</span>
+                                </div>
+                              )}
+                              {med.endDate && (
+                                <div className="detail-row">
+                                  <i className="fas fa-calendar-check"></i>
+                                  <span>Ends: {new Date(med.endDate).toLocaleDateString()}</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      );
+                        );
                       })}
                     </div>
                   ) : (
@@ -977,49 +984,49 @@ const PatientDetails: React.FC = () => {
                       {inactiveMedications.map((med, idx) => {
                         const originalIndex = currentMedications.findIndex(m => m === med);
                         return (
-                        <div key={idx} className="medication-item inactive-med">
-                          <div className="medication-header">
-                            <h4 className="medication-name">{med.name || 'Unknown Medication'}</h4>
-                            <button
-                              className="status-toggle-btn inactive"
-                              onClick={() => toggleMedicationStatus(originalIndex)}
-                              title="Mark as active"
-                            >
-                              <i className="fas fa-times-circle"></i>
-                            </button>
-                          </div>
-                          <div className="medication-details">
-                            <div className="detail-row">
-                              <i className="fas fa-weight"></i>
-                              <span>Dosage: {med.dosage || 'Not specified'}</span>
+                          <div key={idx} className="medication-item inactive-med">
+                            <div className="medication-header">
+                              <h4 className="medication-name">{med.name || 'Unknown Medication'}</h4>
+                              <button
+                                className="status-toggle-btn inactive"
+                                onClick={() => toggleMedicationStatus(originalIndex)}
+                                title="Mark as active"
+                              >
+                                <i className="fas fa-times-circle"></i>
+                              </button>
                             </div>
-                            <div className="detail-row">
-                              <i className="fas fa-clock"></i>
-                              <span>Frequency: {med.frequency || 'Not specified'}</span>
-                            </div>
-                            <div className="detail-row">
-                              <i className="fas fa-calendar"></i>
-                              <span>Duration: {med.duration || 'Ongoing'}</span>
-                            </div>
-                            {med.startDate && (
+                            <div className="medication-details">
                               <div className="detail-row">
-                                <i className="fas fa-calendar-plus"></i>
-                                <span>Started: {new Date(med.startDate).toLocaleDateString()}</span>
+                                <i className="fas fa-weight"></i>
+                                <span>Dosage: {med.dosage || 'Not specified'}</span>
                               </div>
-                            )}
-                            {med.endDate && (
                               <div className="detail-row">
-                                <i className="fas fa-calendar-times"></i>
-                                <span>Ended: {new Date(med.endDate).toLocaleDateString()}</span>
+                                <i className="fas fa-clock"></i>
+                                <span>Frequency: {med.frequency || 'Not specified'}</span>
                               </div>
-                            )}
+                              <div className="detail-row">
+                                <i className="fas fa-calendar"></i>
+                                <span>Duration: {med.duration || 'Ongoing'}</span>
+                              </div>
+                              {med.startDate && (
+                                <div className="detail-row">
+                                  <i className="fas fa-calendar-plus"></i>
+                                  <span>Started: {new Date(med.startDate).toLocaleDateString()}</span>
+                                </div>
+                              )}
+                              {med.endDate && (
+                                <div className="detail-row">
+                                  <i className="fas fa-calendar-times"></i>
+                                  <span>Ended: {new Date(med.endDate).toLocaleDateString()}</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="inactive-badge">
+                              <i className="fas fa-history"></i>
+                              Discontinued
+                            </div>
                           </div>
-                          <div className="inactive-badge">
-                            <i className="fas fa-history"></i>
-                            Discontinued
-                          </div>
-                        </div>
-                      );
+                        );
                       })}
                     </div>
                   ) : (
@@ -1228,12 +1235,12 @@ const PatientDetails: React.FC = () => {
             <button className="modal-close-btn" onClick={() => setShowSettings(false)}>
               <i className="fas fa-times"></i>
             </button>
-            <APIKeySettings 
+            <APIKeySettings
               userId={(() => {
                 const user = localStorage.getItem('user');
                 const userData = user ? JSON.parse(user) : null;
                 return userData?._id || userData?.id || '';
-              })()} 
+              })()}
               onStatusChange={fetchApiUsageStatus}
             />
           </div>
