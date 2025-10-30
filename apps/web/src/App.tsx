@@ -19,9 +19,16 @@ import ModelsPlayground from "./components/ModelsPlayground";
 import PatientProfileSetup from "./components/PatientProfileSetup";
 import PatientPortalNew from "./components/PatientPortal";
 import MobileNotSupported from "./components/MobileNotSupported";
+import MaintenancePage from "./components/MaintenancePage";
+import { MAINTENANCE_MODE } from "./config/maintenance";
 
 
 function App() {
+  // If maintenance mode is enabled, show maintenance page for all routes
+  if (MAINTENANCE_MODE) {
+    return <MaintenancePage />;
+  }
+
   return (
     <Router>
       <Routes>

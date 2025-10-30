@@ -20,7 +20,10 @@
     "install:all": "npm install && npm run install:web && npm run install:api",
     "install:web": "cd apps/web && npm install",
     "install:api": "cd apps/api-gateway && npm install",
-    "lint": "cd apps/web && npm run lint"
+    "lint": "cd apps/web && npm run lint",
+    "maintenance:on": "node scripts/toggle-maintenance.js on",
+    "maintenance:off": "node scripts/toggle-maintenance.js off",
+    "maintenance:status": "node scripts/toggle-maintenance.js status"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
