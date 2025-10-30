@@ -1,7 +1,6 @@
 import express, { Request, Response } from 'express';
 import { OPENROUTER_URL, FRONTEND_URL } from '../config';
 import axios from 'axios';
-import { trackUsage, getApiKey } from '../middleware/usageTracking';
 
 const router = express.Router();
 
@@ -22,9 +21,9 @@ const FREE_MODELS = [
 async function callOpenRouterAPI(prompt: string, apiKey: string): Promise<string> {
   for (let i = 0; i < FREE_MODELS.length; i++) {
     const model = FREE_MODELS[i];
-    
+
     try {
-      
+
       const response = await axios.post(
         OPENROUTER_URL,
         {
@@ -43,43 +42,44 @@ async function callOpenRouterAPI(prompt: string, apiKey: string): Promise<string
       );
 
       const aiResponse = (response.data as any).choices?.[0]?.message?.content?.trim();
-      
+
       if (!aiResponse) {
         throw new Error('No response from AI');
       }
-      
+
       return aiResponse;
-      
+
     } catch (error: any) {
       const errorMsg = error.response?.data?.error?.message || error.message;
-      
+
       if (i === FREE_MODELS.length - 1) {
         throw new Error(`All models failed. Last error: ${errorMsg}`);
       }
     }
   }
-  
+
   throw new Error('Failed to get AI response');
 }
 
-// Simplify drug-drug interactions
-router.post('/', trackUsage, async (req: Request, res: Response): Promise<void> => {
+// Simplify drug-drug interactions (public endpoint - no auth required for homepage)
+router.post('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const { interactions } = req.body;
-    
+
     if (!interactions || !Array.isArray(interactions) || interactions.length === 0) {
       res.status(400).json({ error: 'No interactions provided' });
       return;
     }
 
 
-    const apiKey = getApiKey(req);
-    
+    // Use system API key for public homepage requests
+    const apiKey = process.env.OPENROUTER_API_KEY || '';
+
     // Process interactions sequentially to avoid rate limits
     const simplified = [];
     for (const interaction of interactions) {
       const { pair, description } = interaction;
-      
+
       if (!pair || !description) {
         console.warn('Skipping invalid interaction:', interaction);
         simplified.push({ pair: pair || 'Unknown', shortDescription: 'Invalid interaction data' });
@@ -93,13 +93,13 @@ Description: "${description}"`;
 
         const shortDescription = await callOpenRouterAPI(prompt, apiKey);
         simplified.push({ pair, shortDescription });
-        
+
       } catch (error: any) {
         console.error(`Failed to simplify interaction for ${pair}:`, error.message);
         // Use original description if simplification fails
-        simplified.push({ 
-          pair, 
-          shortDescription: description.length > 200 ? description.substring(0, 200) + '...' : description 
+        simplified.push({
+          pair,
+          shortDescription: description.length > 200 ? description.substring(0, 200) + '...' : description
         });
       }
     }

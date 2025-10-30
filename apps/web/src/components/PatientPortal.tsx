@@ -260,7 +260,7 @@ const PatientPortal: React.FC = () => {
       }
       
       const userId = userData._id || userData.id;
-      const patientId = userData.email;
+      const patientId = userId; // Use userId as patientId (same as standalone chatbot)
 
       // Get authentication token
       const token = localStorage.getItem('token');
